@@ -9,8 +9,15 @@ import os
 router = APIRouter()
 
 async def send_telegram_message(chat_id: int, text: str, keyboard: dict = None):
+    token = settings.TELEGRAM_BOT_TOKEN
+    print(f"[BOT] Sending message to {chat_id}, token exists: {bool(token)}")
+    
+    if not token:
+        print("[BOT ERROR] TELEGRAM_BOT_TOKEN is not set!")
+        return
+    
     async with httpx.AsyncClient() as client:
-        url = f"https://api.telegram.org/bot{settings.TELEGRAM_BOT_TOKEN}/sendMessage"
+        url = f"https://api.telegram.org/bot{token}/sendMessage"
         payload = {
             "chat_id": chat_id,
             "text": text,
@@ -19,17 +26,23 @@ async def send_telegram_message(chat_id: int, text: str, keyboard: dict = None):
         if keyboard:
             payload["reply_markup"] = keyboard
         
-        await client.post(url, json=payload)
+        try:
+            response = await client.post(url, json=payload)
+            print(f"[BOT] Telegram API response: {response.status_code} - {response.text}")
+        except Exception as e:
+            print(f"[BOT ERROR] Failed to send message: {e}")
 
 @router.post("/webhook")
 async def telegram_webhook(request: Request, db: AsyncSession = Depends(get_db)):
     data = await request.json()
+    print(f"[WEBHOOK] Received: {data}")
     
     if "message" in data:
         message = data["message"]
         chat_id = message["chat"]["id"]
         text = message.get("text", "")
         telegram_user_id = message.get("from", {}).get("id")
+        print(f"[WEBHOOK] Processing message from {telegram_user_id}, text: {text}")
         
         # Логика 1: Пользователь нажал /start
         if text == "/start":
