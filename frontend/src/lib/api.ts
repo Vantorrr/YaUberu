@@ -70,14 +70,21 @@ class ApiClient {
 
   // Auth
   async login(name: string, phone?: string) {
-    let telegramId = localStorage.getItem('mock_telegram_id');
-    if (!telegramId) {
-        telegramId = Math.floor(Math.random() * 1000000).toString();
-        localStorage.setItem('mock_telegram_id', telegramId);
+    let initData = '';
+    
+    // Check if running in Telegram WebApp
+    if (typeof window !== 'undefined' && (window as any).Telegram?.WebApp?.initData) {
+        initData = (window as any).Telegram.WebApp.initData;
+    } else {
+        // Fallback for browser development (mock data)
+        let telegramId = localStorage.getItem('mock_telegram_id');
+        if (!telegramId) {
+            telegramId = Math.floor(Math.random() * 1000000).toString();
+            localStorage.setItem('mock_telegram_id', telegramId);
+        }
+        const userJson = JSON.stringify({ id: Number(telegramId), first_name: name });
+        initData = `user=${encodeURIComponent(userJson)}&auth_date=${Math.floor(Date.now() / 1000)}`;
     }
-
-    const userJson = JSON.stringify({ id: Number(telegramId), first_name: name });
-    const initData = `user=${encodeURIComponent(userJson)}&auth_date=${Math.floor(Date.now() / 1000)}`;
 
     const res = await this.request('/auth/telegram', {
       method: 'POST',
