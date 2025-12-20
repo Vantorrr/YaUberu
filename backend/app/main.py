@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 
 from app.config import settings
-from app.api import auth, orders, users, admin, courier
+from app.api import auth, orders, users, admin, courier, client_bot
 from app.models.base import Base, engine
 # Import models to ensure they are registered with Base
 from app import models
@@ -38,6 +38,7 @@ app.include_router(users.router, prefix="/api/users", tags=["Users"])
 app.include_router(orders.router, prefix="/api/orders", tags=["Orders"])
 app.include_router(admin.router, prefix="/api/admin", tags=["Admin"])
 app.include_router(courier.router, prefix="/api/courier", tags=["Courier"])
+app.include_router(client_bot.router, prefix="/api/client-bot", tags=["ClientBot"])
 
 
 @app.get("/")
