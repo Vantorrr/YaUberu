@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
@@ -17,7 +17,7 @@ const timeSlots = [
   { id: 4, time: '20:00 — 22:00', label: 'Ночь', status: 'available' },
 ];
 
-export default function OrderPage() {
+function OrderContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -402,5 +402,13 @@ export default function OrderPage() {
         </Button>
       </div>
     </div>
+  );
+}
+
+export default function OrderPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-[#0f1714] flex items-center justify-center text-emerald-500">Загрузка...</div>}>
+      <OrderContent />
+    </Suspense>
   );
 }
