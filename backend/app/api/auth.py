@@ -33,6 +33,7 @@ async def telegram_auth(
     # Verify Telegram init data
     telegram_data = verify_telegram_data(request.init_data)
     if not telegram_data:
+        print(f"Telegram Auth Failed: Invalid data. Init data: {request.init_data}")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid Telegram data"

@@ -51,6 +51,7 @@ def verify_telegram_data(init_data: str) -> Optional[dict]:
         # Extract hash
         received_hash = parsed_data.pop("hash", None)
         if not received_hash:
+            print("Verify Telegram: No hash found in init_data")
             return None
         
         # Create data check string
@@ -75,6 +76,7 @@ def verify_telegram_data(init_data: str) -> Optional[dict]:
         
         # Verify
         if calculated_hash != received_hash:
+            print(f"Verify Telegram: Hash mismatch. Calculated: {calculated_hash}, Received: {received_hash}")
             return None
         
         # Parse user data
@@ -83,6 +85,7 @@ def verify_telegram_data(init_data: str) -> Optional[dict]:
         
         return parsed_data
     
-    except Exception:
+    except Exception as e:
+        print(f"Verify Telegram Error: {e}")
         return None
 
