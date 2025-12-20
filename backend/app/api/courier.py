@@ -1,10 +1,16 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, and_, func
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 from datetime import date
+from pydantic import BaseModel
 
-from app.models import get_db, Order, OrderStatus, User, ResidentialComplex, Address
+from app.models import get_db, Order, OrderStatus, User, ResidentialComplex, Address, UserRole
+from app.services.notifications import notify_client_courier_took_order, notify_client_order_completed
+
+
+class TakeOrderRequest(BaseModel):
+    courier_telegram_id: int
 
 router = APIRouter()
 
@@ -99,15 +105,44 @@ async def get_orders(complex_id: int, building: str, db: AsyncSession = Depends(
     return response
 
 @router.post("/orders/{order_id}/take")
-async def take_order(order_id: int, db: AsyncSession = Depends(get_db)):
+async def take_order(order_id: int, request: TakeOrderRequest, db: AsyncSession = Depends(get_db)):
+    # Get order
     result = await db.execute(select(Order).where(Order.id == order_id))
     order = result.scalar_one_or_none()
     if not order:
         raise HTTPException(status_code=404, detail="Order not found")
-        
+    
+    if order.status != OrderStatus.SCHEDULED:
+        raise HTTPException(status_code=400, detail="Order already taken")
+    
+    # Get courier
+    result = await db.execute(select(User).where(User.telegram_id == request.courier_telegram_id))
+    courier = result.scalar_one_or_none()
+    if not courier:
+        raise HTTPException(status_code=404, detail="Courier not found")
+    
+    # Assign courier and update status
+    order.courier_id = courier.id
     order.status = OrderStatus.IN_PROGRESS
     await db.commit()
-    return {"status": "ok"}
+    
+    # === NOTIFY CLIENT ===
+    try:
+        # Get client
+        result = await db.execute(select(User).where(User.id == order.user_id))
+        client = result.scalar_one_or_none()
+        
+        if client and client.telegram_id:
+            time_slot_str = order.time_slot.value if hasattr(order.time_slot, 'value') else str(order.time_slot)
+            await notify_client_courier_took_order(
+                client_telegram_id=client.telegram_id,
+                courier_name=courier.name,
+                time_slot=time_slot_str
+            )
+    except Exception as e:
+        print(f"[NOTIFY ERROR] Failed to notify client: {e}")
+    
+    return {"status": "ok", "message": f"Заказ взят курьером {courier.name}"}
 
 @router.post("/orders/{order_id}/complete")
 async def complete_order(order_id: int, bags_count: int, db: AsyncSession = Depends(get_db)):
@@ -119,6 +154,20 @@ async def complete_order(order_id: int, bags_count: int, db: AsyncSession = Depe
     order.status = OrderStatus.COMPLETED
     order.bags_count = bags_count
     await db.commit()
+    
+    # === NOTIFY CLIENT ===
+    try:
+        result = await db.execute(select(User).where(User.id == order.user_id))
+        client = result.scalar_one_or_none()
+        
+        if client and client.telegram_id:
+            await notify_client_order_completed(
+                client_telegram_id=client.telegram_id,
+                bags_count=bags_count
+            )
+    except Exception as e:
+        print(f"[NOTIFY ERROR] Failed to notify client on completion: {e}")
+    
     return {"status": "ok"}
 
 @router.post("/orders/{order_id}/undo")

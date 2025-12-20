@@ -5,8 +5,9 @@ from pydantic import BaseModel
 from typing import List, Optional
 from datetime import date, timedelta
 
-from app.models import get_db, Order, OrderStatus, TimeSlot, Address, Balance, BalanceTransaction, User
+from app.models import get_db, Order, OrderStatus, TimeSlot, Address, Balance, BalanceTransaction, User, UserRole, ResidentialComplex
 from app.api.deps import get_current_user
+from app.services.notifications import notify_all_couriers_new_order
 
 router = APIRouter()
 
@@ -115,6 +116,35 @@ async def create_order(
     
     await db.commit()
     await db.refresh(order)
+    
+    # === NOTIFY ALL COURIERS ===
+    try:
+        # Get all couriers
+        couriers_result = await db.execute(
+            select(User).where(User.role == UserRole.COURIER, User.is_active == True)
+        )
+        couriers = couriers_result.scalars().all()
+        courier_tg_ids = [c.telegram_id for c in couriers if c.telegram_id]
+        
+        # Get address details
+        complex_name = ""
+        if address.complex_id:
+            complex_result = await db.execute(select(ResidentialComplex).where(ResidentialComplex.id == address.complex_id))
+            complex_obj = complex_result.scalar_one_or_none()
+            if complex_obj:
+                complex_name = complex_obj.name
+        
+        address_str = f"{complex_name}, д. {address.building}, кв. {address.apartment}"
+        time_slot_str = request.time_slot.value if hasattr(request.time_slot, 'value') else str(request.time_slot)
+        
+        await notify_all_couriers_new_order(
+            courier_telegram_ids=courier_tg_ids,
+            address=address_str,
+            time_slot=time_slot_str,
+            comment=request.comment
+        )
+    except Exception as e:
+        print(f"[NOTIFY ERROR] Failed to notify couriers: {e}")
     
     return order
 

@@ -39,10 +39,10 @@ async def fetch(endpoint, params=None):
         logger.error(f"Fetch error: {e}")
         return None
 
-async def post(endpoint, params=None):
+async def post(endpoint, params=None, json_data=None):
     try:
         async with aiohttp.ClientSession() as session:
-            async with session.post(f"{API_BASE}{endpoint}", params=params) as resp:
+            async with session.post(f"{API_BASE}{endpoint}", params=params, json=json_data) as resp:
                 return resp.status == 200
     except Exception as e:
         logger.error(f"Post error: {e}")
@@ -216,16 +216,19 @@ async def show_orders_in_building(callback: CallbackQuery, state: FSMContext):
 @router.callback_query(F.data.startswith("take_"))
 async def take_order_handler(callback: CallbackQuery):
     order_id = int(callback.data.split("_")[1])
+    courier_tg_id = callback.from_user.id
     
-    success = await post(f"/courier/orders/{order_id}/take")
+    success = await post(
+        f"/courier/orders/{order_id}/take",
+        json_data={"courier_telegram_id": courier_tg_id}
+    )
     if not success:
-        await callback.answer("Ошибка взятия заказа", show_alert=True)
+        await callback.answer("Заказ уже взят другим курьером!", show_alert=True)
         return
     
-    # We need detailed order info here, but for now just show confirmation
-    # Simplification: Assume user remembers details from previous screen
     text = (
         f"📦 **Заказ #{order_id} в работе**\n\n"
+        "✅ Клиент уведомлен, что вы взяли заказ!\n\n"
         "Когда заберете мусор, нажмите **Готово**"
     )
     
