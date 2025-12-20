@@ -15,12 +15,27 @@ export default function WelcomePage() {
   const router = useRouter();
 
   useEffect(() => {
-    // Check if already logged in
+    // Check if already logged in or auto-login via Telegram
     const checkAuth = async () => {
         try {
+            // Try to get user with existing token
             const user = await api.getMe();
-            if (user) router.push('/app');
-        } catch {}
+            if (user) {
+                router.push('/app');
+                return;
+            }
+        } catch {
+            // No valid token, try auto-login if in Telegram
+            try {
+                if (typeof window !== 'undefined' && (window as any).Telegram?.WebApp?.initData) {
+                    // We're in Telegram, try auto-login
+                    await api.login('User');
+                    router.push('/app');
+                }
+            } catch {
+                // Auto-login failed, user needs to register
+            }
+        }
     };
     checkAuth();
   }, [router]);
