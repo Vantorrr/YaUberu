@@ -45,13 +45,18 @@ async def telegram_webhook(request: Request, db: AsyncSession = Depends(get_db))
         print(f"[WEBHOOK] Processing message from {telegram_user_id}, text: {text}")
         
         # Логика 1: Пользователь нажал /start
-        if text == "/start":
-            # Проверяем, есть ли у пользователя телефон в БД
+        if text == "/start" or text == "/start auth":
+            # Проверяем, есть ли у пользователя РЕАЛЬНЫЙ телефон в БД
             result = await db.execute(select(User).where(User.telegram_id == telegram_user_id))
             user = result.scalar_one_or_none()
             
-            if user and user.phone:
-                # Уже зарегистрирован, даем кнопку входа
+            # Считаем телефон реальным, если он есть и НЕ начинается с +7999 (мок)
+            has_real_phone = user and user.phone and not user.phone.startswith("+7999")
+            
+            print(f"[WEBHOOK] User exists: {bool(user)}, phone: {user.phone if user else None}, has_real_phone: {has_real_phone}")
+            
+            if has_real_phone:
+                # Уже зарегистрирован с реальным телефоном, даем кнопку входа
                 frontend_url = os.getenv("FRONTEND_URL", "https://awake-imagination-production.up.railway.app")
                 keyboard = {
                     "inline_keyboard": [[
@@ -67,7 +72,7 @@ async def telegram_webhook(request: Request, db: AsyncSession = Depends(get_db))
                     keyboard
                 )
             else:
-                # Новый пользователь, просим контакт
+                # Новый пользователь или без реального телефона, просим контакт
                 keyboard = {
                     "keyboard": [[
                         {
