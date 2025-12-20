@@ -20,12 +20,12 @@ async def telegram_webhook(request: Request):
                 url = f"https://api.telegram.org/bot{settings.TELEGRAM_BOT_TOKEN}/sendMessage"
                 payload = {
                     "chat_id": chat_id,
-                    "text": "👋 **Привет! Это «Я УБЕРУ»** 🍃\n\nСервис комфортного выноса мусора.\nЧтобы сделать заказ, нажмите кнопку ниже 👇",
+                    "text": "👋 **Привет! Это «Я УБЕРУ»** 🍃\n\nСервис комфортного выноса мусора.\nЧтобы начать работу, нажмите кнопку ниже 👇",
                     "parse_mode": "Markdown",
                     "reply_markup": {
                         "inline_keyboard": [[
                             {
-                                "text": "📱 Заказать вывоз",
+                                "text": "🚀 Открыть приложение",
                                 "web_app": {"url": frontend_url}
                             }
                         ]]
@@ -34,4 +34,3 @@ async def telegram_webhook(request: Request):
                 await client.post(url, json=payload)
                 
     return {"status": "ok"}
-

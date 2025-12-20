@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/Button';
 import { Trash2, Clock, Sparkles, ArrowRight } from 'lucide-react';
@@ -13,7 +13,6 @@ import 'swiper/css/pagination';
 
 export default function WelcomePage() {
   const router = useRouter();
-  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     // Check if already logged in
@@ -26,19 +25,8 @@ export default function WelcomePage() {
     checkAuth();
   }, [router]);
 
-  const handleStart = async () => {
-    try {
-        setLoading(true);
-        // Try to auto-login using Telegram data
-        await api.login('User'); 
-        router.push('/app');
-    } catch (e) {
-        console.error(e);
-        // If auto-login fails, maybe show an error or redirect to manual login (fallback)
-        // But since we require bot start, this usually means connection issue
-        alert('Пожалуйста, запустите приложение через бота @YaUberu_AppBot');
-        setLoading(false);
-    }
+  const handleStart = () => {
+    router.push('/auth/contact');
   };
 
   const slides = [
@@ -113,9 +101,9 @@ export default function WelcomePage() {
 
       {/* Fixed Footer */}
       <div className="px-6 pb-10 space-y-3 relative z-20">
-        <Button fullWidth onClick={handleStart} className="shadow-2xl shadow-orange-500/20" disabled={loading}>
-          {loading ? 'Загрузка...' : 'Начать'}
-          {!loading && <ArrowRight className="w-5 h-5" />}
+        <Button fullWidth onClick={handleStart} className="shadow-2xl shadow-orange-500/20">
+          Начать
+          <ArrowRight className="w-5 h-5" />
         </Button>
         
         <p className="text-center text-gray-600 text-[10px] pt-4 uppercase tracking-widest opacity-60">
