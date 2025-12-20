@@ -1,0 +1,185 @@
+// src/lib/api.ts
+
+const API_BASE = 'http://localhost:8080/api';
+
+export interface User {
+  id: number;
+  name: string;
+  phone?: string;
+  role: string;
+  balance?: number;
+}
+
+export interface Order {
+  id: number;
+  address_details: string;
+  time_slot: string;
+  status: string;
+  created_at: string;
+  scheduled_date: string;
+  comment?: string;
+}
+
+class ApiClient {
+  private token: string | null = null;
+
+  constructor() {
+    if (typeof window !== 'undefined') {
+      this.token = localStorage.getItem('token');
+    }
+  }
+
+  setToken(token: string) {
+    this.token = token;
+    localStorage.setItem('token', token);
+  }
+
+  logout() {
+    this.token = null;
+    localStorage.removeItem('token');
+    window.location.href = '/auth/login';
+  }
+
+  private async request(endpoint: string, options: RequestInit = {}) {
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+      ...(options.headers as Record<string, string>),
+    };
+
+    if (this.token) {
+      headers['Authorization'] = `Bearer ${this.token}`;
+    }
+
+    const response = await fetch(`${API_BASE}${endpoint}`, {
+      ...options,
+      headers,
+    });
+
+    if (response.status === 401) {
+      this.logout();
+      return;
+    }
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ detail: 'Unknown error' }));
+      throw new Error(error.detail || 'API request failed');
+    }
+
+    return response.json();
+  }
+
+  // Auth
+  async login(name: string, phone?: string) {
+    let telegramId = localStorage.getItem('mock_telegram_id');
+    if (!telegramId) {
+        telegramId = Math.floor(Math.random() * 1000000).toString();
+        localStorage.setItem('mock_telegram_id', telegramId);
+    }
+
+    const userJson = JSON.stringify({ id: Number(telegramId), first_name: name });
+    const initData = `user=${encodeURIComponent(userJson)}&auth_date=${Math.floor(Date.now() / 1000)}`;
+
+    const res = await this.request('/auth/telegram', {
+      method: 'POST',
+      body: JSON.stringify({
+        init_data: initData,
+        name,
+        phone,
+      }),
+    });
+
+    if (res.access_token) {
+      this.setToken(res.access_token);
+      return res.user;
+    }
+    throw new Error('No token received');
+  }
+
+  // Users
+  async getMe() {
+    return this.request('/users/me');
+  }
+
+  async getBalance() {
+    return this.request('/users/balance');
+  }
+
+  async createAddress(data: any) {
+    return this.request('/users/addresses', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+  
+  // NEW: Public complexes for user
+  async getResidentialComplexes() {
+      return this.request('/users/complexes');
+  }
+
+  // Orders
+  async getOrders() {
+    return this.request('/orders/');
+  }
+
+  async createOrder(data: {
+    address_id: number; 
+    date: string;
+    time_slot: string;
+    is_urgent?: boolean;
+    comment?: string;
+  }) {
+    return this.request('/orders/', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  // Admin
+  async getAdminStats() {
+    return this.request('/admin/stats');
+  }
+
+  async getTodayOrders() {
+    return this.request('/admin/orders/today');
+  }
+
+  async getCouriers() {
+    return this.request('/admin/couriers');
+  }
+
+  async addCourier(data: { telegram_id: number; name: string }) {
+    return this.request('/admin/couriers', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async deleteCourier(id: number) {
+      return this.request(`/admin/couriers/${id}`, { method: 'DELETE' });
+  }
+
+  async assignCourier(orderId: number, courierId: number) {
+    return this.request(`/admin/orders/${orderId}/assign`, {
+        method: 'POST',
+        body: JSON.stringify({ courier_id: courierId })
+    });
+  }
+
+  async cancelOrderAdmin(orderId: number) {
+      return this.request(`/admin/orders/${orderId}/cancel`, { method: 'POST' });
+  }
+  
+  // Renamed for clarity
+  async getAdminComplexes() {
+      return this.request('/admin/complexes');
+  }
+
+  async createComplex(name: string) {
+      return this.request('/admin/complexes', {
+          method: 'POST',
+          body: JSON.stringify({ name })
+      });
+  }
+}
+
+export const api = new ApiClient();

@@ -1,0 +1,50 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --foreground-rgb: 232, 245, 240;
+  --background-start-rgb: 15, 23, 20;
+  --background-end-rgb: 10, 15, 13;
+}
+
+body {
+  color: rgb(var(--foreground-rgb));
+  background: linear-gradient(
+      to bottom,
+      transparent,
+      rgb(var(--background-end-rgb))
+    )
+    rgb(var(--background-start-rgb));
+  min-height: 100vh;
+}
+
+/* Glassmorphism helpers */
+.glass {
+  background: rgba(15, 23, 20, 0.6);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(52, 211, 153, 0.1);
+}
+
+.glass-card {
+  background: rgba(6, 78, 59, 0.3); /* emerald-950/30 */
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(6, 95, 70, 0.3); /* emerald-800/30 */
+}
+
+/* Tab Bar */
+.tab-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(15, 23, 20, 0.95);
+  backdrop-filter: blur(20px);
+  border-top: 1px solid rgba(52, 211, 153, 0.15);
+  padding: 8px 0 calc(8px + env(safe-area-inset-bottom));
+  z-index: 50;
+}
+
+.safe-bottom {
+  padding-bottom: calc(80px + env(safe-area-inset-bottom));
+}
