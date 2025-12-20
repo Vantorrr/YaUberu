@@ -68,22 +68,15 @@ class ApiClient {
     return response.json();
   }
 
-  // Auth
+  // Auth - ONLY works with real Telegram WebApp initData
   async login(name: string, phone?: string) {
-    let initData = '';
+    // Get real Telegram initData
+    const initData = typeof window !== 'undefined' 
+      ? (window as any).Telegram?.WebApp?.initData || ''
+      : '';
     
-    // Check if running in Telegram WebApp
-    if (typeof window !== 'undefined' && (window as any).Telegram?.WebApp?.initData) {
-        initData = (window as any).Telegram.WebApp.initData;
-    } else {
-        // Fallback for browser development (mock data)
-        let telegramId = localStorage.getItem('mock_telegram_id');
-        if (!telegramId) {
-            telegramId = Math.floor(Math.random() * 1000000).toString();
-            localStorage.setItem('mock_telegram_id', telegramId);
-        }
-        const userJson = JSON.stringify({ id: Number(telegramId), first_name: name });
-        initData = `user=${encodeURIComponent(userJson)}&auth_date=${Math.floor(Date.now() / 1000)}`;
+    if (!initData) {
+      throw new Error('Приложение работает только в Telegram');
     }
 
     const res = await this.request('/auth/telegram', {
@@ -95,11 +88,11 @@ class ApiClient {
       }),
     });
 
-    if (res.access_token) {
+    if (res?.access_token) {
       this.setToken(res.access_token);
       return res.user;
     }
-    throw new Error('No token received');
+    throw new Error('Ошибка авторизации');
   }
 
   // Users
