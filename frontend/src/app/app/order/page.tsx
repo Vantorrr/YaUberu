@@ -52,32 +52,49 @@ function OrderContent() {
       });
   }, []);
   
-  // Геолокация (Telegram WebApp API)
+  // Геолокация (стандартный Web API)
   const handleLocationRequest = () => {
-    if (typeof window !== 'undefined' && (window as any).Telegram?.WebApp) {
-      const tg = (window as any).Telegram.WebApp;
-      
-      // Используем новый API из Telegram WebApp 6.9+
-      if (tg.requestLocation) {
-        setLocationLoading(true);
-        console.log('[LOCATION] Requesting location...');
-        
-        tg.requestLocation((success: boolean) => {
-          setLocationLoading(false);
-          if (success) {
-            console.log('[LOCATION] Location access granted');
-            alert('Геолокация получена! В полной версии адрес будет определён автоматически.');
-          } else {
-            console.log('[LOCATION] Location access denied');
-            alert('Доступ к геолокации отклонён.');
-          }
-        });
-      } else {
-        alert('Ваш клиент Telegram не поддерживает геолокацию. Обновите приложение.');
-      }
-    } else {
-      alert('Геолокация доступна только в Telegram');
+    if (!navigator.geolocation) {
+      alert('Ваш браузер не поддерживает геолокацию');
+      return;
     }
+
+    setLocationLoading(true);
+    console.log('[LOCATION] Requesting location...');
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+        console.log('[LOCATION] Got location:', latitude, longitude);
+        
+        setLocationLoading(false);
+        
+        // В будущем здесь будет геокодирование через Яндекс.Карты API
+        // Пока просто показываем координаты
+        alert(`📍 Геолокация получена!\n\nШирота: ${latitude.toFixed(6)}\nДолгота: ${longitude.toFixed(6)}\n\n💡 В полной версии адрес будет определён автоматически.`);
+      },
+      (error) => {
+        setLocationLoading(false);
+        console.error('[LOCATION] Error:', error);
+        
+        let errorMessage = 'Не удалось получить геолокацию';
+        
+        if (error.code === error.PERMISSION_DENIED) {
+          errorMessage = 'Доступ к геолокации запрещён. Разрешите доступ в настройках Telegram.';
+        } else if (error.code === error.POSITION_UNAVAILABLE) {
+          errorMessage = 'Не удалось определить местоположение. Проверьте GPS.';
+        } else if (error.code === error.TIMEOUT) {
+          errorMessage = 'Превышено время ожидания. Попробуйте снова.';
+        }
+        
+        alert(errorMessage);
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 0
+      }
+    );
   };
 
   const stepIndex = steps.indexOf(step);
