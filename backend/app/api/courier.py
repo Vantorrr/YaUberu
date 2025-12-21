@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, and_, func
+from sqlalchemy import select, and_, func, extract
 from typing import List, Dict, Any, Optional
-from datetime import date
+from datetime import date, datetime, timedelta
 from pydantic import BaseModel
 
 from app.models import get_db, Order, OrderStatus, User, ResidentialComplex, Address, UserRole
@@ -13,6 +13,82 @@ class TakeOrderRequest(BaseModel):
     courier_telegram_id: int
 
 router = APIRouter()
+
+
+# ================== COURIER STATS ==================
+@router.get("/stats/{telegram_id}")
+async def get_courier_stats(telegram_id: int, db: AsyncSession = Depends(get_db)):
+    """Get real statistics for a courier"""
+    
+    # Find courier
+    result = await db.execute(select(User).where(User.telegram_id == telegram_id))
+    courier = result.scalar_one_or_none()
+    
+    if not courier:
+        return {
+            "today": {"orders": 0, "bags": 0},
+            "week": {"orders": 0, "earned": 0},
+            "month": {"orders": 0, "earned": 0},
+            "rating": 5.0
+        }
+    
+    today = date.today()
+    week_ago = today - timedelta(days=7)
+    month_start = today.replace(day=1)
+    
+    # Today stats
+    today_result = await db.execute(
+        select(
+            func.count(Order.id),
+            func.coalesce(func.sum(Order.bags_count), 0)
+        )
+        .where(
+            and_(
+                Order.courier_id == courier.id,
+                Order.date == today,
+                Order.status == OrderStatus.COMPLETED
+            )
+        )
+    )
+    today_orders, today_bags = today_result.one()
+    
+    # Week stats
+    week_result = await db.execute(
+        select(func.count(Order.id))
+        .where(
+            and_(
+                Order.courier_id == courier.id,
+                Order.date >= week_ago,
+                Order.status == OrderStatus.COMPLETED
+            )
+        )
+    )
+    week_orders = week_result.scalar() or 0
+    
+    # Month stats
+    month_result = await db.execute(
+        select(func.count(Order.id))
+        .where(
+            and_(
+                Order.courier_id == courier.id,
+                Order.date >= month_start,
+                Order.status == OrderStatus.COMPLETED
+            )
+        )
+    )
+    month_orders = month_result.scalar() or 0
+    
+    # Calculate earnings (100 RUB per order for example)
+    rate_per_order = 100
+    week_earned = week_orders * rate_per_order
+    month_earned = month_orders * rate_per_order
+    
+    return {
+        "today": {"orders": int(today_orders), "bags": int(today_bags)},
+        "week": {"orders": int(week_orders), "earned": int(week_earned)},
+        "month": {"orders": int(month_orders), "earned": int(month_earned)},
+        "rating": 5.0  # TODO: implement rating system
+    }
 
 @router.get("/complexes")
 async def get_complexes_with_orders(db: AsyncSession = Depends(get_db)):

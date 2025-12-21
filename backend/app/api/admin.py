@@ -9,6 +9,7 @@ from app.models import (
     get_db, User, UserRole, Order, OrderStatus,
     ResidentialComplex, Subscription, Balance, BalanceTransaction
 )
+from app.services.scheduler import generate_orders_for_today
 
 router = APIRouter()
 
@@ -256,3 +257,26 @@ async def deactivate_courier(
     await db.commit()
     
     return {"status": "ok", "message": "Courier deactivated"}
+
+
+# ================== SCHEDULER ==================
+
+@router.post("/scheduler/run")
+async def run_scheduler():
+    """
+    Manually trigger the scheduler to generate orders for today.
+    This is usually called by a cron job but can be triggered manually.
+    """
+    try:
+        generated, skipped = await generate_orders_for_today()
+        return {
+            "status": "ok",
+            "generated": generated,
+            "skipped": skipped,
+            "message": f"Generated {generated} orders, skipped {skipped}"
+        }
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Scheduler error: {str(e)}"
+        )

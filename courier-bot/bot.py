@@ -21,8 +21,13 @@ logger = logging.getLogger(__name__)
 TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 API_BASE = os.getenv("API_BASE_URL", "http://localhost:8080/api")
 
-# Admin IDs (add your admin telegram IDs here)
-ADMIN_IDS = [8141463258]  # Pavel's ID
+# Admin IDs from environment
+ADMIN_IDS_STR = os.getenv("ADMIN_TELEGRAM_IDS", "8141463258")
+ADMIN_IDS = [int(id.strip()) for id in ADMIN_IDS_STR.split(",") if id.strip()]
+
+# Support contacts
+SUPPORT_USERNAME = os.getenv("SUPPORT_USERNAME", "@YaUberu_Support")
+SUPPORT_PHONE = os.getenv("SUPPORT_PHONE", "+7 (999) 123-45-67")
 
 # Initialize
 bot = Bot(token=TOKEN)
@@ -287,13 +292,13 @@ async def faq_slots(callback: CallbackQuery):
 # ================== SUPPORT ==================
 @router.callback_query(F.data == "support")
 async def show_support(callback: CallbackQuery):
-    text = """
+    text = f"""
 💬 **Поддержка курьеров**
 
 По любым вопросам пишите:
 
-👤 **Менеджер:** @YaUberu_Support
-📱 **Телефон:** +7 (999) 123-45-67
+👤 **Менеджер:** {SUPPORT_USERNAME}
+📱 **Телефон:** {SUPPORT_PHONE}
 
 ⏰ Время ответа: до 30 минут (9:00–21:00)
 
@@ -315,25 +320,38 @@ async def show_support(callback: CallbackQuery):
 # ================== STATS ==================
 @router.callback_query(F.data == "my_stats")
 async def show_my_stats(callback: CallbackQuery):
-    # TODO: Fetch real stats from API
-    text = """
+    telegram_id = callback.from_user.id
+    
+    # Fetch real stats from API
+    stats = await fetch(f"/courier/stats/{telegram_id}")
+    
+    if not stats:
+        text = "❌ Ошибка загрузки статистики"
+    else:
+        today = stats.get("today", {})
+        week = stats.get("week", {})
+        month = stats.get("month", {})
+        rating = stats.get("rating", 5.0)
+        
+        text = f"""
 📊 **Ваша статистика**
 
 ━━━ Сегодня ━━━
-✅ Выполнено: 0 заказов
-📦 Пакетов: 0 шт
+✅ Выполнено: **{today.get('orders', 0)}** заказов
+📦 Пакетов: **{today.get('bags', 0)}** шт
 
 ━━━ За неделю ━━━
-✅ Выполнено: 0 заказов
-💰 Заработано: 0 ₽
+✅ Выполнено: **{week.get('orders', 0)}** заказов
+💰 Заработано: **{week.get('earned', 0)} ₽**
 
 ━━━ За месяц ━━━
-✅ Выполнено: 0 заказов
-💰 Заработано: 0 ₽
-⭐️ Рейтинг: 5.0
+✅ Выполнено: **{month.get('orders', 0)}** заказов
+💰 Заработано: **{month.get('earned', 0)} ₽**
+⭐️ Рейтинг: **{rating}**
 
-_Статистика обновляется автоматически_
+_Обновлено: {datetime.now().strftime('%H:%M')}_
 """
+    
     await callback.message.edit_text(
         text,
         reply_markup=get_back_to_main(),

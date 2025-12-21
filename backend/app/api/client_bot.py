@@ -4,7 +4,6 @@ from sqlalchemy import select
 from app.config import settings
 from app.models import get_db, User, Balance
 import httpx
-import os
 
 router = APIRouter()
 
@@ -57,7 +56,7 @@ async def telegram_webhook(request: Request, db: AsyncSession = Depends(get_db))
             
             if has_real_phone:
                 # Уже зарегистрирован с реальным телефоном, даем кнопку входа
-                frontend_url = os.getenv("FRONTEND_URL", "https://awake-imagination-production.up.railway.app")
+                frontend_url = settings.FRONTEND_URL
                 keyboard = {
                     "inline_keyboard": [[
                         {
@@ -129,7 +128,7 @@ async def telegram_webhook(request: Request, db: AsyncSession = Depends(get_db))
             await db.commit()
             
             # Отправляем ссылку на Web App
-            frontend_url = os.getenv("FRONTEND_URL", "https://awake-imagination-production.up.railway.app")
+            frontend_url = settings.FRONTEND_URL
             
             # Убираем клавиатуру и даем кнопку входа
             remove_kb = {"remove_keyboard": True}

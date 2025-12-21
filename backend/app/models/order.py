@@ -64,6 +64,7 @@ class Subscription(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    address_id = Column(Integer, ForeignKey("addresses.id"), nullable=False)
     tariff = Column(SQLEnum(Tariff), nullable=False)
     
     # Credits
@@ -77,8 +78,13 @@ class Subscription(Base):
     
     is_active = Column(Boolean, default=True)
     
+    # Last date when orders were generated (to avoid duplicates)
+    last_generated_date = Column(Date, nullable=True)
+    
     # Relationships
     orders = relationship("Order", back_populates="subscription")
+    user = relationship("User")
+    address = relationship("Address")
 
 
 class TrialUsage(Base):
