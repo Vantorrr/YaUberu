@@ -73,9 +73,10 @@ export default function HomePage() {
             <Button 
                 onClick={() => router.push('/app/order')} 
                 fullWidth
+                className="bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-4 shadow-lg shadow-emerald-500/30 hover:shadow-emerald-500/50 transition-all"
             >
                 <Trash2 className="w-5 h-5" />
-                Убрать мусор
+                Вызвать курьера
             </Button>
         </div>
 

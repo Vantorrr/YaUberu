@@ -26,6 +26,7 @@ function OrderContent() {
   const [address, setAddress] = useState({ complexId: '', building: '', entrance: '', floor: '', apartment: '', intercom: '' });
   const [pickupMethod, setPickupMethod] = useState<'door' | 'hand'>('door');
   const [loading, setLoading] = useState(false);
+  const [locationLoading, setLocationLoading] = useState(false);
   
   // Dynamic Complexes
   const [complexes, setComplexes] = useState<any[]>([]);
@@ -50,6 +51,26 @@ function OrderContent() {
         alert('Ошибка загрузки ЖК. Проверьте соединение.');
       });
   }, []);
+  
+  // Геолокация
+  const handleLocationRequest = () => {
+    if (typeof window !== 'undefined' && (window as any).Telegram?.WebApp) {
+      const tg = (window as any).Telegram.WebApp;
+      setLocationLoading(true);
+      
+      tg.LocationManager?.getLocation((location: any) => {
+        if (location) {
+          console.log('[LOCATION] Got location:', location);
+          // В реальном приложении здесь будет геокодирование через Яндекс/Google API
+          // Пока просто показываем, что получили координаты
+          alert(`Геолокация получена!\nLat: ${location.latitude}\nLon: ${location.longitude}\n\nАвтозаполнение адреса пока в разработке.`);
+        }
+        setLocationLoading(false);
+      });
+    } else {
+      alert('Геолокация доступна только в Telegram');
+    }
+  };
 
   const stepIndex = steps.indexOf(step);
 
@@ -175,14 +196,35 @@ function OrderContent() {
         {/* Step 1: Address */}
         {step === 'address' && (
           <>
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-emerald-600 rounded-xl flex items-center justify-center">
-                <MapPin className="w-6 h-6 text-white" />
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 bg-emerald-600 rounded-xl flex items-center justify-center">
+                  <MapPin className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-white">Адрес</h2>
+                  <p className="text-gray-500 text-sm">Куда приехать?</p>
+                </div>
               </div>
-              <div>
-                <h2 className="text-xl font-bold text-white">Адрес</h2>
-                <p className="text-gray-500 text-sm">Куда приехать?</p>
-              </div>
+              
+              <button
+                type="button"
+                onClick={handleLocationRequest}
+                disabled={locationLoading}
+                className="px-4 py-2 rounded-xl bg-emerald-900/50 border border-emerald-600/30 text-emerald-400 text-sm font-medium hover:bg-emerald-900 transition-colors disabled:opacity-50 flex items-center gap-2"
+              >
+                {locationLoading ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-emerald-400 border-t-transparent rounded-full animate-spin" />
+                    <span>Определяем...</span>
+                  </>
+                ) : (
+                  <>
+                    <MapPin className="w-4 h-4" />
+                    <span>Моя локация</span>
+                  </>
+                )}
+              </button>
             </div>
 
             <div className="space-y-4">
@@ -227,7 +269,9 @@ function OrderContent() {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-sm text-gray-400 mb-2">Дом</label>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Дом <span className="text-red-500">*</span>
+                  </label>
                   <div className="relative">
                     <Home className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-emerald-500" />
                     <input
@@ -235,12 +279,13 @@ function OrderContent() {
                       placeholder="2к4"
                       value={address.building}
                       onChange={(e) => setAddress({ ...address, building: e.target.value })}
-                      className="w-full pl-12 pr-4 py-4 rounded-xl bg-emerald-950/50 border border-emerald-800/30 text-white placeholder-gray-600"
+                      className="w-full pl-12 pr-4 py-4 rounded-xl bg-emerald-950/50 border border-emerald-800/30 text-white placeholder-gray-600 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 outline-none transition-all"
+                      required
                     />
                   </div>
                 </div>
                 <div>
-                  <label className="block text-sm text-gray-400 mb-2">Подъезд</label>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">Подъезд</label>
                   <div className="relative">
                     <DoorOpen className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-emerald-500" />
                     <input
@@ -248,7 +293,7 @@ function OrderContent() {
                       placeholder="5"
                       value={address.entrance}
                       onChange={(e) => setAddress({ ...address, entrance: e.target.value })}
-                      className="w-full pl-12 pr-4 py-4 rounded-xl bg-emerald-950/50 border border-emerald-800/30 text-white placeholder-gray-600"
+                      className="w-full pl-12 pr-4 py-4 rounded-xl bg-emerald-950/50 border border-emerald-800/30 text-white placeholder-gray-600 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 outline-none transition-all"
                     />
                   </div>
                 </div>
@@ -256,17 +301,20 @@ function OrderContent() {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-sm text-gray-400 mb-2">Этаж</label>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">Этаж</label>
                   <input
-                    type="text"
+                    type="number"
+                    inputMode="numeric"
                     placeholder="9"
                     value={address.floor}
                     onChange={(e) => setAddress({ ...address, floor: e.target.value })}
-                    className="w-full px-4 py-4 rounded-xl bg-emerald-950/50 border border-emerald-800/30 text-white placeholder-gray-600"
+                    className="w-full px-4 py-4 rounded-xl bg-emerald-950/50 border border-emerald-800/30 text-white placeholder-gray-600 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 outline-none transition-all"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm text-gray-400 mb-2">Квартира</label>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Квартира <span className="text-red-500">*</span>
+                  </label>
                   <div className="relative">
                     <Hash className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-emerald-500" />
                     <input
@@ -274,21 +322,29 @@ function OrderContent() {
                       placeholder="45"
                       value={address.apartment}
                       onChange={(e) => setAddress({ ...address, apartment: e.target.value })}
-                      className="w-full pl-12 pr-4 py-4 rounded-xl bg-emerald-950/50 border border-emerald-800/30 text-white placeholder-gray-600"
+                      className="w-full pl-12 pr-4 py-4 rounded-xl bg-emerald-950/50 border border-emerald-800/30 text-white placeholder-gray-600 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 outline-none transition-all"
+                      required
                     />
                   </div>
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm text-gray-400 mb-2">Код домофона</label>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  Код домофона
+                  <span className="text-gray-500 ml-2">(необязательно)</span>
+                </label>
                 <input
                   type="text"
-                  placeholder="1234"
+                  inputMode="numeric"
+                  placeholder="1234 или КБ123"
                   value={address.intercom}
                   onChange={(e) => setAddress({ ...address, intercom: e.target.value })}
-                  className="w-full px-4 py-4 rounded-xl bg-emerald-950/50 border border-emerald-800/30 text-white placeholder-gray-600"
+                  className="w-full px-4 py-4 rounded-xl bg-emerald-950/50 border border-emerald-800/30 text-white placeholder-gray-600 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 outline-none transition-all"
                 />
+                <p className="text-xs text-gray-500 mt-2">
+                  💡 Если домофона нет, оставьте пустым
+                </p>
               </div>
             </div>
           </>
@@ -393,18 +449,41 @@ function OrderContent() {
               </div>
             </div>
 
-            <Card>
+            <Card className="bg-gradient-to-br from-emerald-950/70 to-emerald-900/30 border-emerald-700/50">
               <div className="space-y-4">
-                <div className="flex justify-between">
-                  <span className="text-gray-500">Адрес</span>
-                  <span className="text-white text-right">{selectedComplexName || 'ЖК'}, д. {address.building}, кв. {address.apartment}</span>
+                <div className="flex items-start gap-3">
+                  <MapPin className="w-5 h-5 text-emerald-500 mt-1 flex-shrink-0" />
+                  <div className="flex-1">
+                    <p className="text-gray-400 text-sm mb-1">Адрес</p>
+                    <p className="text-white font-medium">
+                      {selectedComplexName || 'ЖК'}, д. {address.building}
+                      {address.entrance && `, подъезд ${address.entrance}`}
+                      {address.floor && `, эт. ${address.floor}`}
+                      , кв. {address.apartment}
+                    </p>
+                    {address.intercom && (
+                      <p className="text-gray-500 text-sm mt-1">Домофон: {address.intercom}</p>
+                    )}
+                  </div>
                 </div>
+                
                 <div className="h-px bg-emerald-900/30" />
-                <div className="flex justify-between">
-                  <span className="text-gray-500">Время</span>
-                  <span className={`text-white font-medium ${slot === 'urgent' ? 'text-orange-500' : ''}`}>
-                    {slot === 'urgent' ? '⚡️ СРОЧНО (1 час)' : timeSlots.find((s) => s.id === slot)?.time}
-                  </span>
+                
+                <div className="flex items-start gap-3">
+                  <Clock className="w-5 h-5 text-emerald-500 mt-1 flex-shrink-0" />
+                  <div className="flex-1">
+                    <p className="text-gray-400 text-sm mb-1">Время</p>
+                    <p className={`font-medium ${slot === 'urgent' ? 'text-orange-500' : 'text-white'}`}>
+                      {slot === 'urgent' ? '⚡️ СРОЧНО (в течение часа)' : timeSlots.find((s) => s.id === slot)?.time}
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="h-px bg-emerald-900/30" />
+                
+                <div className="flex items-center justify-between bg-emerald-900/40 p-4 rounded-xl">
+                  <span className="text-gray-300 font-medium">Итого к оплате</span>
+                  <span className="text-emerald-400 font-bold text-3xl">{slot === 'urgent' ? '450' : '300'} ₽</span>
                 </div>
               </div>
             </Card>
