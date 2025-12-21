@@ -52,21 +52,29 @@ function OrderContent() {
       });
   }, []);
   
-  // Геолокация
+  // Геолокация (Telegram WebApp API)
   const handleLocationRequest = () => {
     if (typeof window !== 'undefined' && (window as any).Telegram?.WebApp) {
       const tg = (window as any).Telegram.WebApp;
-      setLocationLoading(true);
       
-      tg.LocationManager?.getLocation((location: any) => {
-        if (location) {
-          console.log('[LOCATION] Got location:', location);
-          // В реальном приложении здесь будет геокодирование через Яндекс/Google API
-          // Пока просто показываем, что получили координаты
-          alert(`Геолокация получена!\nLat: ${location.latitude}\nLon: ${location.longitude}\n\nАвтозаполнение адреса пока в разработке.`);
-        }
-        setLocationLoading(false);
-      });
+      // Используем новый API из Telegram WebApp 6.9+
+      if (tg.requestLocation) {
+        setLocationLoading(true);
+        console.log('[LOCATION] Requesting location...');
+        
+        tg.requestLocation((success: boolean) => {
+          setLocationLoading(false);
+          if (success) {
+            console.log('[LOCATION] Location access granted');
+            alert('Геолокация получена! В полной версии адрес будет определён автоматически.');
+          } else {
+            console.log('[LOCATION] Location access denied');
+            alert('Доступ к геолокации отклонён.');
+          }
+        });
+      } else {
+        alert('Ваш клиент Telegram не поддерживает геолокацию. Обновите приложение.');
+      }
     } else {
       alert('Геолокация доступна только в Telegram');
     }

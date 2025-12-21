@@ -47,13 +47,13 @@ export default function HomePage() {
   return (
     <div className="px-5 py-6 space-y-8 min-h-screen pb-24">
       {/* Header */}
-      <div>
+      <div className="animate-fadeIn">
         <p className="text-emerald-500 text-sm font-medium mb-1">Добро пожаловать 👋</p>
         <h1 className="text-3xl font-bold text-white">Главная</h1>
       </div>
 
       {/* Balance Card */}
-      <div className="bg-gradient-to-br from-emerald-900 to-emerald-950 rounded-3xl p-6 shadow-xl relative overflow-hidden border border-emerald-500/20">
+      <div className="bg-gradient-to-br from-emerald-900 to-emerald-950 rounded-3xl p-6 shadow-xl relative overflow-hidden border border-emerald-500/20 animate-slideUp">
         <div className="flex items-center justify-between mb-6 relative z-10">
           <div>
             <p className="text-emerald-400/80 text-sm font-medium mb-1">Ваш баланс</p>
