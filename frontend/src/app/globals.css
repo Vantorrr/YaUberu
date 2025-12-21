@@ -101,3 +101,31 @@ input:focus, textarea:focus, select:focus {
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(20, 184, 166, 0.5);
 }
+
+/* Leaflet Map Overrides */
+.leaflet-container {
+  font-family: inherit;
+  z-index: 1;
+}
+
+.leaflet-control-zoom {
+  border: 1px solid rgba(20, 184, 166, 0.3) !important;
+  border-radius: 12px !important;
+  overflow: hidden;
+}
+
+.leaflet-control-zoom a {
+  background: rgba(4, 47, 46, 0.9) !important;
+  color: rgb(20, 184, 166) !important;
+  border: none !important;
+}
+
+.leaflet-control-zoom a:hover {
+  background: rgba(20, 184, 166, 0.2) !important;
+}
+
+.leaflet-popup-content-wrapper {
+  background: rgba(4, 47, 46, 0.95) !important;
+  color: white !important;
+  border-radius: 12px !important;
+}
