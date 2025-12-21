@@ -50,19 +50,6 @@ function OrderContent() {
         alert('Ошибка загрузки ЖК. Проверьте соединение.');
       });
   }, []);
-  
-  // Геолокация через Telegram бот
-  const handleLocationRequest = () => {
-    if (typeof window !== 'undefined' && (window as any).Telegram?.WebApp) {
-      const tg = (window as any).Telegram.WebApp;
-      
-      // Telegram WebApp блокирует Web Geolocation API
-      // Единственный способ - попросить пользователя отправить локацию через бота
-      alert('🗺️ Функция в разработке!\n\nДля полноценной работы с геолокацией потребуется:\n\n1️⃣ Интеграция с Яндекс.Картами API\n2️⃣ Геокодирование адреса\n3️⃣ Автоподстановка ЖК\n\nПока выбирайте ЖК и адрес вручную 👇');
-    } else {
-      alert('Функция доступна только в Telegram');
-    }
-  };
 
   const stepIndex = steps.indexOf(step);
 
@@ -188,25 +175,14 @@ function OrderContent() {
         {/* Step 1: Address */}
         {step === 'address' && (
           <>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 bg-teal-600 rounded-xl flex items-center justify-center">
-                  <MapPin className="w-6 h-6 text-white" />
-                </div>
-                <div>
-                  <h2 className="text-xl font-bold text-white">Адрес</h2>
-                  <p className="text-gray-500 text-sm">Куда приехать?</p>
-                </div>
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 bg-teal-600 rounded-xl flex items-center justify-center">
+                <MapPin className="w-6 h-6 text-white" />
               </div>
-              
-              <button
-                type="button"
-                onClick={handleLocationRequest}
-                className="px-4 py-2 rounded-xl bg-zinc-900/50 border border-zinc-700/30 text-zinc-400 text-sm font-medium hover:bg-zinc-900 transition-colors flex items-center gap-2"
-              >
-                <MapPin className="w-4 h-4" />
-                <span className="text-xs">🚧 В разработке</span>
-              </button>
+              <div>
+                <h2 className="text-xl font-bold text-white">Адрес</h2>
+                <p className="text-gray-500 text-sm">Куда приехать?</p>
+              </div>
             </div>
 
             <div className="space-y-4">
