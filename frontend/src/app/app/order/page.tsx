@@ -26,7 +26,6 @@ function OrderContent() {
   const [address, setAddress] = useState({ complexId: '', building: '', entrance: '', floor: '', apartment: '', intercom: '' });
   const [pickupMethod, setPickupMethod] = useState<'door' | 'hand'>('door');
   const [loading, setLoading] = useState(false);
-  const [locationLoading, setLocationLoading] = useState(false);
   
   // Dynamic Complexes
   const [complexes, setComplexes] = useState<any[]>([]);
@@ -52,49 +51,17 @@ function OrderContent() {
       });
   }, []);
   
-  // Геолокация (стандартный Web API)
+  // Геолокация через Telegram бот
   const handleLocationRequest = () => {
-    if (!navigator.geolocation) {
-      alert('Ваш браузер не поддерживает геолокацию');
-      return;
+    if (typeof window !== 'undefined' && (window as any).Telegram?.WebApp) {
+      const tg = (window as any).Telegram.WebApp;
+      
+      // Telegram WebApp блокирует Web Geolocation API
+      // Единственный способ - попросить пользователя отправить локацию через бота
+      alert('🗺️ Функция в разработке!\n\nДля полноценной работы с геолокацией потребуется:\n\n1️⃣ Интеграция с Яндекс.Картами API\n2️⃣ Геокодирование адреса\n3️⃣ Автоподстановка ЖК\n\nПока выбирайте ЖК и адрес вручную 👇');
+    } else {
+      alert('Функция доступна только в Telegram');
     }
-
-    setLocationLoading(true);
-    console.log('[LOCATION] Requesting location...');
-
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        const { latitude, longitude } = position.coords;
-        console.log('[LOCATION] Got location:', latitude, longitude);
-        
-        setLocationLoading(false);
-        
-        // В будущем здесь будет геокодирование через Яндекс.Карты API
-        // Пока просто показываем координаты
-        alert(`📍 Геолокация получена!\n\nШирота: ${latitude.toFixed(6)}\nДолгота: ${longitude.toFixed(6)}\n\n💡 В полной версии адрес будет определён автоматически.`);
-      },
-      (error) => {
-        setLocationLoading(false);
-        console.error('[LOCATION] Error:', error);
-        
-        let errorMessage = 'Не удалось получить геолокацию';
-        
-        if (error.code === error.PERMISSION_DENIED) {
-          errorMessage = 'Доступ к геолокации запрещён. Разрешите доступ в настройках Telegram.';
-        } else if (error.code === error.POSITION_UNAVAILABLE) {
-          errorMessage = 'Не удалось определить местоположение. Проверьте GPS.';
-        } else if (error.code === error.TIMEOUT) {
-          errorMessage = 'Превышено время ожидания. Попробуйте снова.';
-        }
-        
-        alert(errorMessage);
-      },
-      {
-        enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 0
-      }
-    );
   };
 
   const stepIndex = steps.indexOf(step);
@@ -235,20 +202,10 @@ function OrderContent() {
               <button
                 type="button"
                 onClick={handleLocationRequest}
-                disabled={locationLoading}
-                className="px-4 py-2 rounded-xl bg-emerald-900/50 border border-emerald-600/30 text-emerald-400 text-sm font-medium hover:bg-emerald-900 transition-colors disabled:opacity-50 flex items-center gap-2"
+                className="px-4 py-2 rounded-xl bg-zinc-900/50 border border-zinc-700/30 text-zinc-400 text-sm font-medium hover:bg-zinc-900 transition-colors flex items-center gap-2"
               >
-                {locationLoading ? (
-                  <>
-                    <div className="w-4 h-4 border-2 border-emerald-400 border-t-transparent rounded-full animate-spin" />
-                    <span>Определяем...</span>
-                  </>
-                ) : (
-                  <>
-                    <MapPin className="w-4 h-4" />
-                    <span>Моя локация</span>
-                  </>
-                )}
+                <MapPin className="w-4 h-4" />
+                <span className="text-xs">🚧 В разработке</span>
               </button>
             </div>
 
