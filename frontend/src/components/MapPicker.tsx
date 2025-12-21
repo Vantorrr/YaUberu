@@ -1,0 +1,136 @@
+'use client';
+
+import { useEffect, useState } from 'react';
+import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
+import 'leaflet/dist/leaflet.css';
+import L from 'leaflet';
+
+// Fix for default marker icon in Next.js
+delete (L.Icon.Default.prototype as any)._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
+  iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+  shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+});
+
+interface MapPickerProps {
+  initialLat?: number;
+  initialLon?: number;
+  onLocationSelect: (lat: number, lon: number, address: string) => void;
+  onClose: () => void;
+}
+
+function LocationMarker({ onLocationSelect }: { onLocationSelect: (lat: number, lon: number) => void }) {
+  const [position, setPosition] = useState<[number, number] | null>(null);
+
+  const map = useMapEvents({
+    click(e) {
+      const { lat, lng } = e.latlng;
+      setPosition([lat, lng]);
+      onLocationSelect(lat, lng);
+    },
+  });
+
+  useEffect(() => {
+    map.locate();
+  }, [map]);
+
+  useMapEvents({
+    locationfound(e) {
+      const { lat, lng } = e.latlng;
+      setPosition([lat, lng]);
+      map.flyTo([lat, lng], 16);
+      onLocationSelect(lat, lng);
+    },
+  });
+
+  return position === null ? null : <Marker position={position} />;
+}
+
+export function MapPicker({ initialLat = 55.7558, initialLon = 37.6173, onLocationSelect, onClose }: MapPickerProps) {
+  const [loading, setLoading] = useState(false);
+  const [currentAddress, setCurrentAddress] = useState('');
+
+  const handleLocationSelect = async (lat: number, lon: number) => {
+    setLoading(true);
+    try {
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&accept-language=ru`,
+        {
+          headers: {
+            'User-Agent': 'YaUberu-App/1.0'
+          }
+        }
+      );
+
+      if (!response.ok) throw new Error('Geocoding failed');
+
+      const data = await response.json();
+      const addr = data.address || {};
+      const street = addr.road || addr.street || '';
+      const house = addr.house_number || '';
+      const fullAddress = `${street}${house ? ', д. ' + house : ''}`;
+      
+      setCurrentAddress(fullAddress);
+      onLocationSelect(lat, lon, fullAddress);
+    } catch (error) {
+      console.error('[MAP] Geocoding error:', error);
+      setCurrentAddress(`${lat.toFixed(6)}, ${lon.toFixed(6)}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4">
+      <div className="bg-zinc-900 rounded-2xl overflow-hidden max-w-2xl w-full max-h-[80vh] flex flex-col">
+        {/* Header */}
+        <div className="p-4 bg-teal-950/50 border-b border-teal-800/30">
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="text-white font-bold text-lg">📍 Укажите точное место</h3>
+            <button
+              onClick={onClose}
+              className="text-gray-400 hover:text-white transition-colors"
+            >
+              ✕
+            </button>
+          </div>
+          {currentAddress && (
+            <p className="text-teal-400 text-sm">
+              {loading ? '🔄 Определяю адрес...' : `📌 ${currentAddress}`}
+            </p>
+          )}
+          <p className="text-gray-500 text-xs mt-1">Нажмите на карту или перетащите маркер</p>
+        </div>
+
+        {/* Map */}
+        <div className="flex-1 relative">
+          <MapContainer
+            center={[initialLat, initialLon]}
+            zoom={16}
+            style={{ height: '100%', width: '100%' }}
+            className="z-0"
+          >
+            <TileLayer
+              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            />
+            <LocationMarker onLocationSelect={handleLocationSelect} />
+          </MapContainer>
+        </div>
+
+        {/* Footer */}
+        <div className="p-4 bg-teal-950/50 border-t border-teal-800/30">
+          <button
+            onClick={onClose}
+            disabled={!currentAddress}
+            className="w-full py-3 px-4 bg-teal-600 hover:bg-teal-500 disabled:bg-gray-700 disabled:text-gray-500 text-white font-bold rounded-xl transition-all"
+          >
+            {currentAddress ? '✓ Выбрать этот адрес' : 'Нажмите на карту'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+

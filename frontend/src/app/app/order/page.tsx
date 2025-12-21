@@ -2,10 +2,17 @@
 
 import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import dynamic from 'next/dynamic';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { ArrowLeft, MapPin, Clock, Check, Building, Home, DoorOpen, Hash, Zap, AlertCircle, User } from 'lucide-react';
 import { api } from '@/lib/api';
+
+// Dynamic import для карты (SSR не поддерживается Leaflet)
+const MapPicker = dynamic(() => import('@/components/MapPicker').then(mod => ({ default: mod.MapPicker })), {
+  ssr: false,
+  loading: () => <div className="text-center py-8 text-teal-400">🗺️ Загрузка карты...</div>
+});
 
 const steps = ['address', 'time', 'confirm'] as const;
 type Step = typeof steps[number];
@@ -27,6 +34,8 @@ function OrderContent() {
   const [pickupMethod, setPickupMethod] = useState<'door' | 'hand'>('door');
   const [loading, setLoading] = useState(false);
   const [locationLoading, setLocationLoading] = useState(false);
+  const [showMap, setShowMap] = useState(false);
+  const [mapCoords, setMapCoords] = useState<{ lat: number; lon: number } | null>(null);
   
   // Dynamic Complexes
   const [complexes, setComplexes] = useState<any[]>([]);
@@ -52,7 +61,7 @@ function OrderContent() {
       });
   }, []);
 
-  // РАБОТАЮЩАЯ геолокация через HTML5 + геокодинг
+  // РАБОТАЮЩАЯ геолокация через HTML5 + карта
   const handleLocationRequest = async () => {
     if (!navigator.geolocation) {
       alert('❌ Ваш браузер не поддерживает геолокацию');
@@ -62,46 +71,13 @@ function OrderContent() {
     setLocationLoading(true);
 
     navigator.geolocation.getCurrentPosition(
-      async (position) => {
+      (position) => {
         const { latitude, longitude } = position.coords;
         console.log('[LOCATION] Got coords:', latitude, longitude);
-
-        try {
-          // Геокодирование через OpenStreetMap Nominatim (бесплатно, без API ключа)
-          const response = await fetch(
-            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&accept-language=ru`,
-            {
-              headers: {
-                'User-Agent': 'YaUberu-App/1.0'
-              }
-            }
-          );
-
-          if (!response.ok) throw new Error('Geocoding failed');
-
-          const data = await response.json();
-          console.log('[LOCATION] Geocoded:', data);
-
-          // Извлекаем данные адреса
-          const addr = data.address || {};
-          const house = addr.house_number || '';
-          const street = addr.road || addr.street || '';
-
-          setLocationLoading(false);
-
-          // Показываем результат
-          alert(`📍 Определена локация!\n\n${street ? street + ', ' : ''}${house ? 'д. ' + house : ''}\n\nКоординаты: ${latitude.toFixed(6)}, ${longitude.toFixed(6)}\n\n💡 Выберите ЖК из списка и уточните адрес вручную`);
-
-          // Автоподстановка дома если есть
-          if (house) {
-            setAddress(prev => ({ ...prev, building: house }));
-          }
-
-        } catch (error) {
-          console.error('[LOCATION] Geocoding error:', error);
-          setLocationLoading(false);
-          alert(`📍 Координаты получены!\n\nШирота: ${latitude.toFixed(6)}\nДолгота: ${longitude.toFixed(6)}\n\n⚠️ Не удалось определить адрес автоматически.\nВыберите ЖК и введите адрес вручную.`);
-        }
+        
+        setLocationLoading(false);
+        setMapCoords({ lat: latitude, lon: longitude });
+        setShowMap(true);
       },
       (error) => {
         setLocationLoading(false);
@@ -125,6 +101,18 @@ function OrderContent() {
         maximumAge: 0
       }
     );
+  };
+
+  const handleMapLocationSelect = (lat: number, lon: number, fullAddress: string) => {
+    console.log('[MAP] Selected:', lat, lon, fullAddress);
+    
+    // Парсим адрес и подставляем в поля
+    const houseMatch = fullAddress.match(/д\.\s*(\S+)/);
+    if (houseMatch) {
+      setAddress(prev => ({ ...prev, building: houseMatch[1] }));
+    }
+    
+    setShowMap(false);
   };
 
   const stepIndex = steps.indexOf(step);
@@ -603,6 +591,16 @@ function OrderContent() {
           {step === 'confirm' ? (loading ? 'Обработка...' : 'Подтвердить и вызвать') : 'Продолжить'}
         </Button>
       </div>
+
+      {/* Map Modal */}
+      {showMap && mapCoords && (
+        <MapPicker
+          initialLat={mapCoords.lat}
+          initialLon={mapCoords.lon}
+          onLocationSelect={handleMapLocationSelect}
+          onClose={() => setShowMap(false)}
+        />
+      )}
     </div>
   );
 }
