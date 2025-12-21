@@ -18,7 +18,7 @@ export default function ContactAuthPage() {
       {/* Back */}
       <button 
         onClick={() => router.back()} 
-        className="w-10 h-10 bg-emerald-900/50 rounded-xl flex items-center justify-center text-white mb-8"
+        className="w-10 h-10 bg-teal-900/50 rounded-xl flex items-center justify-center text-white mb-8"
       >
         <ArrowLeft className="w-5 h-5" />
       </button>
@@ -32,7 +32,7 @@ export default function ContactAuthPage() {
       {/* Contact Request Card */}
       <Card>
         <div className="flex items-center gap-4 mb-4">
-          <div className="w-14 h-14 bg-emerald-600 rounded-xl flex items-center justify-center">
+          <div className="w-14 h-14 bg-teal-600 rounded-xl flex items-center justify-center">
             <Phone className="w-7 h-7 text-white" />
           </div>
           <div>

@@ -30,7 +30,7 @@ export default function RegisterPage() {
   return (
     <div className="min-h-screen bg-[#0f1714] px-5 py-6">
       {/* Back */}
-      <button onClick={() => router.back()} className="w-10 h-10 bg-emerald-900/50 rounded-xl flex items-center justify-center text-white mb-8">
+      <button onClick={() => router.back()} className="w-10 h-10 bg-teal-900/50 rounded-xl flex items-center justify-center text-white mb-8">
         <ArrowLeft className="w-5 h-5" />
       </button>
 
@@ -43,13 +43,13 @@ export default function RegisterPage() {
         <div>
           <label className="block text-sm text-gray-400 mb-2">Ваше имя</label>
           <div className="relative">
-            <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-emerald-500" />
+            <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-teal-500" />
             <input
               type="text"
               placeholder="Как к вам обращаться?"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full pl-12 pr-4 py-4 rounded-xl bg-emerald-950/50 border border-emerald-800/30 text-white placeholder-gray-600"
+              className="w-full pl-12 pr-4 py-4 rounded-xl bg-teal-950/50 border border-teal-800/30 text-white placeholder-gray-600"
             />
           </div>
         </div>

@@ -40,7 +40,7 @@ export default function OrdersPage() {
 
       {/* Upcoming */}
       <div>
-        <h2 className="text-sm font-semibold text-emerald-500 uppercase tracking-wider mb-3">
+        <h2 className="text-sm font-semibold text-teal-500 uppercase tracking-wider mb-3">
           Предстоящие
         </h2>
         
@@ -60,7 +60,7 @@ export default function OrdersPage() {
               <Card key={order.id}>
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 bg-emerald-600 rounded-xl flex items-center justify-center">
+                    <div className="w-12 h-12 bg-teal-600 rounded-xl flex items-center justify-center">
                       <Calendar className="w-6 h-6 text-white" />
                     </div>
                     <div>
@@ -68,18 +68,18 @@ export default function OrdersPage() {
                       <p className="text-gray-500 text-sm">{order.time_slot}</p>
                     </div>
                   </div>
-                  <button className="p-2 rounded-lg bg-emerald-900/50 text-emerald-400 hover:bg-emerald-900">
+                  <button className="p-2 rounded-lg bg-teal-900/50 text-teal-400 hover:bg-teal-900">
                     <Pencil className="w-4 h-4" />
                   </button>
                 </div>
 
                 <div className="space-y-2">
                   <div className="flex items-center gap-2 text-gray-400 text-sm">
-                    <Clock className="w-4 h-4 text-emerald-500" />
+                    <Clock className="w-4 h-4 text-teal-500" />
                     <span>{order.time_slot}</span>
                   </div>
                   <div className="flex items-center gap-2 text-gray-400 text-sm">
-                    <MapPin className="w-4 h-4 text-emerald-500" />
+                    <MapPin className="w-4 h-4 text-teal-500" />
                     <span>{order.address_details}</span>
                   </div>
                 </div>
@@ -105,14 +105,14 @@ export default function OrdersPage() {
       {/* History */}
       {completedOrders.length > 0 && (
         <div>
-          <h2 className="text-sm font-semibold text-emerald-500 uppercase tracking-wider mb-3">
+          <h2 className="text-sm font-semibold text-teal-500 uppercase tracking-wider mb-3">
             История
           </h2>
-          <div className="bg-emerald-950/30 rounded-2xl border border-emerald-800/20 overflow-hidden">
+          <div className="bg-teal-950/30 rounded-2xl border border-teal-800/20 overflow-hidden">
             {completedOrders.map((order, i) => (
               <div 
                 key={order.id} 
-                className={`flex items-center justify-between p-4 ${i !== completedOrders.length - 1 ? 'border-b border-emerald-800/20' : ''}`}
+                className={`flex items-center justify-between p-4 ${i !== completedOrders.length - 1 ? 'border-b border-teal-800/20' : ''}`}
               >
                 <div className="flex items-center gap-3">
                   <div className="w-9 h-9 bg-green-900/50 rounded-full flex items-center justify-center">

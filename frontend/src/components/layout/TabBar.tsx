@@ -28,7 +28,7 @@ export function TabBar() {
             className={`
               flex flex-col items-center gap-1 py-2 px-4 rounded-xl transition-colors
               ${isActive(tab.path) 
-                ? 'text-emerald-400' 
+                ? 'text-teal-400' 
                 : 'text-gray-500 hover:text-gray-400'
               }
             `}

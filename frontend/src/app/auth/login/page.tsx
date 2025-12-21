@@ -28,7 +28,7 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen bg-[#0f1714] px-5 py-6">
       {/* Back */}
-      <button onClick={() => router.back()} className="w-10 h-10 bg-emerald-900/50 rounded-xl flex items-center justify-center text-white mb-8">
+      <button onClick={() => router.back()} className="w-10 h-10 bg-teal-900/50 rounded-xl flex items-center justify-center text-white mb-8">
         <ArrowLeft className="w-5 h-5" />
       </button>
 
@@ -65,7 +65,7 @@ export default function LoginPage() {
       {/* Register */}
       <p className="text-center text-gray-500 mt-8">
         Нет аккаунта?{' '}
-        <button onClick={() => router.push('/auth/register')} className="text-emerald-400 font-semibold">
+        <button onClick={() => router.push('/auth/register')} className="text-teal-400 font-semibold">
           Зарегистрироваться
         </button>
       </p>

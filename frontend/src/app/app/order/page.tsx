@@ -164,9 +164,9 @@ function OrderContent() {
   return (
     <div className="min-h-screen bg-[#0f1714]">
       {/* Header */}
-      <div className="sticky top-0 z-10 bg-[#0f1714]/95 backdrop-blur border-b border-emerald-900/30 px-5 py-4">
+      <div className="sticky top-0 z-10 bg-[#0f1714]/95 backdrop-blur border-b border-teal-900/30 px-5 py-4">
         <div className="flex items-center gap-4">
-          <button onClick={back} className="w-10 h-10 bg-emerald-900/50 rounded-xl flex items-center justify-center text-white">
+          <button onClick={back} className="w-10 h-10 bg-teal-900/50 rounded-xl flex items-center justify-center text-white">
             <ArrowLeft className="w-5 h-5" />
           </button>
           <div>
@@ -178,7 +178,7 @@ function OrderContent() {
         {/* Progress */}
         <div className="flex gap-2 mt-4">
           {steps.map((_, i) => (
-            <div key={i} className={`h-1 flex-1 rounded-full ${i <= stepIndex ? 'bg-emerald-500' : 'bg-emerald-900/30'}`} />
+            <div key={i} className={`h-1 flex-1 rounded-full ${i <= stepIndex ? 'bg-teal-500' : 'bg-teal-900/30'}`} />
           ))}
         </div>
       </div>
@@ -190,7 +190,7 @@ function OrderContent() {
           <>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 bg-emerald-600 rounded-xl flex items-center justify-center">
+                <div className="w-12 h-12 bg-teal-600 rounded-xl flex items-center justify-center">
                   <MapPin className="w-6 h-6 text-white" />
                 </div>
                 <div>
@@ -228,13 +228,13 @@ function OrderContent() {
                         className={`
                           p-4 rounded-xl border-2 transition-all text-left flex items-center gap-3
                           ${address.complexId === String(c.id)
-                            ? 'bg-emerald-600 border-emerald-500 text-white' 
-                            : 'bg-emerald-950/30 border-emerald-800/30 text-gray-300 hover:border-emerald-600/50'
+                            ? 'bg-teal-600 border-teal-500 text-white' 
+                            : 'bg-teal-950/30 border-teal-800/30 text-gray-300 hover:border-teal-600/50'
                           }
                         `}
                       >
                         <Building className={`w-5 h-5 flex-shrink-0 ${
-                          address.complexId === String(c.id) ? 'text-white' : 'text-emerald-500'
+                          address.complexId === String(c.id) ? 'text-white' : 'text-teal-500'
                         }`} />
                         <div className="flex-1">
                           <p className="font-semibold">{c.name}</p>
@@ -255,13 +255,13 @@ function OrderContent() {
                     Дом <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
-                    <Home className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-emerald-500" />
+                    <Home className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-teal-500" />
                     <input
                       type="text"
                       placeholder="2к4"
                       value={address.building}
                       onChange={(e) => setAddress({ ...address, building: e.target.value })}
-                      className="w-full pl-12 pr-4 py-4 rounded-xl bg-emerald-950/50 border border-emerald-800/30 text-white placeholder-gray-600 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 outline-none transition-all"
+                      className="w-full pl-12 pr-4 py-4 rounded-xl bg-teal-950/50 border border-teal-800/30 text-white placeholder-gray-600 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 outline-none transition-all"
                       required
                     />
                   </div>
@@ -269,13 +269,13 @@ function OrderContent() {
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">Подъезд</label>
                   <div className="relative">
-                    <DoorOpen className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-emerald-500" />
+                    <DoorOpen className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-teal-500" />
                     <input
                       type="text"
                       placeholder="5"
                       value={address.entrance}
                       onChange={(e) => setAddress({ ...address, entrance: e.target.value })}
-                      className="w-full pl-12 pr-4 py-4 rounded-xl bg-emerald-950/50 border border-emerald-800/30 text-white placeholder-gray-600 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 outline-none transition-all"
+                      className="w-full pl-12 pr-4 py-4 rounded-xl bg-teal-950/50 border border-teal-800/30 text-white placeholder-gray-600 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 outline-none transition-all"
                     />
                   </div>
                 </div>
@@ -290,7 +290,7 @@ function OrderContent() {
                     placeholder="9"
                     value={address.floor}
                     onChange={(e) => setAddress({ ...address, floor: e.target.value })}
-                    className="w-full px-4 py-4 rounded-xl bg-emerald-950/50 border border-emerald-800/30 text-white placeholder-gray-600 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 outline-none transition-all"
+                    className="w-full px-4 py-4 rounded-xl bg-teal-950/50 border border-teal-800/30 text-white placeholder-gray-600 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 outline-none transition-all"
                   />
                 </div>
                 <div>
@@ -298,13 +298,13 @@ function OrderContent() {
                     Квартира <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
-                    <Hash className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-emerald-500" />
+                    <Hash className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-teal-500" />
                     <input
                       type="text"
                       placeholder="45"
                       value={address.apartment}
                       onChange={(e) => setAddress({ ...address, apartment: e.target.value })}
-                      className="w-full pl-12 pr-4 py-4 rounded-xl bg-emerald-950/50 border border-emerald-800/30 text-white placeholder-gray-600 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 outline-none transition-all"
+                      className="w-full pl-12 pr-4 py-4 rounded-xl bg-teal-950/50 border border-teal-800/30 text-white placeholder-gray-600 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 outline-none transition-all"
                       required
                     />
                   </div>
@@ -322,7 +322,7 @@ function OrderContent() {
                   placeholder="1234 или КБ123"
                   value={address.intercom}
                   onChange={(e) => setAddress({ ...address, intercom: e.target.value })}
-                  className="w-full px-4 py-4 rounded-xl bg-emerald-950/50 border border-emerald-800/30 text-white placeholder-gray-600 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 outline-none transition-all"
+                  className="w-full px-4 py-4 rounded-xl bg-teal-950/50 border border-teal-800/30 text-white placeholder-gray-600 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 outline-none transition-all"
                 />
                 <p className="text-xs text-gray-500 mt-2">
                   💡 Если домофона нет, оставьте пустым
@@ -381,9 +381,9 @@ function OrderContent() {
 
               {/* Divider */}
               <div className="flex items-center gap-3 py-2">
-                <div className="h-px bg-emerald-900/30 flex-1" />
+                <div className="h-px bg-teal-900/30 flex-1" />
                 <span className="text-gray-500 text-xs font-medium uppercase tracking-wider">Или по расписанию</span>
-                <div className="h-px bg-emerald-900/30 flex-1" />
+                <div className="h-px bg-teal-900/30 flex-1" />
               </div>
 
               {/* STANDARD SLOTS */}
@@ -396,7 +396,7 @@ function OrderContent() {
                       onClick={isAvailable ? () => setSlot(s.id) : undefined}
                       className={`
                         ${!isAvailable ? 'opacity-40 grayscale cursor-not-allowed' : ''} 
-                        ${slot === s.id ? 'border-emerald-500 ring-2 ring-emerald-500/30 bg-emerald-900/40' : ''}
+                        ${slot === s.id ? 'border-teal-500 ring-2 ring-teal-500/30 bg-teal-900/40' : ''}
                       `}
                     >
                       <div className="flex items-center justify-between">
@@ -404,7 +404,7 @@ function OrderContent() {
                           <p className="text-white font-semibold text-lg">{s.time}</p>
                           <p className="text-gray-500 text-sm">{s.label}</p>
                         </div>
-                        <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${slot === s.id ? 'bg-emerald-500 border-emerald-500' : 'border-gray-600'}`}>
+                        <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${slot === s.id ? 'bg-teal-500 border-teal-500' : 'border-gray-600'}`}>
                           {slot === s.id && <Check className="w-4 h-4 text-white" />}
                         </div>
                       </div>
@@ -431,10 +431,10 @@ function OrderContent() {
               </div>
             </div>
 
-            <Card className="bg-gradient-to-br from-emerald-950/70 to-emerald-900/30 border-emerald-700/50">
+            <Card className="bg-gradient-to-br from-emerald-950/70 to-emerald-900/30 border-teal-700/50">
               <div className="space-y-4">
                 <div className="flex items-start gap-3">
-                  <MapPin className="w-5 h-5 text-emerald-500 mt-1 flex-shrink-0" />
+                  <MapPin className="w-5 h-5 text-teal-500 mt-1 flex-shrink-0" />
                   <div className="flex-1">
                     <p className="text-gray-400 text-sm mb-1">Адрес</p>
                     <p className="text-white font-medium">
@@ -449,10 +449,10 @@ function OrderContent() {
                   </div>
                 </div>
                 
-                <div className="h-px bg-emerald-900/30" />
+                <div className="h-px bg-teal-900/30" />
                 
                 <div className="flex items-start gap-3">
-                  <Clock className="w-5 h-5 text-emerald-500 mt-1 flex-shrink-0" />
+                  <Clock className="w-5 h-5 text-teal-500 mt-1 flex-shrink-0" />
                   <div className="flex-1">
                     <p className="text-gray-400 text-sm mb-1">Время</p>
                     <p className={`font-medium ${slot === 'urgent' ? 'text-orange-500' : 'text-white'}`}>
@@ -461,11 +461,11 @@ function OrderContent() {
                   </div>
                 </div>
                 
-                <div className="h-px bg-emerald-900/30" />
+                <div className="h-px bg-teal-900/30" />
                 
-                <div className="flex items-center justify-between bg-emerald-900/40 p-4 rounded-xl">
+                <div className="flex items-center justify-between bg-teal-900/40 p-4 rounded-xl">
                   <span className="text-gray-300 font-medium">Итого к оплате</span>
-                  <span className="text-emerald-400 font-bold text-3xl">{slot === 'urgent' ? '450' : '300'} ₽</span>
+                  <span className="text-teal-400 font-bold text-3xl">{slot === 'urgent' ? '450' : '300'} ₽</span>
                 </div>
               </div>
             </Card>
@@ -479,11 +479,11 @@ function OrderContent() {
                   className={`
                     flex flex-col items-center justify-center gap-2 p-4 rounded-2xl border cursor-pointer transition-all
                     ${pickupMethod === 'door' 
-                      ? 'bg-emerald-900/60 border-emerald-500/50 shadow-lg shadow-emerald-900/20' 
-                      : 'bg-emerald-950/30 border-emerald-800/30 opacity-60 hover:opacity-100'}
+                      ? 'bg-teal-900/60 border-teal-500/50 shadow-lg shadow-emerald-900/20' 
+                      : 'bg-teal-950/30 border-teal-800/30 opacity-60 hover:opacity-100'}
                   `}
                 >
-                  <DoorOpen className={`w-6 h-6 ${pickupMethod === 'door' ? 'text-emerald-400' : 'text-gray-500'}`} />
+                  <DoorOpen className={`w-6 h-6 ${pickupMethod === 'door' ? 'text-teal-400' : 'text-gray-500'}`} />
                   <span className={`text-sm font-medium ${pickupMethod === 'door' ? 'text-white' : 'text-gray-400'}`}>У двери</span>
                 </div>
 
@@ -493,7 +493,7 @@ function OrderContent() {
                     flex flex-col items-center justify-center gap-2 p-4 rounded-2xl border cursor-pointer transition-all
                     ${pickupMethod === 'hand' 
                       ? 'bg-orange-900/40 border-orange-500/50 shadow-lg shadow-orange-900/20' 
-                      : 'bg-emerald-950/30 border-emerald-800/30 opacity-60 hover:opacity-100'}
+                      : 'bg-teal-950/30 border-teal-800/30 opacity-60 hover:opacity-100'}
                   `}
                 >
                   <User className={`w-6 h-6 ${pickupMethod === 'hand' ? 'text-orange-400' : 'text-gray-500'}`} />
@@ -536,7 +536,7 @@ function OrderContent() {
 
 export default function OrderPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-[#0f1714] flex items-center justify-center text-emerald-500">Загрузка...</div>}>
+    <Suspense fallback={<div className="min-h-screen bg-[#0f1714] flex items-center justify-center text-teal-500">Загрузка...</div>}>
       <OrderContent />
     </Suspense>
   );

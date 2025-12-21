@@ -30,8 +30,8 @@ export function Button({
 
   const styles = {
     primary: 'bg-orange-500 hover:bg-orange-600 text-white shadow-lg shadow-orange-500/30',
-    secondary: 'bg-emerald-900/50 hover:bg-emerald-900/70 text-emerald-100 border border-emerald-700/50',
-    outline: 'border-2 border-emerald-500 text-emerald-500 hover:bg-emerald-500/10',
+    secondary: 'bg-teal-900/50 hover:bg-teal-900/70 text-teal-100 border border-teal-700/50',
+    outline: 'border-2 border-teal-500 text-teal-500 hover:bg-teal-500/10',
     ghost: 'text-gray-400 hover:text-white hover:bg-white/5',
   };
 

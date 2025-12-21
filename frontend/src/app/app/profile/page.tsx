@@ -40,7 +40,7 @@ export default function ProfilePage() {
       {/* User */}
       <Card>
         <div className="flex items-center gap-4">
-          <div className="w-16 h-16 bg-emerald-600 rounded-full flex items-center justify-center">
+          <div className="w-16 h-16 bg-teal-600 rounded-full flex items-center justify-center">
             <span className="text-2xl font-bold text-white uppercase">
                 {user?.name?.[0] || 'Я'}
             </span>
@@ -63,15 +63,15 @@ export default function ProfilePage() {
 
       {/* Actions */}
       <div>
-        <h2 className="text-sm font-semibold text-emerald-500 uppercase tracking-wider mb-3">
+        <h2 className="text-sm font-semibold text-teal-500 uppercase tracking-wider mb-3">
           Управление
         </h2>
-        <div className="bg-emerald-950/30 rounded-2xl border border-emerald-800/20 overflow-hidden">
+        <div className="bg-teal-950/30 rounded-2xl border border-teal-800/20 overflow-hidden">
           <button 
             onClick={() => router.push('/app/orders')}
-            className="w-full flex items-center gap-4 p-4 text-left hover:bg-emerald-900/30 transition-colors border-b border-emerald-800/20"
+            className="w-full flex items-center gap-4 p-4 text-left hover:bg-teal-900/30 transition-colors border-b border-teal-800/20"
           >
-            <div className="w-10 h-10 bg-emerald-900/50 rounded-xl flex items-center justify-center text-emerald-400">
+            <div className="w-10 h-10 bg-teal-900/50 rounded-xl flex items-center justify-center text-teal-400">
               <History className="w-5 h-5" />
             </div>
             <div className="flex-1 min-w-0">
@@ -83,7 +83,7 @@ export default function ProfilePage() {
 
           <button 
             onClick={() => router.push('/app/order')}
-            className="w-full flex items-center gap-4 p-4 text-left hover:bg-emerald-900/30 transition-colors"
+            className="w-full flex items-center gap-4 p-4 text-left hover:bg-teal-900/30 transition-colors"
           >
             <div className="w-10 h-10 bg-orange-900/50 rounded-xl flex items-center justify-center text-orange-400">
               <MapPin className="w-5 h-5" />
@@ -99,13 +99,13 @@ export default function ProfilePage() {
 
       {/* Support */}
       <div>
-        <h2 className="text-sm font-semibold text-emerald-500 uppercase tracking-wider mb-3">
+        <h2 className="text-sm font-semibold text-teal-500 uppercase tracking-wider mb-3">
           Помощь
         </h2>
-        <div className="bg-emerald-950/30 rounded-2xl border border-emerald-800/20 overflow-hidden">
+        <div className="bg-teal-950/30 rounded-2xl border border-teal-800/20 overflow-hidden">
           <button 
             onClick={openSupport}
-            className="w-full flex items-center gap-4 p-4 text-left hover:bg-emerald-900/30 transition-colors border-b border-emerald-800/20"
+            className="w-full flex items-center gap-4 p-4 text-left hover:bg-teal-900/30 transition-colors border-b border-teal-800/20"
           >
             <div className="w-10 h-10 bg-blue-900/50 rounded-xl flex items-center justify-center text-blue-400">
               <MessageCircle className="w-5 h-5" />
@@ -119,7 +119,7 @@ export default function ProfilePage() {
 
           <div className="p-4">
             <div className="flex items-center gap-4">
-              <div className="w-10 h-10 bg-emerald-900/50 rounded-xl flex items-center justify-center text-emerald-400">
+              <div className="w-10 h-10 bg-teal-900/50 rounded-xl flex items-center justify-center text-teal-400">
                 <Info className="w-5 h-5" />
               </div>
               <div className="flex-1 min-w-0">

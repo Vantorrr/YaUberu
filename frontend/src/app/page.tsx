@@ -48,16 +48,16 @@ export default function WelcomePage() {
     {
       id: 1,
       icon: Trash2,
-      color: 'text-emerald-400',
-      bg: 'bg-emerald-500/10 border-emerald-500/20',
+      color: 'text-teal-400',
+      bg: 'bg-teal-500/10 border-teal-500/20',
       title: 'Оставьте у двери',
       desc: 'Просто выставьте мусор за дверь. Мы заберем его в удобное для вас время.',
     },
     {
       id: 2,
       icon: Clock,
-      color: 'text-emerald-400',
-      bg: 'bg-emerald-500/10 border-emerald-500/20',
+      color: 'text-teal-400',
+      bg: 'bg-teal-500/10 border-teal-500/20',
       title: '4 слота времени',
       desc: 'Утро, день, вечер или ночь. Выбирайте удобный интервал при заказе.',
     },
@@ -75,16 +75,16 @@ export default function WelcomePage() {
     <div className="min-h-screen relative flex flex-col bg-[#0f1714] overflow-hidden">
       {/* Background Blobs */}
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
-         <div className="absolute top-[-20%] left-[-20%] w-[80%] h-[80%] bg-emerald-900/20 rounded-full blur-[120px]" />
-         <div className="absolute bottom-[-20%] right-[-20%] w-[80%] h-[80%] bg-emerald-900/10 rounded-full blur-[120px]" />
+         <div className="absolute top-[-20%] left-[-20%] w-[80%] h-[80%] bg-teal-900/20 rounded-full blur-[120px]" />
+         <div className="absolute bottom-[-20%] right-[-20%] w-[80%] h-[80%] bg-teal-900/10 rounded-full blur-[120px]" />
       </div>
 
       {/* Header Logo */}
       <div className="pt-12 pb-4 text-center z-10">
         <h1 className="text-4xl font-bold tracking-tight mb-2">
           <span className="text-white">Я</span>
-          <span className="text-emerald-500">.</span>
-          <span className="text-emerald-500">УБЕРУ</span>
+          <span className="text-teal-500">.</span>
+          <span className="text-teal-500">УБЕРУ</span>
         </h1>
       </div>
 

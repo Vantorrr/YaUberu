@@ -23,13 +23,13 @@ body {
 .glass {
   background: rgba(15, 23, 20, 0.6);
   backdrop-filter: blur(12px);
-  border: 1px solid rgba(52, 211, 153, 0.1);
+  border: 1px solid rgba(20, 184, 166, 0.1);
 }
 
 .glass-card {
-  background: rgba(6, 78, 59, 0.3); /* emerald-950/30 */
+  background: rgba(4, 47, 46, 0.3); /* teal-950/30 */
   backdrop-filter: blur(10px);
-  border: 1px solid rgba(6, 95, 70, 0.3); /* emerald-800/30 */
+  border: 1px solid rgba(17, 94, 89, 0.3); /* teal-800/30 */
 }
 
 /* Tab Bar */
@@ -40,7 +40,7 @@ body {
   right: 0;
   background: rgba(15, 23, 20, 0.95);
   backdrop-filter: blur(20px);
-  border-top: 1px solid rgba(52, 211, 153, 0.15);
+  border-top: 1px solid rgba(20, 184, 166, 0.15);
   padding: 8px 0 calc(8px + env(safe-area-inset-bottom));
   z-index: 50;
 }
@@ -61,8 +61,8 @@ body {
 }
 
 @keyframes pulse-glow {
-  0%, 100% { box-shadow: 0 0 20px rgba(16, 185, 129, 0.3); }
-  50% { box-shadow: 0 0 30px rgba(16, 185, 129, 0.6); }
+  0%, 100% { box-shadow: 0 0 20px rgba(20, 184, 166, 0.3); }
+  50% { box-shadow: 0 0 30px rgba(20, 184, 166, 0.6); }
 }
 
 .animate-fadeIn {
@@ -76,7 +76,7 @@ body {
 /* Input focus effects */
 input:focus, textarea:focus, select:focus {
   outline: none;
-  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15);
+  box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.15);
 }
 
 /* Smooth transitions */
@@ -90,14 +90,14 @@ input:focus, textarea:focus, select:focus {
 }
 
 ::-webkit-scrollbar-track {
-  background: rgba(16, 185, 129, 0.05);
+  background: rgba(20, 184, 166, 0.05);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(16, 185, 129, 0.3);
+  background: rgba(20, 184, 166, 0.3);
   border-radius: 10px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(16, 185, 129, 0.5);
+  background: rgba(20, 184, 166, 0.5);
 }

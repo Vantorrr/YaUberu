@@ -112,7 +112,7 @@ export default function AdminPage() {
   if (loading && !stats) {
     return (
       <div className="min-h-screen bg-gray-900 flex items-center justify-center text-white">
-        <RefreshCw className="w-8 h-8 animate-spin text-emerald-500" />
+        <RefreshCw className="w-8 h-8 animate-spin text-teal-500" />
       </div>
     );
   }
@@ -140,7 +140,7 @@ export default function AdminPage() {
             <CheckCircle className="w-4 h-4" />
             <span className="text-xs">Выполнено</span>
           </div>
-          <p className="text-3xl font-bold text-emerald-400">{stats?.completed_today || 0}</p>
+          <p className="text-3xl font-bold text-teal-400">{stats?.completed_today || 0}</p>
         </div>
       </div>
 
@@ -148,21 +148,21 @@ export default function AdminPage() {
       <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
         <button 
             onClick={() => setActiveTab('orders')}
-            className={`px-4 py-2 rounded-xl text-sm font-medium transition-colors whitespace-nowrap flex items-center gap-2 ${activeTab === 'orders' ? 'bg-emerald-600 text-white' : 'bg-gray-800 text-gray-400'}`}
+            className={`px-4 py-2 rounded-xl text-sm font-medium transition-colors whitespace-nowrap flex items-center gap-2 ${activeTab === 'orders' ? 'bg-teal-600 text-white' : 'bg-gray-800 text-gray-400'}`}
         >
             <Package className="w-4 h-4" />
             Заказы
         </button>
         <button 
             onClick={() => setActiveTab('couriers')}
-            className={`px-4 py-2 rounded-xl text-sm font-medium transition-colors whitespace-nowrap flex items-center gap-2 ${activeTab === 'couriers' ? 'bg-emerald-600 text-white' : 'bg-gray-800 text-gray-400'}`}
+            className={`px-4 py-2 rounded-xl text-sm font-medium transition-colors whitespace-nowrap flex items-center gap-2 ${activeTab === 'couriers' ? 'bg-teal-600 text-white' : 'bg-gray-800 text-gray-400'}`}
         >
             <Users className="w-4 h-4" />
             Курьеры
         </button>
         <button 
             onClick={() => setActiveTab('complexes')}
-            className={`px-4 py-2 rounded-xl text-sm font-medium transition-colors whitespace-nowrap flex items-center gap-2 ${activeTab === 'complexes' ? 'bg-emerald-600 text-white' : 'bg-gray-800 text-gray-400'}`}
+            className={`px-4 py-2 rounded-xl text-sm font-medium transition-colors whitespace-nowrap flex items-center gap-2 ${activeTab === 'complexes' ? 'bg-teal-600 text-white' : 'bg-gray-800 text-gray-400'}`}
         >
             <Building className="w-4 h-4" />
             ЖК и Адреса
@@ -207,7 +207,7 @@ export default function AdminPage() {
                   <div className="flex gap-2">
                     <button 
                       onClick={() => openAssignModal(order)}
-                      className="flex-1 py-2 bg-emerald-900/40 text-emerald-400 text-xs font-medium rounded-lg border border-emerald-800/50 hover:bg-emerald-900/60 flex items-center justify-center gap-1"
+                      className="flex-1 py-2 bg-teal-900/40 text-teal-400 text-xs font-medium rounded-lg border border-teal-800/50 hover:bg-teal-900/60 flex items-center justify-center gap-1"
                     >
                       <Truck className="w-3 h-3" />
                       Назначить
@@ -235,7 +235,7 @@ export default function AdminPage() {
           <div className="space-y-4">
              <div className="bg-gray-800/40 p-4 rounded-2xl border border-gray-800">
                 <h3 className="font-bold text-gray-300 mb-3 flex items-center gap-2">
-                    <Plus className="w-4 h-4 text-emerald-500" />
+                    <Plus className="w-4 h-4 text-teal-500" />
                     Добавить курьера
                 </h3>
                 <form onSubmit={handleAddCourier} className="flex flex-col gap-3">
@@ -244,16 +244,16 @@ export default function AdminPage() {
                         placeholder="Имя курьера"
                         value={newCourierName}
                         onChange={(e) => setNewCourierName(e.target.value)}
-                        className="bg-gray-900 border border-gray-700 text-white rounded-lg p-3 text-sm focus:border-emerald-500 outline-none"
+                        className="bg-gray-900 border border-gray-700 text-white rounded-lg p-3 text-sm focus:border-teal-500 outline-none"
                     />
                     <input 
                         type="number" 
                         placeholder="Telegram ID (число)"
                         value={newCourierId}
                         onChange={(e) => setNewCourierId(e.target.value)}
-                        className="bg-gray-900 border border-gray-700 text-white rounded-lg p-3 text-sm focus:border-emerald-500 outline-none"
+                        className="bg-gray-900 border border-gray-700 text-white rounded-lg p-3 text-sm focus:border-teal-500 outline-none"
                     />
-                    <button type="submit" className="bg-emerald-600 text-white py-2 rounded-lg font-medium hover:bg-emerald-500 transition-colors">
+                    <button type="submit" className="bg-teal-600 text-white py-2 rounded-lg font-medium hover:bg-teal-500 transition-colors">
                         Добавить
                     </button>
                 </form>
@@ -264,7 +264,7 @@ export default function AdminPage() {
                 {couriers.map(c => (
                     <div key={c.id} className="flex items-center justify-between p-4 bg-gray-800/30 rounded-xl border border-gray-800">
                         <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-full bg-emerald-900/50 flex items-center justify-center text-emerald-400 font-bold">
+                            <div className="w-8 h-8 rounded-full bg-teal-900/50 flex items-center justify-center text-teal-400 font-bold">
                                 {c.name[0]}
                             </div>
                             <div>
@@ -290,7 +290,7 @@ export default function AdminPage() {
           <div className="space-y-4">
              <div className="bg-gray-800/40 p-4 rounded-2xl border border-gray-800">
                 <h3 className="font-bold text-gray-300 mb-3 flex items-center gap-2">
-                    <Plus className="w-4 h-4 text-emerald-500" />
+                    <Plus className="w-4 h-4 text-teal-500" />
                     Добавить Жилой Комплекс
                 </h3>
                 <form onSubmit={handleAddComplex} className="flex flex-col gap-3">
@@ -299,9 +299,9 @@ export default function AdminPage() {
                         placeholder="Название ЖК"
                         value={newComplexName}
                         onChange={(e) => setNewComplexName(e.target.value)}
-                        className="bg-gray-900 border border-gray-700 text-white rounded-lg p-3 text-sm focus:border-emerald-500 outline-none"
+                        className="bg-gray-900 border border-gray-700 text-white rounded-lg p-3 text-sm focus:border-teal-500 outline-none"
                     />
-                    <button type="submit" className="bg-emerald-600 text-white py-2 rounded-lg font-medium hover:bg-emerald-500 transition-colors">
+                    <button type="submit" className="bg-teal-600 text-white py-2 rounded-lg font-medium hover:bg-teal-500 transition-colors">
                         Создать зону
                     </button>
                 </form>

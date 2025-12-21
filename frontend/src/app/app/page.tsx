@@ -48,24 +48,24 @@ export default function HomePage() {
     <div className="px-5 py-6 space-y-8 min-h-screen pb-24">
       {/* Header */}
       <div className="animate-fadeIn">
-        <p className="text-emerald-500 text-sm font-medium mb-1">Добро пожаловать 👋</p>
+        <p className="text-teal-500 text-sm font-medium mb-1">Добро пожаловать 👋</p>
         <h1 className="text-3xl font-bold text-white">Главная</h1>
       </div>
 
       {/* Balance Card */}
-      <div className="bg-gradient-to-br from-emerald-900 to-emerald-950 rounded-3xl p-6 shadow-xl relative overflow-hidden border border-emerald-500/20 animate-slideUp">
+      <div className="bg-gradient-to-br from-teal-900 to-teal-950 rounded-3xl p-6 shadow-xl relative overflow-hidden border border-teal-500/20 animate-slideUp">
         <div className="flex items-center justify-between mb-6 relative z-10">
           <div>
-            <p className="text-emerald-400/80 text-sm font-medium mb-1">Ваш баланс</p>
+            <p className="text-teal-400/80 text-sm font-medium mb-1">Ваш баланс</p>
             <div className="flex items-baseline gap-2">
               <span className="text-5xl font-bold text-white tracking-tight">
                 {balance !== null ? balance : '...'}
               </span>
-              <span className="text-emerald-400 text-lg font-medium">выносов</span>
+              <span className="text-teal-400 text-lg font-medium">выносов</span>
             </div>
           </div>
-          <div className="w-14 h-14 bg-emerald-500/10 rounded-2xl flex items-center justify-center backdrop-blur-sm border border-emerald-500/20">
-            <Package className="w-7 h-7 text-emerald-400" />
+          <div className="w-14 h-14 bg-teal-500/10 rounded-2xl flex items-center justify-center backdrop-blur-sm border border-teal-500/20">
+            <Package className="w-7 h-7 text-teal-400" />
           </div>
         </div>
         
@@ -73,7 +73,7 @@ export default function HomePage() {
             <Button 
                 onClick={() => router.push('/app/order')} 
                 fullWidth
-                className="bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-4 shadow-lg shadow-emerald-500/30 hover:shadow-emerald-500/50 transition-all"
+                className="bg-teal-500 hover:bg-teal-600 text-white font-bold py-4 shadow-lg shadow-teal-500/30 hover:shadow-teal-500/50 transition-all"
             >
                 <Trash2 className="w-5 h-5" />
                 Вызвать курьера
@@ -81,7 +81,7 @@ export default function HomePage() {
         </div>
 
         {/* Decor */}
-        <div className="absolute -right-10 -top-10 w-40 h-40 bg-emerald-500/10 rounded-full blur-3xl" />
+        <div className="absolute -right-10 -top-10 w-40 h-40 bg-teal-500/10 rounded-full blur-3xl" />
       </div>
 
       {/* Subscriptions (Apple Style) */}
@@ -99,12 +99,12 @@ export default function HomePage() {
                 className={`
                     relative p-5 rounded-2xl border transition-all cursor-pointer overflow-hidden group
                     ${t.popular 
-                        ? 'bg-zinc-900 border-emerald-500/50 ring-1 ring-emerald-500/20' 
+                        ? 'bg-zinc-900 border-teal-500/50 ring-1 ring-teal-500/20' 
                         : 'bg-zinc-900/50 border-zinc-800 hover:border-zinc-700'}
                 `}
             >
               {t.popular && (
-                <div className="absolute top-0 right-0 bg-emerald-500 text-emerald-950 text-[10px] font-bold px-3 py-1 rounded-bl-xl">
+                <div className="absolute top-0 right-0 bg-teal-500 text-teal-950 text-[10px] font-bold px-3 py-1 rounded-bl-xl">
                   POPULAR
                 </div>
               )}
@@ -124,7 +124,7 @@ export default function HomePage() {
               <div className="mt-3 flex flex-wrap gap-2">
                   {t.features.map((f, i) => (
                       <span key={i} className="text-xs text-zinc-400 flex items-center gap-1 bg-zinc-800/50 px-2 py-1 rounded-md">
-                          <Check className="w-3 h-3 text-emerald-500" />
+                          <Check className="w-3 h-3 text-teal-500" />
                           {f}
                       </span>
                   ))}
