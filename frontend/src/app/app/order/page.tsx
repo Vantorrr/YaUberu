@@ -34,8 +34,7 @@ function OrderContent() {
   const [pickupMethod, setPickupMethod] = useState<'door' | 'hand'>('door');
   const [loading, setLoading] = useState(false);
   const [locationLoading, setLocationLoading] = useState(false);
-  const [showMap, setShowMap] = useState(false);
-  const [mapCoords, setMapCoords] = useState<{ lat: number; lon: number } | null>(null);
+  const [mapCoords, setMapCoords] = useState<{ lat: number; lon: number }>({ lat: 55.7558, lon: 37.6173 }); // Москва по умолчанию
   
   // Dynamic Complexes
   const [complexes, setComplexes] = useState<any[]>([]);
@@ -61,7 +60,7 @@ function OrderContent() {
       });
   }, []);
 
-  // РАБОТАЮЩАЯ геолокация через HTML5 + карта
+  // Центрирование карты на текущей геолокации
   const handleLocationRequest = async () => {
     if (!navigator.geolocation) {
       alert('❌ Ваш браузер не поддерживает геолокацию');
@@ -77,7 +76,6 @@ function OrderContent() {
         
         setLocationLoading(false);
         setMapCoords({ lat: latitude, lon: longitude });
-        setShowMap(true);
       },
       (error) => {
         setLocationLoading(false);
@@ -86,11 +84,11 @@ function OrderContent() {
         let errorMessage = '❌ Не удалось получить геолокацию';
 
         if (error.code === error.PERMISSION_DENIED) {
-          errorMessage = '🚫 Доступ к геолокации запрещён.\n\nРазрешите доступ в настройках:\n1. Откройте настройки Telegram\n2. Конфиденциальность → Геолокация\n3. Разрешите для этого бота';
+          errorMessage = '🚫 Доступ к геолокации запрещён';
         } else if (error.code === error.POSITION_UNAVAILABLE) {
-          errorMessage = '📡 Не удалось определить местоположение.\n\nПроверьте:\n• GPS включён\n• Есть доступ к интернету\n• Вы находитесь не в здании';
+          errorMessage = '📡 Не удалось определить местоположение';
         } else if (error.code === error.TIMEOUT) {
-          errorMessage = '⏱ Превышено время ожидания.\n\nПопробуйте ещё раз или введите адрес вручную.';
+          errorMessage = '⏱ Превышено время ожидания';
         }
 
         alert(errorMessage);
@@ -111,8 +109,6 @@ function OrderContent() {
     if (houseMatch) {
       setAddress(prev => ({ ...prev, building: houseMatch[1] }));
     }
-    
-    setShowMap(false);
   };
 
   const stepIndex = steps.indexOf(step);
@@ -390,6 +386,35 @@ function OrderContent() {
                 </p>
               </div>
             </div>
+
+            {/* ВСТРОЕННАЯ КАРТА */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <label className="block text-sm font-medium text-gray-300">
+                  📍 Уточните на карте
+                </label>
+                <button
+                  type="button"
+                  onClick={handleLocationRequest}
+                  disabled={locationLoading}
+                  className="text-xs text-teal-400 hover:text-teal-300 transition-colors flex items-center gap-1"
+                >
+                  {locationLoading ? '🔄 Ищу...' : '📍 Где я?'}
+                </button>
+              </div>
+              <div className="rounded-2xl overflow-hidden border-2 border-teal-800/30 h-[300px]">
+                <MapPicker
+                  initialLat={mapCoords.lat}
+                  initialLon={mapCoords.lon}
+                  onLocationSelect={handleMapLocationSelect}
+                  onClose={() => {}}
+                  embedded={true}
+                />
+              </div>
+              <p className="text-xs text-gray-500 text-center">
+                💡 Кликните на карту чтобы указать точное место
+              </p>
+            </div>
           </>
         )}
 
@@ -591,16 +616,6 @@ function OrderContent() {
           {step === 'confirm' ? (loading ? 'Обработка...' : 'Подтвердить и вызвать') : 'Продолжить'}
         </Button>
       </div>
-
-      {/* Map Modal */}
-      {showMap && mapCoords && (
-        <MapPicker
-          initialLat={mapCoords.lat}
-          initialLon={mapCoords.lon}
-          onLocationSelect={handleMapLocationSelect}
-          onClose={() => setShowMap(false)}
-        />
-      )}
     </div>
   );
 }

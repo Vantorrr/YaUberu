@@ -18,6 +18,7 @@ interface MapPickerProps {
   initialLon?: number;
   onLocationSelect: (lat: number, lon: number, address: string) => void;
   onClose: () => void;
+  embedded?: boolean;
 }
 
 function LocationMarker({ onLocationSelect }: { onLocationSelect: (lat: number, lon: number) => void }) {
@@ -47,7 +48,7 @@ function LocationMarker({ onLocationSelect }: { onLocationSelect: (lat: number, 
   return position === null ? null : <Marker position={position} />;
 }
 
-export function MapPicker({ initialLat = 55.7558, initialLon = 37.6173, onLocationSelect, onClose }: MapPickerProps) {
+export function MapPicker({ initialLat = 55.7558, initialLon = 37.6173, onLocationSelect, onClose, embedded = false }: MapPickerProps) {
   const [loading, setLoading] = useState(false);
   const [currentAddress, setCurrentAddress] = useState('');
 
@@ -81,6 +82,35 @@ export function MapPicker({ initialLat = 55.7558, initialLon = 37.6173, onLocati
     }
   };
 
+  // Embedded режим - просто карта
+  if (embedded) {
+    return (
+      <div className="w-full h-full relative">
+        <MapContainer
+          center={[initialLat, initialLon]}
+          zoom={16}
+          style={{ height: '100%', width: '100%' }}
+          className="z-0"
+          key={`${initialLat}-${initialLon}`}
+        >
+          <TileLayer
+            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          />
+          <LocationMarker onLocationSelect={handleLocationSelect} />
+        </MapContainer>
+        {currentAddress && (
+          <div className="absolute top-2 left-2 right-2 z-10 bg-teal-950/95 backdrop-blur-sm px-3 py-2 rounded-xl border border-teal-600/30">
+            <p className="text-teal-400 text-xs font-medium">
+              {loading ? '🔄 Определяю адрес...' : `📌 ${currentAddress}`}
+            </p>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // Модальный режим - полный интерфейс
   return (
     <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4">
       <div className="bg-zinc-900 rounded-2xl overflow-hidden max-w-2xl w-full max-h-[80vh] flex flex-col">
