@@ -26,6 +26,7 @@ function OrderContent() {
   const [address, setAddress] = useState({ complexId: '', building: '', entrance: '', floor: '', apartment: '', intercom: '' });
   const [pickupMethod, setPickupMethod] = useState<'door' | 'hand'>('door');
   const [loading, setLoading] = useState(false);
+  const [locationLoading, setLocationLoading] = useState(false);
   
   // Dynamic Complexes
   const [complexes, setComplexes] = useState<any[]>([]);
@@ -50,6 +51,81 @@ function OrderContent() {
         alert('Ошибка загрузки ЖК. Проверьте соединение.');
       });
   }, []);
+
+  // РАБОТАЮЩАЯ геолокация через HTML5 + геокодинг
+  const handleLocationRequest = async () => {
+    if (!navigator.geolocation) {
+      alert('❌ Ваш браузер не поддерживает геолокацию');
+      return;
+    }
+
+    setLocationLoading(true);
+
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const { latitude, longitude } = position.coords;
+        console.log('[LOCATION] Got coords:', latitude, longitude);
+
+        try {
+          // Геокодирование через OpenStreetMap Nominatim (бесплатно, без API ключа)
+          const response = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&accept-language=ru`,
+            {
+              headers: {
+                'User-Agent': 'YaUberu-App/1.0'
+              }
+            }
+          );
+
+          if (!response.ok) throw new Error('Geocoding failed');
+
+          const data = await response.json();
+          console.log('[LOCATION] Geocoded:', data);
+
+          // Извлекаем данные адреса
+          const addr = data.address || {};
+          const house = addr.house_number || '';
+          const street = addr.road || addr.street || '';
+
+          setLocationLoading(false);
+
+          // Показываем результат
+          alert(`📍 Определена локация!\n\n${street ? street + ', ' : ''}${house ? 'д. ' + house : ''}\n\nКоординаты: ${latitude.toFixed(6)}, ${longitude.toFixed(6)}\n\n💡 Выберите ЖК из списка и уточните адрес вручную`);
+
+          // Автоподстановка дома если есть
+          if (house) {
+            setAddress(prev => ({ ...prev, building: house }));
+          }
+
+        } catch (error) {
+          console.error('[LOCATION] Geocoding error:', error);
+          setLocationLoading(false);
+          alert(`📍 Координаты получены!\n\nШирота: ${latitude.toFixed(6)}\nДолгота: ${longitude.toFixed(6)}\n\n⚠️ Не удалось определить адрес автоматически.\nВыберите ЖК и введите адрес вручную.`);
+        }
+      },
+      (error) => {
+        setLocationLoading(false);
+        console.error('[LOCATION] Error:', error);
+
+        let errorMessage = '❌ Не удалось получить геолокацию';
+
+        if (error.code === error.PERMISSION_DENIED) {
+          errorMessage = '🚫 Доступ к геолокации запрещён.\n\nРазрешите доступ в настройках:\n1. Откройте настройки Telegram\n2. Конфиденциальность → Геолокация\n3. Разрешите для этого бота';
+        } else if (error.code === error.POSITION_UNAVAILABLE) {
+          errorMessage = '📡 Не удалось определить местоположение.\n\nПроверьте:\n• GPS включён\n• Есть доступ к интернету\n• Вы находитесь не в здании';
+        } else if (error.code === error.TIMEOUT) {
+          errorMessage = '⏱ Превышено время ожидания.\n\nПопробуйте ещё раз или введите адрес вручную.';
+        }
+
+        alert(errorMessage);
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 15000,
+        maximumAge: 0
+      }
+    );
+  };
 
   const stepIndex = steps.indexOf(step);
 
@@ -175,14 +251,35 @@ function OrderContent() {
         {/* Step 1: Address */}
         {step === 'address' && (
           <>
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-teal-600 rounded-xl flex items-center justify-center">
-                <MapPin className="w-6 h-6 text-white" />
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 bg-teal-600 rounded-xl flex items-center justify-center">
+                  <MapPin className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-white">Адрес</h2>
+                  <p className="text-gray-500 text-sm">Куда приехать?</p>
+                </div>
               </div>
-              <div>
-                <h2 className="text-xl font-bold text-white">Адрес</h2>
-                <p className="text-gray-500 text-sm">Куда приехать?</p>
-              </div>
+              
+              <button
+                type="button"
+                onClick={handleLocationRequest}
+                disabled={locationLoading}
+                className="px-3 py-2 rounded-xl bg-teal-900/40 border border-teal-600/30 text-teal-400 text-sm font-medium hover:bg-teal-900/60 hover:border-teal-500/50 transition-all disabled:opacity-50 flex items-center gap-2 active:scale-95"
+              >
+                {locationLoading ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-teal-400 border-t-transparent rounded-full animate-spin" />
+                    <span className="text-xs">Ищу...</span>
+                  </>
+                ) : (
+                  <>
+                    <MapPin className="w-4 h-4" />
+                    <span className="text-xs font-semibold">📍 Где я?</span>
+                  </>
+                )}
+              </button>
             </div>
 
             <div className="space-y-4">
