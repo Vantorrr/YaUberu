@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
@@ -21,10 +21,10 @@ interface MapPickerProps {
   embedded?: boolean;
 }
 
-function LocationMarker({ onLocationSelect }: { onLocationSelect: (lat: number, lon: number) => void }) {
-  const [position, setPosition] = useState<[number, number] | null>(null);
+function LocationMarker({ initialPosition, onLocationSelect }: { initialPosition: [number, number]; onLocationSelect: (lat: number, lon: number) => void }) {
+  const [position, setPosition] = useState<[number, number]>(initialPosition);
 
-  const map = useMapEvents({
+  useMapEvents({
     click(e) {
       const { lat, lng } = e.latlng;
       setPosition([lat, lng]);
@@ -32,25 +32,14 @@ function LocationMarker({ onLocationSelect }: { onLocationSelect: (lat: number, 
     },
   });
 
-  useEffect(() => {
-    map.locate();
-  }, [map]);
-
-  useMapEvents({
-    locationfound(e) {
-      const { lat, lng } = e.latlng;
-      setPosition([lat, lng]);
-      map.flyTo([lat, lng], 16);
-      onLocationSelect(lat, lng);
-    },
-  });
-
-  return position === null ? null : <Marker position={position} />;
+  return <Marker position={position} />;
 }
 
 export function MapPicker({ initialLat = 55.7558, initialLon = 37.6173, onLocationSelect, onClose, embedded = false }: MapPickerProps) {
   const [loading, setLoading] = useState(false);
   const [currentAddress, setCurrentAddress] = useState('');
+
+  console.log('[MAP] Rendering MapPicker', { initialLat, initialLon, embedded });
 
   const handleLocationSelect = async (lat: number, lon: number) => {
     setLoading(true);
@@ -85,22 +74,26 @@ export function MapPicker({ initialLat = 55.7558, initialLon = 37.6173, onLocati
   // Embedded режим - просто карта
   if (embedded) {
     return (
-      <div className="w-full h-full relative">
+      <div className="w-full h-full relative bg-teal-950/20">
         <MapContainer
           center={[initialLat, initialLon]}
           zoom={16}
           style={{ height: '100%', width: '100%' }}
           className="z-0"
+          scrollWheelZoom={true}
           key={`${initialLat}-${initialLon}`}
         >
           <TileLayer
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
-          <LocationMarker onLocationSelect={handleLocationSelect} />
+          <LocationMarker 
+            initialPosition={[initialLat, initialLon]}
+            onLocationSelect={handleLocationSelect} 
+          />
         </MapContainer>
         {currentAddress && (
-          <div className="absolute top-2 left-2 right-2 z-10 bg-teal-950/95 backdrop-blur-sm px-3 py-2 rounded-xl border border-teal-600/30">
+          <div className="absolute top-2 left-2 right-2 z-[1000] bg-teal-950/95 backdrop-blur-sm px-3 py-2 rounded-xl border border-teal-600/30">
             <p className="text-teal-400 text-xs font-medium">
               {loading ? '🔄 Определяю адрес...' : `📌 ${currentAddress}`}
             </p>
@@ -140,12 +133,16 @@ export function MapPicker({ initialLat = 55.7558, initialLon = 37.6173, onLocati
             zoom={16}
             style={{ height: '100%', width: '100%' }}
             className="z-0"
+            scrollWheelZoom={true}
           >
             <TileLayer
               attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             />
-            <LocationMarker onLocationSelect={handleLocationSelect} />
+            <LocationMarker 
+              initialPosition={[initialLat, initialLon]}
+              onLocationSelect={handleLocationSelect} 
+            />
           </MapContainer>
         </div>
 

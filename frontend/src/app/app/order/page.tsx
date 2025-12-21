@@ -11,7 +11,14 @@ import { api } from '@/lib/api';
 // Dynamic import для карты (SSR не поддерживается Leaflet)
 const MapPicker = dynamic(() => import('@/components/MapPicker').then(mod => ({ default: mod.MapPicker })), {
   ssr: false,
-  loading: () => <div className="text-center py-8 text-teal-400">🗺️ Загрузка карты...</div>
+  loading: () => (
+    <div className="w-full h-full flex items-center justify-center bg-teal-950/20 rounded-2xl">
+      <div className="text-center">
+        <div className="w-12 h-12 border-4 border-teal-400 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+        <p className="text-teal-400 text-sm font-medium">🗺️ Загрузка карты...</p>
+      </div>
+    </div>
+  )
 });
 
 const steps = ['address', 'time', 'confirm'] as const;
