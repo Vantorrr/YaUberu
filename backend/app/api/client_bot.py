@@ -134,8 +134,9 @@ async def telegram_webhook(request: Request, db: AsyncSession = Depends(get_db))
             
         elif callback_data == "menu":
             # Показываем главное меню снова с фото
+            telegram_user_id = callback["from"]["id"]
             result = await db.execute(
-                select(User).where(User.telegram_id == callback["from"]["id"])
+                select(User).where(User.telegram_id == telegram_user_id)
             )
             user = result.scalar_one_or_none()
             
@@ -144,6 +145,9 @@ async def telegram_webhook(request: Request, db: AsyncSession = Depends(get_db))
                 balance_result = await db.execute(select(Balance).where(Balance.user_id == user.id))
                 balance = balance_result.scalar_one_or_none()
                 credits = balance.credits if balance else 0
+                
+                # Проверяем, админ ли пользователь
+                is_admin = telegram_user_id in settings.admin_ids
                 
                 keyboard = {
                     "inline_keyboard": [
@@ -175,6 +179,15 @@ async def telegram_webhook(request: Request, db: AsyncSession = Depends(get_db))
                         ]
                     ]
                 }
+                
+                # Добавляем кнопку админ-панели для админов
+                if is_admin:
+                    keyboard["inline_keyboard"].append([
+                        {
+                            "text": "👑 Админ-панель",
+                            "web_app": {"url": f"{frontend_url}/admin"}
+                        }
+                    ])
                 
                 caption = f"""👤 **{user.name}**
 💼 Баланс: **{credits} выносов**
@@ -281,6 +294,9 @@ async def telegram_webhook(request: Request, db: AsyncSession = Depends(get_db))
                 balance = balance_result.scalar_one_or_none()
                 credits = balance.credits if balance else 0
                 
+                # Проверяем, админ ли пользователь
+                is_admin = telegram_user_id in settings.admin_ids
+                
                 keyboard = {
                     "inline_keyboard": [
                         [
@@ -311,6 +327,15 @@ async def telegram_webhook(request: Request, db: AsyncSession = Depends(get_db))
                         ]
                     ]
                 }
+                
+                # Добавляем кнопку админ-панели для админов
+                if is_admin:
+                    keyboard["inline_keyboard"].append([
+                        {
+                            "text": "👑 Админ-панель",
+                            "web_app": {"url": f"{frontend_url}/admin"}
+                        }
+                    ])
                 
                 caption = f"""👤 **{user.name}**
 💼 Баланс: **{credits} выносов**
@@ -354,6 +379,9 @@ async def telegram_webhook(request: Request, db: AsyncSession = Depends(get_db))
                 balance = balance_result.scalar_one_or_none()
                 credits = balance.credits if balance else 0
                 
+                # Проверяем, админ ли пользователь
+                is_admin = telegram_user_id in settings.admin_ids
+                
                 keyboard = {
                     "inline_keyboard": [
                         [
@@ -384,6 +412,15 @@ async def telegram_webhook(request: Request, db: AsyncSession = Depends(get_db))
                         ]
                     ]
                 }
+                
+                # Добавляем кнопку админ-панели для админов
+                if is_admin:
+                    keyboard["inline_keyboard"].append([
+                        {
+                            "text": "👑 Админ-панель",
+                            "web_app": {"url": f"{frontend_url}/admin"}
+                        }
+                    ])
                 
                 # Отправляем фото с приветствием
                 caption = f"""👋 **С возвращением, {user.name}!**
