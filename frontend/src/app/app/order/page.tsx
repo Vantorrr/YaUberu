@@ -29,13 +29,53 @@ function OrderContent() {
   
   // Dynamic Complexes
   const [complexes, setComplexes] = useState<any[]>([]);
+  
   useEffect(() => {
-    api.getResidentialComplexes().then(setComplexes).catch(console.error);
+    // Expand to full screen
+    if (typeof window !== 'undefined' && (window as any).Telegram?.WebApp) {
+      const tg = (window as any).Telegram.WebApp;
+      tg.ready();
+      tg.expand();
+      console.log('[TG] WebApp expanded to full screen');
+    }
+    
+    // Load complexes
+    api.getResidentialComplexes()
+      .then(data => {
+        console.log('[ORDER] Loaded complexes:', data);
+        setComplexes(data);
+      })
+      .catch(err => {
+        console.error('[ORDER] Failed to load complexes:', err);
+        alert('Ошибка загрузки ЖК. Проверьте соединение.');
+      });
   }, []);
 
   const stepIndex = steps.indexOf(step);
 
   const next = async () => {
+    // Validation for address step
+    if (step === 'address') {
+      if (!address.complexId) {
+        alert('Выберите жилой комплекс');
+        return;
+      }
+      if (!address.building) {
+        alert('Укажите номер дома');
+        return;
+      }
+      if (!address.apartment) {
+        alert('Укажите квартиру');
+        return;
+      }
+    }
+    
+    // Validation for time step
+    if (step === 'time' && !slot) {
+      alert('Выберите время вывоза');
+      return;
+    }
+    
     if (stepIndex < steps.length - 1) {
       setStep(steps[stepIndex + 1]);
     } else {
@@ -43,16 +83,20 @@ function OrderContent() {
       try {
         setLoading(true);
         
+        console.log('[ORDER] Creating address:', address);
+        
         // 1. Create Address
         const addressRes = await api.createAddress({
           complex_id: Number(address.complexId),
           building: address.building,
-          entrance: address.entrance,
-          floor: address.floor,
+          entrance: address.entrance || '1',
+          floor: address.floor || '1',
           apartment: address.apartment,
-          intercom: address.intercom,
+          intercom: address.intercom || '0',
           is_default: true,
         });
+        
+        console.log('[ORDER] Address created:', addressRes);
 
         // 2. Prepare Data
         let timeSlotStr = '';
