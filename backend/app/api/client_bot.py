@@ -31,6 +31,34 @@ async def send_telegram_message(chat_id: int, text: str, keyboard: dict = None):
         except Exception as e:
             print(f"[BOT ERROR] Failed to send message: {e}")
 
+
+async def send_telegram_photo(chat_id: int, photo_url: str, caption: str = None, keyboard: dict = None):
+    """Send a photo with optional caption and keyboard"""
+    token = settings.TELEGRAM_BOT_TOKEN
+    print(f"[BOT] Sending photo to {chat_id}")
+    
+    if not token:
+        print("[BOT ERROR] TELEGRAM_BOT_TOKEN is not set!")
+        return
+    
+    async with httpx.AsyncClient() as client:
+        url = f"https://api.telegram.org/bot{token}/sendPhoto"
+        payload = {
+            "chat_id": chat_id,
+            "photo": photo_url,
+        }
+        if caption:
+            payload["caption"] = caption
+            payload["parse_mode"] = "Markdown"
+        if keyboard:
+            payload["reply_markup"] = keyboard
+        
+        try:
+            response = await client.post(url, json=payload)
+            print(f"[BOT] Photo sent: {response.status_code}")
+        except Exception as e:
+            print(f"[BOT ERROR] Failed to send photo: {e}")
+
 @router.post("/webhook")
 async def telegram_webhook(request: Request, db: AsyncSession = Depends(get_db)):
     data = await request.json()
@@ -65,10 +93,14 @@ async def telegram_webhook(request: Request, db: AsyncSession = Depends(get_db))
                         }
                     ]]
                 }
-                await send_telegram_message(
-                    chat_id, 
-                    f"👋 **С возвращением, {user.name}!**\n\nОткройте приложение, чтобы оформить вывоз мусора.",
-                    keyboard
+                
+                # Отправляем фото с приветствием
+                caption = f"👋 **С возвращением, {user.name}!**\n\n🍃 Откройте приложение, чтобы оформить вывоз мусора."
+                await send_telegram_photo(
+                    chat_id,
+                    photo_url="https://i.ibb.co/TDdV6sVF/17663028696947a49522580.jpg",
+                    caption=caption,
+                    keyboard=keyboard
                 )
             else:
                 # Новый пользователь или без реального телефона, просим контакт
@@ -83,10 +115,20 @@ async def telegram_webhook(request: Request, db: AsyncSession = Depends(get_db))
                     "one_time_keyboard": True
                 }
                 
-                await send_telegram_message(
-                    chat_id, 
-                    "👋 **Привет! Это «Я УБЕРУ»** 🍃\n\nЧтобы мы могли связываться с вами и уведомлять о статусе заказов, пожалуйста, поделитесь номером телефона 👇",
-                    keyboard
+                # Отправляем фото с приветствием для нового пользователя
+                caption = """👋 **Привет! Это «Я УБЕРУ»** 🍃
+
+✨ Мы вывезем ваш мусор в удобное время
+🕐 4 временных слота на выбор
+📦 Банк выносов — платите только за реальные заборы
+
+Чтобы начать, поделитесь номером телефона 👇"""
+                
+                await send_telegram_photo(
+                    chat_id,
+                    photo_url="https://i.ibb.co/TDdV6sVF/17663028696947a49522580.jpg",
+                    caption=caption,
+                    keyboard=keyboard
                 )
             
         # Логика 2: Пользователь отправил контакт
