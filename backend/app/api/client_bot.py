@@ -64,6 +64,129 @@ async def telegram_webhook(request: Request, db: AsyncSession = Depends(get_db))
     data = await request.json()
     print(f"[WEBHOOK] Received: {data}")
     
+    # Handle callback queries (button clicks)
+    if "callback_query" in data:
+        callback = data["callback_query"]
+        chat_id = callback["message"]["chat"]["id"]
+        callback_data = callback.get("data", "")
+        
+        if callback_data == "help":
+            help_text = """❓ **Помощь**
+
+**Как это работает:**
+
+1️⃣ Купите пакет выносов (банк мешков)
+2️⃣ Оформите заказ на удобное время
+3️⃣ Выставьте мешок у двери
+4️⃣ Курьер заберёт в выбранный слот
+
+━━━━━━━━━━━━━━━━━━━━
+
+**Слоты времени:**
+🌅 08:00 — 10:00 (Утро)
+☀️ 12:00 — 14:00 (День)
+🌆 16:00 — 18:00 (Вечер)
+🌙 20:00 — 22:00 (Ночь)
+
+━━━━━━━━━━━━━━━━━━━━
+
+**Тарифы:**
+• Разовый вынос: 300 ₽
+• Пробный (3 выноса): 500 ₽
+• Стандарт (15 выносов): 3000 ₽
+• Премиум (30 выносов): 5000 ₽
+
+**Срочный вынос** (в течение часа): 450 ₽"""
+            
+            keyboard = {
+                "inline_keyboard": [[
+                    {"text": "🏠 Главное меню", "callback_data": "menu"}
+                ]]
+            }
+            await send_telegram_message(chat_id, help_text, keyboard)
+            
+        elif callback_data == "support":
+            support_text = f"""💬 **Поддержка**
+
+По любым вопросам обращайтесь:
+
+👤 **Менеджер:** {settings.SUPPORT_USERNAME}
+📱 **Телефон:** {settings.SUPPORT_PHONE}
+
+⏰ **Время работы:** 9:00 — 21:00
+
+━━━━━━━━━━━━━━━━━━━━
+
+**Срочные вопросы:**
+• Курьер не приехал
+• Проблема с оплатой
+• Неправильный адрес
+• Жалоба на сервис
+
+Пишите сразу! Ответим в течение 15 минут."""
+            
+            keyboard = {
+                "inline_keyboard": [[
+                    {"text": "🏠 Главное меню", "callback_data": "menu"}
+                ]]
+            }
+            await send_telegram_message(chat_id, support_text, keyboard)
+            
+        elif callback_data == "menu":
+            # Показываем главное меню снова
+            result = await db.execute(
+                select(User).where(User.telegram_id == callback["from"]["id"])
+            )
+            user = result.scalar_one_or_none()
+            
+            if user:
+                frontend_url = settings.FRONTEND_URL
+                balance_result = await db.execute(select(Balance).where(Balance.user_id == user.id))
+                balance = balance_result.scalar_one_or_none()
+                credits = balance.credits if balance else 0
+                
+                keyboard = {
+                    "inline_keyboard": [
+                        [
+                            {
+                                "text": "🚀 Заказать вынос",
+                                "web_app": {"url": f"{frontend_url}/app/order"}
+                            }
+                        ],
+                        [
+                            {
+                                "text": "📦 Мои заказы",
+                                "web_app": {"url": f"{frontend_url}/app/orders"}
+                            },
+                            {
+                                "text": "👤 Профиль",
+                                "web_app": {"url": f"{frontend_url}/app/profile"}
+                            }
+                        ],
+                        [
+                            {
+                                "text": "💰 Купить выносы",
+                                "web_app": {"url": f"{frontend_url}/app"}
+                            }
+                        ],
+                        [
+                            {"text": "❓ Помощь", "callback_data": "help"},
+                            {"text": "💬 Поддержка", "callback_data": "support"}
+                        ]
+                    ]
+                }
+                
+                menu_text = f"""🏠 **Главное меню**
+
+👤 {user.name}
+💼 Баланс: **{credits} выносов**
+
+Выберите действие 👇"""
+                
+                await send_telegram_message(chat_id, menu_text, keyboard)
+        
+        return {"status": "ok"}
+    
     if "message" in data:
         message = data["message"]
         chat_id = message["chat"]["id"]
@@ -71,8 +194,124 @@ async def telegram_webhook(request: Request, db: AsyncSession = Depends(get_db))
         telegram_user_id = message.get("from", {}).get("id")
         print(f"[WEBHOOK] Processing message from {telegram_user_id}, text: {text}")
         
+        # Команды
+        if text == "/help":
+            help_text = """❓ **Помощь**
+
+**Как это работает:**
+
+1️⃣ Купите пакет выносов (банк мешков)
+2️⃣ Оформите заказ на удобное время
+3️⃣ Выставьте мешок у двери
+4️⃣ Курьер заберёт в выбранный слот
+
+━━━━━━━━━━━━━━━━━━━━
+
+**Слоты времени:**
+🌅 08:00 — 10:00 (Утро)
+☀️ 12:00 — 14:00 (День)
+🌆 16:00 — 18:00 (Вечер)
+🌙 20:00 — 22:00 (Ночь)
+
+━━━━━━━━━━━━━━━━━━━━
+
+**Тарифы:**
+• Разовый вынос: 300 ₽
+• Пробный (3 выноса): 500 ₽
+• Стандарт (15 выносов): 3000 ₽
+• Премиум (30 выносов): 5000 ₽
+
+**Срочный вынос** (в течение часа): 450 ₽"""
+            
+            keyboard = {
+                "inline_keyboard": [[
+                    {"text": "🏠 Главное меню", "callback_data": "menu"}
+                ]]
+            }
+            await send_telegram_message(chat_id, help_text, keyboard)
+            return {"status": "ok"}
+        
+        elif text == "/support":
+            support_text = f"""💬 **Поддержка**
+
+По любым вопросам обращайтесь:
+
+👤 **Менеджер:** {settings.SUPPORT_USERNAME}
+📱 **Телефон:** {settings.SUPPORT_PHONE}
+
+⏰ **Время работы:** 9:00 — 21:00
+
+━━━━━━━━━━━━━━━━━━━━
+
+**Срочные вопросы:**
+• Курьер не приехал
+• Проблема с оплатой
+• Неправильный адрес
+• Жалоба на сервис
+
+Пишите сразу! Ответим в течение 15 минут."""
+            
+            keyboard = {
+                "inline_keyboard": [[
+                    {"text": "🏠 Главное меню", "callback_data": "menu"}
+                ]]
+            }
+            await send_telegram_message(chat_id, support_text, keyboard)
+            return {"status": "ok"}
+        
+        elif text == "/menu":
+            result = await db.execute(select(User).where(User.telegram_id == telegram_user_id))
+            user = result.scalar_one_or_none()
+            
+            if user:
+                frontend_url = settings.FRONTEND_URL
+                balance_result = await db.execute(select(Balance).where(Balance.user_id == user.id))
+                balance = balance_result.scalar_one_or_none()
+                credits = balance.credits if balance else 0
+                
+                keyboard = {
+                    "inline_keyboard": [
+                        [
+                            {
+                                "text": "🚀 Заказать вынос",
+                                "web_app": {"url": f"{frontend_url}/app/order"}
+                            }
+                        ],
+                        [
+                            {
+                                "text": "📦 Мои заказы",
+                                "web_app": {"url": f"{frontend_url}/app/orders"}
+                            },
+                            {
+                                "text": "👤 Профиль",
+                                "web_app": {"url": f"{frontend_url}/app/profile"}
+                            }
+                        ],
+                        [
+                            {
+                                "text": "💰 Купить выносы",
+                                "web_app": {"url": f"{frontend_url}/app"}
+                            }
+                        ],
+                        [
+                            {"text": "❓ Помощь", "callback_data": "help"},
+                            {"text": "💬 Поддержка", "callback_data": "support"}
+                        ]
+                    ]
+                }
+                
+                menu_text = f"""🏠 **Главное меню**
+
+👤 {user.name}
+💼 Баланс: **{credits} выносов**
+
+Выберите действие 👇"""
+                
+                await send_telegram_message(chat_id, menu_text, keyboard)
+            return {"status": "ok"}
+        
         # Логика 1: Пользователь нажал /start
-        if text == "/start" or text == "/start auth":
+        elif text == "/start" or text == "/start auth":
             # Проверяем, есть ли у пользователя РЕАЛЬНЫЙ телефон в БД
             result = await db.execute(select(User).where(User.telegram_id == telegram_user_id))
             user = result.scalar_one_or_none()
@@ -83,19 +322,60 @@ async def telegram_webhook(request: Request, db: AsyncSession = Depends(get_db))
             print(f"[WEBHOOK] User exists: {bool(user)}, phone: {user.phone if user else None}, has_real_phone: {has_real_phone}")
             
             if has_real_phone:
-                # Уже зарегистрирован с реальным телефоном, даем кнопку входа
+                # Уже зарегистрирован с реальным телефоном, даем полное меню
                 frontend_url = settings.FRONTEND_URL
+                
+                # Получаем баланс пользователя
+                balance_result = await db.execute(select(Balance).where(Balance.user_id == user.id))
+                balance = balance_result.scalar_one_or_none()
+                credits = balance.credits if balance else 0
+                
                 keyboard = {
-                    "inline_keyboard": [[
-                        {
-                            "text": "🚀 Открыть приложение",
-                            "web_app": {"url": frontend_url}
-                        }
-                    ]]
+                    "inline_keyboard": [
+                        [
+                            {
+                                "text": "🚀 Заказать вынос",
+                                "web_app": {"url": f"{frontend_url}/app/order"}
+                            }
+                        ],
+                        [
+                            {
+                                "text": "📦 Мои заказы",
+                                "web_app": {"url": f"{frontend_url}/app/orders"}
+                            },
+                            {
+                                "text": "👤 Профиль",
+                                "web_app": {"url": f"{frontend_url}/app/profile"}
+                            }
+                        ],
+                        [
+                            {
+                                "text": "💰 Купить выносы",
+                                "web_app": {"url": f"{frontend_url}/app"}
+                            }
+                        ],
+                        [
+                            {"text": "❓ Помощь", "callback_data": "help"},
+                            {"text": "💬 Поддержка", "callback_data": "support"}
+                        ]
+                    ]
                 }
                 
                 # Отправляем фото с приветствием
-                caption = f"👋 **С возвращением, {user.name}!**\n\n🍃 Откройте приложение, чтобы оформить вывоз мусора."
+                caption = f"""👋 **С возвращением, {user.name}!**
+
+💼 Ваш баланс: **{credits} выносов**
+
+━━━━━━━━━━━━━━━━━━━━
+**Что вы можете сделать:**
+
+🚀 Заказать вынос мусора
+📦 Посмотреть свои заказы
+👤 Управлять профилем
+💰 Купить пакет выносов
+
+Выберите действие ниже 👇"""
+                
                 await send_telegram_photo(
                     chat_id,
                     photo_url="https://i.ibb.co/TDdV6sVF/17663028696947a49522580.jpg",
