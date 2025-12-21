@@ -133,7 +133,7 @@ async def telegram_webhook(request: Request, db: AsyncSession = Depends(get_db))
             await send_telegram_message(chat_id, support_text, keyboard)
             
         elif callback_data == "menu":
-            # Показываем главное меню снова
+            # Показываем главное меню снова с фото
             result = await db.execute(
                 select(User).where(User.telegram_id == callback["from"]["id"])
             )
@@ -176,14 +176,26 @@ async def telegram_webhook(request: Request, db: AsyncSession = Depends(get_db))
                     ]
                 }
                 
-                menu_text = f"""🏠 **Главное меню**
-
-👤 {user.name}
+                caption = f"""👤 **{user.name}**
 💼 Баланс: **{credits} выносов**
 
-Выберите действие 👇"""
+━━━━━━━━━━━━━━━━━━━━
+**Что вы можете сделать:**
+
+🚀 Заказать вынос мусора
+📦 Посмотреть свои заказы
+👤 Управлять профилем
+💰 Купить пакет выносов
+
+Выберите действие ниже 👇"""
                 
-                await send_telegram_message(chat_id, menu_text, keyboard)
+                # Отправляем фото с меню
+                await send_telegram_photo(
+                    chat_id,
+                    photo_url="https://i.ibb.co/TDdV6sVF/17663028696947a49522580.jpg",
+                    caption=caption,
+                    keyboard=keyboard
+                )
         
         return {"status": "ok"}
     
@@ -300,14 +312,26 @@ async def telegram_webhook(request: Request, db: AsyncSession = Depends(get_db))
                     ]
                 }
                 
-                menu_text = f"""🏠 **Главное меню**
-
-👤 {user.name}
+                caption = f"""👤 **{user.name}**
 💼 Баланс: **{credits} выносов**
 
-Выберите действие 👇"""
+━━━━━━━━━━━━━━━━━━━━
+**Что вы можете сделать:**
+
+🚀 Заказать вынос мусора
+📦 Посмотреть свои заказы
+👤 Управлять профилем
+💰 Купить пакет выносов
+
+Выберите действие ниже 👇"""
                 
-                await send_telegram_message(chat_id, menu_text, keyboard)
+                # Отправляем фото с меню
+                await send_telegram_photo(
+                    chat_id,
+                    photo_url="https://i.ibb.co/TDdV6sVF/17663028696947a49522580.jpg",
+                    caption=caption,
+                    keyboard=keyboard
+                )
             return {"status": "ok"}
         
         # Логика 1: Пользователь нажал /start
