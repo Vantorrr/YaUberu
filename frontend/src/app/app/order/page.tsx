@@ -188,17 +188,41 @@ function OrderContent() {
             <div className="space-y-4">
               <div>
                 <label className="block text-sm text-gray-400 mb-2">Жилой комплекс</label>
-                <div className="relative">
-                  <Building className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-emerald-500" />
-                  <select
-                    value={address.complexId}
-                    onChange={(e) => setAddress({ ...address, complexId: e.target.value })}
-                    className="w-full pl-12 pr-4 py-4 rounded-xl bg-emerald-950/50 border border-emerald-800/30 text-white appearance-none"
-                  >
-                    <option value="">Выберите ЖК</option>
-                    {complexes.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-                  </select>
-                </div>
+                
+                {complexes.length === 0 ? (
+                  <div className="text-center py-8 text-gray-500">
+                    <Building className="w-12 h-12 mx-auto mb-2 opacity-30" />
+                    <p>Загрузка ЖК...</p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 gap-3">
+                    {complexes.map((c) => (
+                      <button
+                        key={c.id}
+                        type="button"
+                        onClick={() => setAddress({ ...address, complexId: String(c.id) })}
+                        className={`
+                          p-4 rounded-xl border-2 transition-all text-left flex items-center gap-3
+                          ${address.complexId === String(c.id)
+                            ? 'bg-emerald-600 border-emerald-500 text-white' 
+                            : 'bg-emerald-950/30 border-emerald-800/30 text-gray-300 hover:border-emerald-600/50'
+                          }
+                        `}
+                      >
+                        <Building className={`w-5 h-5 flex-shrink-0 ${
+                          address.complexId === String(c.id) ? 'text-white' : 'text-emerald-500'
+                        }`} />
+                        <div className="flex-1">
+                          <p className="font-semibold">{c.name}</p>
+                          {c.short_name && <p className="text-sm opacity-70">{c.short_name}</p>}
+                        </div>
+                        {address.complexId === String(c.id) && (
+                          <Check className="w-5 h-5 text-white" />
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
 
               <div className="grid grid-cols-2 gap-3">
