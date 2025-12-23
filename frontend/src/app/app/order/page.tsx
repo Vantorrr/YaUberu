@@ -2,24 +2,10 @@
 
 import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import dynamic from 'next/dynamic';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { ArrowLeft, MapPin, Clock, Check, Building, Home, DoorOpen, Hash, Zap, AlertCircle, User } from 'lucide-react';
 import { api } from '@/lib/api';
-
-// Dynamic import для карты (SSR не поддерживается Leaflet)
-const MapPicker = dynamic(() => import('@/components/MapPicker').then(mod => ({ default: mod.MapPicker })), {
-  ssr: false,
-  loading: () => (
-    <div className="w-full h-full flex items-center justify-center bg-teal-950/20 rounded-2xl">
-      <div className="text-center">
-        <div className="w-12 h-12 border-4 border-teal-400 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
-        <p className="text-teal-400 text-sm font-medium">🗺️ Загрузка карты...</p>
-      </div>
-    </div>
-  )
-});
 
 const steps = ['address', 'time', 'confirm'] as const;
 type Step = typeof steps[number];
@@ -41,7 +27,7 @@ function OrderContent() {
   const [pickupMethod, setPickupMethod] = useState<'door' | 'hand'>('door');
   const [loading, setLoading] = useState(false);
   const [locationLoading, setLocationLoading] = useState(false);
-  const [mapCenter, setMapCenter] = useState<[number, number]>([55.7558, 37.6173]); // Москва по умолчанию
+  const [mapCenter, setMapCenter] = useState({ lat: 55.7558, lon: 37.6173 }); // Москва по умолчанию
   
   // Dynamic Complexes
   const [complexes, setComplexes] = useState<any[]>([]);
@@ -67,21 +53,6 @@ function OrderContent() {
       });
   }, []);
 
-  // Обработчик выбора адреса на карте
-  const handleMapLocationSelect = (lat: number, lon: number, fullAddress: string) => {
-    console.log('[MAP] Selected:', lat, lon, fullAddress);
-    
-    // Парсим адрес и извлекаем номер дома
-    const houseMatch = fullAddress.match(/д\.\s*(\S+)/);
-    if (houseMatch) {
-      setAddress(prev => ({ ...prev, building: houseMatch[1] }));
-      alert(`✅ Адрес выбран!\n\n🏠 Дом: ${houseMatch[1]}\n\n📝 Заполните квартиру и остальные поля`);
-    } else {
-      // Если не нашли номер дома, просто показываем адрес
-      alert(`📍 Адрес выбран:\n\n${fullAddress}\n\n📝 Введите номер дома и квартиру вручную`);
-    }
-  };
-
   // Центрирование карты на текущей геолокации
   const handleLocationRequest = async () => {
     if (!navigator.geolocation) {
@@ -97,8 +68,8 @@ function OrderContent() {
         console.log('[LOCATION] Got coords:', latitude, longitude);
         
         setLocationLoading(false);
-        setMapCenter([latitude, longitude]);
-        alert(`📍 Карта центрирована на вашем местоположении!\n\n👆 Теперь кликните на карту для выбора дома`);
+        setMapCenter({ lat: latitude, lon: longitude });
+        alert(`📍 Ваше местоположение найдено!\n\nУточните адрес в полях ниже.`);
       },
       (error) => {
         setLocationLoading(false);
@@ -107,11 +78,11 @@ function OrderContent() {
         let errorMessage = '❌ Не удалось получить геолокацию';
 
         if (error.code === error.PERMISSION_DENIED) {
-          errorMessage = '🚫 Доступ к геолокации запрещён.\n\nРазрешите доступ в настройках браузера.';
+          errorMessage = '🚫 Доступ к геолокации запрещён';
         } else if (error.code === error.POSITION_UNAVAILABLE) {
-          errorMessage = '📡 Не удалось определить местоположение.\n\nПроверьте GPS/Wi-Fi.';
+          errorMessage = '📡 Не удалось определить местоположение';
         } else if (error.code === error.TIMEOUT) {
-          errorMessage = '⏱ Превышено время ожидания.\n\nПопробуйте ещё раз.';
+          errorMessage = '⏱ Превышено время ожидания';
         }
 
         alert(errorMessage);
@@ -254,20 +225,48 @@ function OrderContent() {
                   <p className="text-gray-500 text-sm">Куда приехать?</p>
                 </div>
               </div>
+              
+              <button
+                type="button"
+                onClick={handleLocationRequest}
+                disabled={locationLoading}
+                className="px-3 py-2 rounded-xl bg-teal-900/40 border border-teal-600/30 text-teal-400 text-sm font-medium hover:bg-teal-900/60 hover:border-teal-500/50 transition-all disabled:opacity-50 flex items-center gap-2 active:scale-95"
+              >
+                {locationLoading ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-teal-400 border-t-transparent rounded-full animate-spin" />
+                    <span className="text-xs">Ищу...</span>
+                  </>
+                ) : (
+                  <>
+                    <MapPin className="w-4 h-4" />
+                    <span className="text-xs font-semibold">📍 Где я?</span>
+                  </>
+                )}
+              </button>
             </div>
 
             <div className="space-y-4">
-              {/* ИНТЕРАКТИВНАЯ КАРТА */}
+              {/* ЯНДЕКС.КАРТЫ В МОДАЛЬНОМ ОКНЕ */}
               <div>
-                <div className="flex items-center justify-between mb-3">
-                  <label className="block text-sm font-medium text-gray-300">
-                    📍 Выберите дом на карте
-                  </label>
+                <label className="block text-sm font-medium text-gray-300 mb-2">📍 Выберите на карте</label>
+                <div className="rounded-2xl overflow-hidden border-2 border-teal-700/50 h-[400px] bg-teal-950/20">
+                  <iframe
+                    key={`map-${mapCenter.lat}-${mapCenter.lon}`}
+                    src={`https://yandex.ru/map-widget/v1/?ll=${mapCenter.lon}%2C${mapCenter.lat}&z=16&l=map`}
+                    width="100%"
+                    height="100%"
+                    frameBorder="0"
+                    allowFullScreen
+                    style={{ position: 'relative' }}
+                  />
+                </div>
+                <div className="flex items-center justify-between mt-3">
                   <button
                     type="button"
                     onClick={handleLocationRequest}
                     disabled={locationLoading}
-                    className="px-3 py-2 rounded-xl bg-teal-900/40 border border-teal-600/30 text-teal-400 text-sm font-medium hover:bg-teal-900/60 transition-all disabled:opacity-50 flex items-center gap-2"
+                    className="px-4 py-2 rounded-xl bg-teal-900/40 border border-teal-600/30 text-teal-400 text-sm font-medium hover:bg-teal-900/60 transition-all disabled:opacity-50 flex items-center gap-2"
                   >
                     {locationLoading ? (
                       <>
@@ -281,49 +280,18 @@ function OrderContent() {
                       </>
                     )}
                   </button>
+                  <p className="text-xs text-gray-500">💡 Укажите адрес вручную ниже</p>
                 </div>
-                <div className="rounded-2xl overflow-hidden border-2 border-teal-700/50 h-[400px]">
-                  <MapPicker
-                    initialLat={mapCenter[0]}
-                    initialLon={mapCenter[1]}
-                    onLocationSelect={handleMapLocationSelect}
-                    onClose={() => {}}
-                    embedded={true}
-                  />
-                </div>
-                <p className="text-xs text-gray-500 text-center mt-2">
-                  💡 Кликните на карту чтобы выбрать ваш дом
-                </p>
               </div>
 
               <div>
                 <label className="block text-sm text-gray-400 mb-2">Жилой комплекс (необязательно)</label>
                 
-                <div className="grid grid-cols-1 gap-3">
-                  <button
-                    type="button"
-                    onClick={() => setAddress({ ...address, complexId: '0' })}
-                    className={`
-                      p-4 rounded-xl border-2 transition-all text-left flex items-center gap-3
-                      ${address.complexId === '0'
-                        ? 'bg-teal-600 border-teal-500 text-white' 
-                        : 'bg-teal-950/30 border-teal-800/30 text-gray-300 hover:border-teal-600/50'
-                      }
-                    `}
-                  >
-                    <MapPin className={`w-5 h-5 flex-shrink-0 ${
-                      address.complexId === '0' ? 'text-white' : 'text-teal-500'
-                    }`} />
-                    <div className="flex-1">
-                      <p className="font-semibold">Другой адрес</p>
-                      <p className="text-sm opacity-70">Не живу в ЖК</p>
-                    </div>
-                    {address.complexId === '0' && (
-                      <Check className="w-5 h-5 text-white" />
-                    )}
-                  </button>
-                  
-                  {complexes.length > 0 ? (
+                {complexes.length === 0 ? (
+                  <div className="p-4 rounded-xl bg-teal-950/30 border border-teal-800/30 text-gray-400 text-sm text-center">
+                    ⚠️ Список ЖК недоступен. Введите адрес вручную.
+                  </div>
+                ) : (
                   <div className="grid grid-cols-1 gap-3">
                     <button
                       type="button"
@@ -347,33 +315,33 @@ function OrderContent() {
                         <Check className="w-5 h-5 text-white" />
                       )}
                     </button>
-                    
-                  {complexes.map((c) => (
-                    <button
-                      key={c.id}
-                      type="button"
-                      onClick={() => setAddress({ ...address, complexId: String(c.id) })}
-                      className={`
-                        p-4 rounded-xl border-2 transition-all text-left flex items-center gap-3
-                        ${address.complexId === String(c.id)
-                          ? 'bg-teal-600 border-teal-500 text-white' 
-                          : 'bg-teal-950/30 border-teal-800/30 text-gray-300 hover:border-teal-600/50'
-                        }
-                      `}
-                    >
-                      <Building className={`w-5 h-5 flex-shrink-0 ${
-                        address.complexId === String(c.id) ? 'text-white' : 'text-teal-500'
-                      }`} />
-                      <div className="flex-1">
-                        <p className="font-semibold">{c.name}</p>
-                        {c.short_name && <p className="text-sm opacity-70">{c.short_name}</p>}
-                      </div>
-                      {address.complexId === String(c.id) && (
-                        <Check className="w-5 h-5 text-white" />
-                      )}
-                    </button>
-                  ))}
-                </div>
+                    {complexes.map((c) => (
+                      <button
+                        key={c.id}
+                        type="button"
+                        onClick={() => setAddress({ ...address, complexId: String(c.id) })}
+                        className={`
+                          p-4 rounded-xl border-2 transition-all text-left flex items-center gap-3
+                          ${address.complexId === String(c.id)
+                            ? 'bg-teal-600 border-teal-500 text-white' 
+                            : 'bg-teal-950/30 border-teal-800/30 text-gray-300 hover:border-teal-600/50'
+                          }
+                        `}
+                      >
+                        <Building className={`w-5 h-5 flex-shrink-0 ${
+                          address.complexId === String(c.id) ? 'text-white' : 'text-teal-500'
+                        }`} />
+                        <div className="flex-1">
+                          <p className="font-semibold">{c.name}</p>
+                          {c.short_name && <p className="text-sm opacity-70">{c.short_name}</p>}
+                        </div>
+                        {address.complexId === String(c.id) && (
+                          <Check className="w-5 h-5 text-white" />
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
 
               <div className="grid grid-cols-2 gap-3">
