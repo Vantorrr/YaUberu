@@ -27,7 +27,6 @@ function OrderContent() {
   const [pickupMethod, setPickupMethod] = useState<'door' | 'hand'>('door');
   const [loading, setLoading] = useState(false);
   const [locationLoading, setLocationLoading] = useState(false);
-  const [mapCenter, setMapCenter] = useState({ lat: 55.7558, lon: 37.6173 }); // Москва по умолчанию
   
   // Dynamic Complexes
   const [complexes, setComplexes] = useState<any[]>([]);
@@ -53,7 +52,7 @@ function OrderContent() {
       });
   }, []);
 
-  // Центрирование карты на текущей геолокации
+  // Автоопределение адреса через геолокацию + геокодинг
   const handleLocationRequest = async () => {
     if (!navigator.geolocation) {
       alert('❌ Ваш браузер не поддерживает геолокацию');
@@ -63,13 +62,56 @@ function OrderContent() {
     setLocationLoading(true);
 
     navigator.geolocation.getCurrentPosition(
-      (position) => {
+      async (position) => {
         const { latitude, longitude } = position.coords;
         console.log('[LOCATION] Got coords:', latitude, longitude);
         
-        setLocationLoading(false);
-        setMapCenter({ lat: latitude, lon: longitude });
-        alert(`📍 Ваше местоположение найдено!\n\nУточните адрес в полях ниже.`);
+        try {
+          // Геокодинг через OpenStreetMap Nominatim API
+          const response = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&addressdetails=1&accept-language=ru`,
+            {
+              headers: {
+                'User-Agent': 'YaUberu-App/1.0',
+              },
+            }
+          );
+
+          if (!response.ok) {
+            throw new Error('Ошибка геокодинга');
+          }
+
+          const data = await response.json();
+          console.log('[GEOCODING] Result:', data);
+
+          const addr = data.address || {};
+          
+          // Извлекаем номер дома
+          const house = addr.house_number || '';
+          // Извлекаем квартиру (если есть)
+          const apartment = addr.flat || '';
+
+          // Автоматом заполняем поля
+          setAddress(prev => ({
+            ...prev,
+            building: house,
+            apartment: apartment || prev.apartment, // Если квартиры нет, оставляем старое значение
+          }));
+
+          setLocationLoading(false);
+          
+          alert(
+            `📍 Адрес определён!\n\n` +
+            `🏠 Дом: ${house || 'не найден'}\n` +
+            `${apartment ? `🚪 Квартира: ${apartment}\n` : ''}` +
+            `\n✅ Проверьте и заполните остальные поля`
+          );
+          
+        } catch (err) {
+          console.error('[GEOCODING] Error:', err);
+          setLocationLoading(false);
+          alert('❌ Не удалось определить адрес по координатам.\n\nВведите адрес вручную.');
+        }
       },
       (error) => {
         setLocationLoading(false);
@@ -78,11 +120,11 @@ function OrderContent() {
         let errorMessage = '❌ Не удалось получить геолокацию';
 
         if (error.code === error.PERMISSION_DENIED) {
-          errorMessage = '🚫 Доступ к геолокации запрещён';
+          errorMessage = '🚫 Доступ к геолокации запрещён.\n\nРазрешите доступ в настройках браузера.';
         } else if (error.code === error.POSITION_UNAVAILABLE) {
-          errorMessage = '📡 Не удалось определить местоположение';
+          errorMessage = '📡 Не удалось определить местоположение.\n\nПроверьте GPS/Wi-Fi.';
         } else if (error.code === error.TIMEOUT) {
-          errorMessage = '⏱ Превышено время ожидания';
+          errorMessage = '⏱ Превышено время ожидания.\n\nПопробуйте ещё раз.';
         }
 
         alert(errorMessage);
@@ -247,51 +289,65 @@ function OrderContent() {
             </div>
 
             <div className="space-y-4">
-              {/* ЯНДЕКС.КАРТЫ В МОДАЛЬНОМ ОКНЕ */}
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">📍 Выберите на карте</label>
-                <div className="rounded-2xl overflow-hidden border-2 border-teal-700/50 h-[400px] bg-teal-950/20">
-                  <iframe
-                    key={`map-${mapCenter.lat}-${mapCenter.lon}`}
-                    src={`https://yandex.ru/map-widget/v1/?ll=${mapCenter.lon}%2C${mapCenter.lat}&z=16&l=map`}
-                    width="100%"
-                    height="100%"
-                    frameBorder="0"
-                    allowFullScreen
-                    style={{ position: 'relative' }}
-                  />
-                </div>
-                <div className="flex items-center justify-between mt-3">
+              {/* АВТООПРЕДЕЛЕНИЕ АДРЕСА */}
+              <div className="p-5 rounded-2xl bg-gradient-to-br from-teal-900/40 to-teal-950/40 border border-teal-600/30">
+                <div className="flex items-center justify-between mb-3">
+                  <div>
+                    <h3 className="text-white font-bold text-lg">📍 Ваш адрес</h3>
+                    <p className="text-gray-400 text-sm">Определим автоматически</p>
+                  </div>
                   <button
                     type="button"
                     onClick={handleLocationRequest}
                     disabled={locationLoading}
-                    className="px-4 py-2 rounded-xl bg-teal-900/40 border border-teal-600/30 text-teal-400 text-sm font-medium hover:bg-teal-900/60 transition-all disabled:opacity-50 flex items-center gap-2"
+                    className="px-4 py-3 rounded-xl bg-teal-600 hover:bg-teal-500 disabled:bg-gray-700 text-white font-bold transition-all disabled:opacity-50 flex items-center gap-2 shadow-lg"
                   >
                     {locationLoading ? (
                       <>
-                        <div className="w-4 h-4 border-2 border-teal-400 border-t-transparent rounded-full animate-spin" />
-                        Ищу...
+                        <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        Определяю...
                       </>
                     ) : (
                       <>
-                        <MapPin className="w-4 h-4" />
-                        Где я?
+                        <MapPin className="w-5 h-5" />
+                        Определить адрес
                       </>
                     )}
                   </button>
-                  <p className="text-xs text-gray-500">💡 Укажите адрес вручную ниже</p>
                 </div>
+                <p className="text-xs text-teal-300">
+                  💡 Нажмите кнопку - адрес вставится автоматически
+                </p>
               </div>
 
               <div>
                 <label className="block text-sm text-gray-400 mb-2">Жилой комплекс (необязательно)</label>
                 
-                {complexes.length === 0 ? (
-                  <div className="p-4 rounded-xl bg-teal-950/30 border border-teal-800/30 text-gray-400 text-sm text-center">
-                    ⚠️ Список ЖК недоступен. Введите адрес вручную.
-                  </div>
-                ) : (
+                <div className="grid grid-cols-1 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setAddress({ ...address, complexId: '0' })}
+                    className={`
+                      p-4 rounded-xl border-2 transition-all text-left flex items-center gap-3
+                      ${address.complexId === '0'
+                        ? 'bg-teal-600 border-teal-500 text-white' 
+                        : 'bg-teal-950/30 border-teal-800/30 text-gray-300 hover:border-teal-600/50'
+                      }
+                    `}
+                  >
+                    <MapPin className={`w-5 h-5 flex-shrink-0 ${
+                      address.complexId === '0' ? 'text-white' : 'text-teal-500'
+                    }`} />
+                    <div className="flex-1">
+                      <p className="font-semibold">Другой адрес</p>
+                      <p className="text-sm opacity-70">Не живу в ЖК</p>
+                    </div>
+                    {address.complexId === '0' && (
+                      <Check className="w-5 h-5 text-white" />
+                    )}
+                  </button>
+                  
+                  {complexes.length > 0 ? (
                   <div className="grid grid-cols-1 gap-3">
                     <button
                       type="button"
@@ -315,33 +371,33 @@ function OrderContent() {
                         <Check className="w-5 h-5 text-white" />
                       )}
                     </button>
-                    {complexes.map((c) => (
-                      <button
-                        key={c.id}
-                        type="button"
-                        onClick={() => setAddress({ ...address, complexId: String(c.id) })}
-                        className={`
-                          p-4 rounded-xl border-2 transition-all text-left flex items-center gap-3
-                          ${address.complexId === String(c.id)
-                            ? 'bg-teal-600 border-teal-500 text-white' 
-                            : 'bg-teal-950/30 border-teal-800/30 text-gray-300 hover:border-teal-600/50'
-                          }
-                        `}
-                      >
-                        <Building className={`w-5 h-5 flex-shrink-0 ${
-                          address.complexId === String(c.id) ? 'text-white' : 'text-teal-500'
-                        }`} />
-                        <div className="flex-1">
-                          <p className="font-semibold">{c.name}</p>
-                          {c.short_name && <p className="text-sm opacity-70">{c.short_name}</p>}
-                        </div>
-                        {address.complexId === String(c.id) && (
-                          <Check className="w-5 h-5 text-white" />
-                        )}
-                      </button>
-                    ))}
-                  </div>
-                )}
+                    
+                  {complexes.map((c) => (
+                    <button
+                      key={c.id}
+                      type="button"
+                      onClick={() => setAddress({ ...address, complexId: String(c.id) })}
+                      className={`
+                        p-4 rounded-xl border-2 transition-all text-left flex items-center gap-3
+                        ${address.complexId === String(c.id)
+                          ? 'bg-teal-600 border-teal-500 text-white' 
+                          : 'bg-teal-950/30 border-teal-800/30 text-gray-300 hover:border-teal-600/50'
+                        }
+                      `}
+                    >
+                      <Building className={`w-5 h-5 flex-shrink-0 ${
+                        address.complexId === String(c.id) ? 'text-white' : 'text-teal-500'
+                      }`} />
+                      <div className="flex-1">
+                        <p className="font-semibold">{c.name}</p>
+                        {c.short_name && <p className="text-sm opacity-70">{c.short_name}</p>}
+                      </div>
+                      {address.complexId === String(c.id) && (
+                        <Check className="w-5 h-5 text-white" />
+                      )}
+                    </button>
+                  ))}
+                </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
