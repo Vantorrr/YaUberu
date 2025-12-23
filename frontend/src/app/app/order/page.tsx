@@ -2,10 +2,24 @@
 
 import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import dynamic from 'next/dynamic';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { ArrowLeft, MapPin, Clock, Check, Building, Home, DoorOpen, Hash, Zap, AlertCircle, User } from 'lucide-react';
 import { api } from '@/lib/api';
+
+// Dynamic import для карты (SSR не поддерживается Leaflet)
+const MapPicker = dynamic(() => import('@/components/MapPicker').then(mod => ({ default: mod.MapPicker })), {
+  ssr: false,
+  loading: () => (
+    <div className="w-full h-full flex items-center justify-center bg-teal-950/20 rounded-2xl">
+      <div className="text-center">
+        <div className="w-12 h-12 border-4 border-teal-400 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+        <p className="text-teal-400 text-sm font-medium">🗺️ Загрузка карты...</p>
+      </div>
+    </div>
+  )
+});
 
 const steps = ['address', 'time', 'confirm'] as const;
 type Step = typeof steps[number];
@@ -27,6 +41,7 @@ function OrderContent() {
   const [pickupMethod, setPickupMethod] = useState<'door' | 'hand'>('door');
   const [loading, setLoading] = useState(false);
   const [locationLoading, setLocationLoading] = useState(false);
+  const [mapCenter, setMapCenter] = useState<[number, number]>([55.7558, 37.6173]); // Москва по умолчанию
   
   // Dynamic Complexes
   const [complexes, setComplexes] = useState<any[]>([]);
@@ -52,7 +67,22 @@ function OrderContent() {
       });
   }, []);
 
-  // Автоопределение адреса через геолокацию + геокодинг
+  // Обработчик выбора адреса на карте
+  const handleMapLocationSelect = (lat: number, lon: number, fullAddress: string) => {
+    console.log('[MAP] Selected:', lat, lon, fullAddress);
+    
+    // Парсим адрес и извлекаем номер дома
+    const houseMatch = fullAddress.match(/д\.\s*(\S+)/);
+    if (houseMatch) {
+      setAddress(prev => ({ ...prev, building: houseMatch[1] }));
+      alert(`✅ Адрес выбран!\n\n🏠 Дом: ${houseMatch[1]}\n\n📝 Заполните квартиру и остальные поля`);
+    } else {
+      // Если не нашли номер дома, просто показываем адрес
+      alert(`📍 Адрес выбран:\n\n${fullAddress}\n\n📝 Введите номер дома и квартиру вручную`);
+    }
+  };
+
+  // Центрирование карты на текущей геолокации
   const handleLocationRequest = async () => {
     if (!navigator.geolocation) {
       alert('❌ Ваш браузер не поддерживает геолокацию');
@@ -62,56 +92,13 @@ function OrderContent() {
     setLocationLoading(true);
 
     navigator.geolocation.getCurrentPosition(
-      async (position) => {
+      (position) => {
         const { latitude, longitude } = position.coords;
         console.log('[LOCATION] Got coords:', latitude, longitude);
         
-        try {
-          // Геокодинг через OpenStreetMap Nominatim API
-          const response = await fetch(
-            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&addressdetails=1&accept-language=ru`,
-            {
-              headers: {
-                'User-Agent': 'YaUberu-App/1.0',
-              },
-            }
-          );
-
-          if (!response.ok) {
-            throw new Error('Ошибка геокодинга');
-          }
-
-          const data = await response.json();
-          console.log('[GEOCODING] Result:', data);
-
-          const addr = data.address || {};
-          
-          // Извлекаем номер дома
-          const house = addr.house_number || '';
-          // Извлекаем квартиру (если есть)
-          const apartment = addr.flat || '';
-
-          // Автоматом заполняем поля
-          setAddress(prev => ({
-            ...prev,
-            building: house,
-            apartment: apartment || prev.apartment, // Если квартиры нет, оставляем старое значение
-          }));
-
-          setLocationLoading(false);
-          
-          alert(
-            `📍 Адрес определён!\n\n` +
-            `🏠 Дом: ${house || 'не найден'}\n` +
-            `${apartment ? `🚪 Квартира: ${apartment}\n` : ''}` +
-            `\n✅ Проверьте и заполните остальные поля`
-          );
-          
-        } catch (err) {
-          console.error('[GEOCODING] Error:', err);
-          setLocationLoading(false);
-          alert('❌ Не удалось определить адрес по координатам.\n\nВведите адрес вручную.');
-        }
+        setLocationLoading(false);
+        setMapCenter([latitude, longitude]);
+        alert(`📍 Карта центрирована на вашем местоположении!\n\n👆 Теперь кликните на карту для выбора дома`);
       },
       (error) => {
         setLocationLoading(false);
@@ -267,56 +254,45 @@ function OrderContent() {
                   <p className="text-gray-500 text-sm">Куда приехать?</p>
                 </div>
               </div>
-              
-              <button
-                type="button"
-                onClick={handleLocationRequest}
-                disabled={locationLoading}
-                className="px-3 py-2 rounded-xl bg-teal-900/40 border border-teal-600/30 text-teal-400 text-sm font-medium hover:bg-teal-900/60 hover:border-teal-500/50 transition-all disabled:opacity-50 flex items-center gap-2 active:scale-95"
-              >
-                {locationLoading ? (
-                  <>
-                    <div className="w-4 h-4 border-2 border-teal-400 border-t-transparent rounded-full animate-spin" />
-                    <span className="text-xs">Ищу...</span>
-                  </>
-                ) : (
-                  <>
-                    <MapPin className="w-4 h-4" />
-                    <span className="text-xs font-semibold">📍 Где я?</span>
-                  </>
-                )}
-              </button>
             </div>
 
             <div className="space-y-4">
-              {/* АВТООПРЕДЕЛЕНИЕ АДРЕСА */}
-              <div className="p-5 rounded-2xl bg-gradient-to-br from-teal-900/40 to-teal-950/40 border border-teal-600/30">
+              {/* ИНТЕРАКТИВНАЯ КАРТА */}
+              <div>
                 <div className="flex items-center justify-between mb-3">
-                  <div>
-                    <h3 className="text-white font-bold text-lg">📍 Ваш адрес</h3>
-                    <p className="text-gray-400 text-sm">Определим автоматически</p>
-                  </div>
+                  <label className="block text-sm font-medium text-gray-300">
+                    📍 Выберите дом на карте
+                  </label>
                   <button
                     type="button"
                     onClick={handleLocationRequest}
                     disabled={locationLoading}
-                    className="px-4 py-3 rounded-xl bg-teal-600 hover:bg-teal-500 disabled:bg-gray-700 text-white font-bold transition-all disabled:opacity-50 flex items-center gap-2 shadow-lg"
+                    className="px-3 py-2 rounded-xl bg-teal-900/40 border border-teal-600/30 text-teal-400 text-sm font-medium hover:bg-teal-900/60 transition-all disabled:opacity-50 flex items-center gap-2"
                   >
                     {locationLoading ? (
                       <>
-                        <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                        Определяю...
+                        <div className="w-4 h-4 border-2 border-teal-400 border-t-transparent rounded-full animate-spin" />
+                        Ищу...
                       </>
                     ) : (
                       <>
-                        <MapPin className="w-5 h-5" />
-                        Определить адрес
+                        <MapPin className="w-4 h-4" />
+                        Где я?
                       </>
                     )}
                   </button>
                 </div>
-                <p className="text-xs text-teal-300">
-                  💡 Нажмите кнопку - адрес вставится автоматически
+                <div className="rounded-2xl overflow-hidden border-2 border-teal-700/50 h-[400px]">
+                  <MapPicker
+                    initialLat={mapCenter[0]}
+                    initialLon={mapCenter[1]}
+                    onLocationSelect={handleMapLocationSelect}
+                    onClose={() => {}}
+                    embedded={true}
+                  />
+                </div>
+                <p className="text-xs text-gray-500 text-center mt-2">
+                  💡 Кликните на карту чтобы выбрать ваш дом
                 </p>
               </div>
 
