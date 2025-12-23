@@ -528,7 +528,8 @@ async def show_orders_in_building(callback: CallbackQuery, state: FSMContext):
         status_emoji = "🟡" if order['status'] == 'scheduled' else "🔵"
         text += (
             f"{status_emoji} **Заказ #{order['id']}**\n"
-            f"┌ 🕐 {order['time_slot']}\n"
+            f"┌ 📍 {order.get('full_address', f'д. {building}')}\n"
+            f"├ 🕐 {order['time_slot']}\n"
             f"├ 🚪 Подъезд {order['entrance']}, этаж {order['floor']}\n"
             f"├ 🏠 Квартира {order['apartment']}\n"
             f"├ 🔑 Домофон: `{order['intercom']}`\n"
@@ -545,7 +546,7 @@ async def show_orders_in_building(callback: CallbackQuery, state: FSMContext):
     )
 
 @router.callback_query(F.data.startswith("take_"))
-async def take_order_handler(callback: CallbackQuery):
+async def take_order_handler(callback: CallbackQuery, state: FSMContext):
     order_id = int(callback.data.split("_")[1])
     courier_tg_id = callback.from_user.id
     
@@ -557,10 +558,27 @@ async def take_order_handler(callback: CallbackQuery):
         await callback.answer("❌ Заказ уже взят другим курьером!", show_alert=True)
         return
     
-    text = f"""
-📦 **Заказ #{order_id} — ваш!**
-
-✅ Клиент уведомлен, что вы едете.
+    # Get order details from state to show full info
+    data = await state.get_data()
+    complex_id = data.get("complex_id")
+    building = data.get("building")
+    
+    # Fetch fresh order details
+    orders = await fetch(f"/courier/orders?complex_id={complex_id}&building={building}")
+    order_info = next((o for o in orders if o['id'] == order_id), None) if orders else None
+    
+    text = f"📦 **Заказ #{order_id} — ваш!**\n\n"
+    
+    if order_info:
+        text += f"📍 **{order_info.get('full_address', 'Адрес')}**\n"
+        text += f"🚪 Подъезд {order_info['entrance']}, этаж {order_info['floor']}\n"
+        text += f"🏠 Квартира {order_info['apartment']}\n"
+        text += f"🔑 Домофон: `{order_info['intercom']}`\n"
+        if order_info.get('comment'):
+            text += f"💬 _{order_info['comment']}_\n"
+        text += "\n"
+    
+    text += """✅ **Клиент уведомлен, что вы едете!**
 
 ━━━━━━━━━━━━━━━━━━━━
 
@@ -600,14 +618,23 @@ async def set_bags_and_complete(callback: CallbackQuery):
         await callback.answer("Ошибка завершения", show_alert=True)
         return
     
+    if bags_count == 1:
+        bags_text = "1 пакет"
+    elif bags_count < 5:
+        bags_text = f"{bags_count} пакета"
+    else:
+        bags_text = f"{bags_count} пакетов"
+    
     await callback.message.edit_text(
         f"""
 ✅ **Заказ #{order_id} выполнен!**
 
-📦 Пакетов: {bags_count}
-💰 Начислено: +1 заказ
+📦 Забрали: **{bags_text}**
+💰 Начислено: +1 заказ (100 ₽)
 
 ━━━━━━━━━━━━━━━━━━━━
+
+✅ **Клиент получил уведомление о завершении!**
 
 _Если ошиблись — можете отменить (5 мин)_
 """,

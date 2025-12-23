@@ -150,8 +150,9 @@ async def get_orders(complex_id: int, building: str, db: AsyncSession = Depends(
     today = date.today()
     
     result = await db.execute(
-        select(Order, Address)
+        select(Order, Address, ResidentialComplex)
         .join(Address, Order.address_id == Address.id)
+        .outerjoin(ResidentialComplex, Address.complex_id == ResidentialComplex.id)
         .where(
             and_(
                 Address.complex_id == complex_id,
@@ -165,9 +166,19 @@ async def get_orders(complex_id: int, building: str, db: AsyncSession = Depends(
     rows = result.all()
     
     response = []
-    for order, addr in rows:
+    for order, addr, complex_obj in rows:
+        # Build full address string
+        if complex_obj:
+            full_address = f"{complex_obj.name}, д. {addr.building}"
+            complex_name = complex_obj.name
+        else:
+            full_address = f"д. {addr.building}"
+            complex_name = "Другой адрес"
+        
         response.append({
             "id": order.id,
+            "complex_name": complex_name,
+            "full_address": full_address,
             "building": addr.building,
             "entrance": addr.entrance,
             "floor": addr.floor,

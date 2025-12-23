@@ -49,17 +49,23 @@ async def notify_all_couriers_new_order(courier_telegram_ids: list, address: str
 
 async def notify_client_courier_took_order(client_telegram_id: int, courier_name: str, time_slot: str):
     """Notify client that a courier took their order"""
+    print(f"[NOTIFY] Sending 'courier took order' to client {client_telegram_id}")
     text = (
-        f"🎉 **Курьер найден!**\n\n"
-        f"👤 **{courier_name}** взял ваш заказ\n"
-        f"🕐 Время: {time_slot}\n\n"
-        f"Не забудьте выставить пакет у двери!"
+        f"🚀 **Курьер выехал!**\n\n"
+        f"👤 Ваш курьер: **{courier_name}**\n"
+        f"🕐 Время прибытия: {time_slot}\n\n"
+        f"📦 Не забудьте выставить пакет у двери!\n"
+        f"_(Если выбрали \"В руки\" — ожидайте звонка)_"
     )
-    await send_telegram_notification(client_telegram_id, text)
+    result = await send_telegram_notification(client_telegram_id, text)
+    print(f"[NOTIFY] Result: {result}")
+    return result
 
 
 async def notify_client_order_completed(client_telegram_id: int, bags_count: int = 1):
     """Notify client that order is completed"""
+    print(f"[NOTIFY] Sending 'order completed' to client {client_telegram_id}, bags={bags_count}")
+    
     if bags_count == 1:
         bags_text = "1 пакет"
     elif bags_count < 5:
@@ -69,8 +75,11 @@ async def notify_client_order_completed(client_telegram_id: int, bags_count: int
     
     text = (
         f"✅ **Готово!**\n\n"
-        f"Мы забрали {bags_text}.\n"
-        f"Спасибо, что пользуетесь сервисом «Я УБЕРУ» 🍃"
+        f"📦 Мы забрали {bags_text}\n"
+        f"💚 Спасибо, что пользуетесь сервисом **«Я УБЕРУ»**\n\n"
+        f"_С баланса списан 1 кредит_"
     )
-    await send_telegram_notification(client_telegram_id, text)
+    result = await send_telegram_notification(client_telegram_id, text)
+    print(f"[NOTIFY] Result: {result}")
+    return result
 
