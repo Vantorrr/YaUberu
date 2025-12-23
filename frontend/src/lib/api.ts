@@ -134,6 +134,22 @@ class ApiClient {
     });
   }
 
+  async rescheduleOrder(orderId: number, newDate: string, newTimeSlot: string) {
+    return this.request(`/orders/${orderId}/reschedule`, {
+      method: 'PUT',
+      body: JSON.stringify({
+        new_date: newDate,
+        new_time_slot: newTimeSlot
+      }),
+    });
+  }
+
+  async cancelOrder(orderId: number) {
+    return this.request(`/orders/${orderId}`, {
+      method: 'DELETE',
+    });
+  }
+
   // Admin
   async getAdminStats() {
     return this.request('/admin/stats');
