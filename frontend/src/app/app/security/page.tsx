@@ -7,27 +7,27 @@ export default function SecurityPage() {
   const router = useRouter();
 
   return (
-    <div className="min-h-screen bg-[#0f1714]">
+    <div className="min-h-screen bg-white">
       {/* Header */}
-      <div className="sticky top-0 z-10 bg-[#0f1714]/95 backdrop-blur border-b border-teal-900/30 px-5 py-4">
+      <div className="sticky top-0 z-10 bg-white/95 backdrop-blur border-b border-teal-900/30 px-5 py-4">
         <div className="flex items-center gap-4">
           <button 
             onClick={() => router.back()} 
-            className="w-10 h-10 bg-teal-900/50 rounded-xl flex items-center justify-center text-white"
+            className="w-10 h-10 bg-gray-100 rounded-xl flex items-center justify-center text-gray-900"
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
           <div className="flex items-center gap-3">
             <Shield className="w-6 h-6 text-teal-500" />
-            <h1 className="text-lg font-bold text-white">Безопасность</h1>
+            <h1 className="text-lg font-bold text-gray-900">Безопасность</h1>
           </div>
         </div>
       </div>
 
       {/* Content */}
       <div className="px-5 py-6 space-y-6 pb-24">
-        <div className="bg-teal-900/20 border border-teal-800/30 rounded-2xl p-5">
-          <p className="text-teal-400 text-sm">
+        <div className="bg-teal-50 border border-teal-200 rounded-2xl p-5">
+          <p className="text-teal-700 text-sm">
             🔒 Ваша безопасность — наш приоритет
           </p>
         </div>
@@ -40,7 +40,7 @@ export default function SecurityPage() {
                 <Lock className="w-6 h-6 text-teal-500" />
               </div>
               <div>
-                <h3 className="text-white font-bold text-lg mb-2">Шифрование данных</h3>
+                <h3 className="text-gray-900 font-bold text-lg mb-2">Шифрование данных</h3>
                 <p className="text-gray-400 text-sm leading-relaxed">
                   Все данные передаются по защищённому протоколу HTTPS с использованием современных алгоритмов шифрования. 
                   Ваши персональные данные и платёжная информация надёжно защищены.
@@ -56,7 +56,7 @@ export default function SecurityPage() {
                 <Eye className="w-6 h-6 text-teal-500" />
               </div>
               <div>
-                <h3 className="text-white font-bold text-lg mb-2">Защита аккаунта</h3>
+                <h3 className="text-gray-900 font-bold text-lg mb-2">Защита аккаунта</h3>
                 <p className="text-gray-400 text-sm leading-relaxed mb-3">
                   Доступ к аккаунту осуществляется через Telegram — одну из самых безопасных платформ обмена сообщениями. 
                   Мы не храним пароли и не имеем доступа к вашему аккаунту Telegram.
@@ -86,7 +86,7 @@ export default function SecurityPage() {
                 <Server className="w-6 h-6 text-teal-500" />
               </div>
               <div>
-                <h3 className="text-white font-bold text-lg mb-2">Безопасность платежей</h3>
+                <h3 className="text-gray-900 font-bold text-lg mb-2">Безопасность платежей</h3>
                 <p className="text-gray-400 text-sm leading-relaxed mb-3">
                   Все платежи обрабатываются через сертифицированные платёжные системы. 
                   Мы не храним данные вашей банковской карты.
@@ -116,7 +116,7 @@ export default function SecurityPage() {
                 <Shield className="w-6 h-6 text-teal-500" />
               </div>
               <div>
-                <h3 className="text-white font-bold text-lg mb-2">Защита от мошенничества</h3>
+                <h3 className="text-gray-900 font-bold text-lg mb-2">Защита от мошенничества</h3>
                 <p className="text-gray-400 text-sm leading-relaxed">
                   Мы используем системы мониторинга для выявления подозрительной активности и защиты от мошеннических действий. 
                   Все операции проходят автоматическую проверку безопасности.
@@ -143,10 +143,10 @@ export default function SecurityPage() {
 
         {/* Контакты */}
         <div className="bg-zinc-900/50 border border-zinc-800 rounded-2xl p-5">
-          <h3 className="text-white font-bold mb-2">Сообщить о проблеме безопасности</h3>
+          <h3 className="text-gray-900 font-bold mb-2">Сообщить о проблеме безопасности</h3>
           <p className="text-gray-400 text-sm">
             Если вы обнаружили уязвимость или подозрительную активность, сообщите нам:<br />
-            <span className="text-teal-400">security@yauberu.ru</span>
+            <span className="text-teal-700">security@yauberu.ru</span>
           </p>
         </div>
       </div>
