@@ -227,10 +227,10 @@ function OrderContent() {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="w-12 h-12 bg-teal-600 rounded-xl flex items-center justify-center">
-                  <MapPin className="w-6 h-6 text-white" />
+                  <MapPin className="w-6 h-6 text-gray-900" />
                 </div>
                 <div>
-                  <h2 className="text-xl font-bold text-white">Адрес</h2>
+                  <h2 className="text-xl font-bold text-gray-900">Адрес</h2>
                   <p className="text-gray-500 text-sm">Куда приехать?</p>
                 </div>
               </div>
@@ -239,7 +239,7 @@ function OrderContent() {
                 type="button"
                 onClick={handleLocationRequest}
                 disabled={locationLoading}
-                className="px-3 py-2 rounded-xl bg-teal-900/40 border border-teal-600/30 text-teal-400 text-sm font-medium hover:bg-teal-900/60 hover:border-teal-500/50 transition-all disabled:opacity-50 flex items-center gap-2 active:scale-95"
+                className="px-3 py-2 rounded-xl bg-teal-100 border border-teal-600/30 text-teal-600 text-sm font-medium hover:bg-teal-900/60 hover:border-teal-500/50 transition-all disabled:opacity-50 flex items-center gap-2 active:scale-95"
               >
                 {locationLoading ? (
                   <>
@@ -258,7 +258,7 @@ function OrderContent() {
             <div className="space-y-4">
               {/* ИНТЕРАКТИВНАЯ КАРТА */}
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">📍 Нажмите на карту для выбора адреса</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">📍 Нажмите на карту для выбора адреса</label>
                 <MapPicker
                   center={mapCenter}
                   onLocationSelect={(data) => {
@@ -283,7 +283,7 @@ function OrderContent() {
                     type="button"
                     onClick={handleLocationRequest}
                     disabled={locationLoading}
-                    className="px-4 py-2 rounded-xl bg-teal-900/40 border border-teal-600/30 text-teal-400 text-sm font-medium hover:bg-teal-900/60 transition-all disabled:opacity-50 flex items-center gap-2"
+                    className="px-4 py-2 rounded-xl bg-teal-100 border border-teal-600/30 text-teal-600 text-sm font-medium hover:bg-teal-900/60 transition-all disabled:opacity-50 flex items-center gap-2"
                   >
                     {locationLoading ? (
                       <>
@@ -303,7 +303,7 @@ function OrderContent() {
 
               {/* УЛИЦА */}
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
                   Улица <span className="text-red-500">*</span>
                 </label>
                 <div className="relative">
@@ -313,7 +313,7 @@ function OrderContent() {
                     placeholder="Ленина"
                     value={address.street}
                     onChange={(e) => setAddress({ ...address, street: e.target.value })}
-                    className="w-full pl-12 pr-4 py-4 rounded-xl bg-teal-950/50 border border-teal-800/30 text-white placeholder-gray-600 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 outline-none transition-all"
+                    className="w-full pl-12 pr-4 py-4 rounded-xl bg-white border border-gray-300 text-gray-900 placeholder-gray-600 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 outline-none transition-all"
                     required
                   />
                 </div>
@@ -321,7 +321,7 @@ function OrderContent() {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
                     Дом <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
@@ -331,13 +331,13 @@ function OrderContent() {
                       placeholder="2к4"
                       value={address.building}
                       onChange={(e) => setAddress({ ...address, building: e.target.value })}
-                      className="w-full pl-12 pr-4 py-4 rounded-xl bg-teal-950/50 border border-teal-800/30 text-white placeholder-gray-600 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 outline-none transition-all"
+                      className="w-full pl-12 pr-4 py-4 rounded-xl bg-white border border-gray-300 text-gray-900 placeholder-gray-600 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 outline-none transition-all"
                       required
                     />
                   </div>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">Подъезд</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Подъезд</label>
                   <div className="relative">
                     <DoorOpen className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-teal-500" />
                     <input
@@ -345,7 +345,7 @@ function OrderContent() {
                       placeholder="5"
                       value={address.entrance}
                       onChange={(e) => setAddress({ ...address, entrance: e.target.value })}
-                      className="w-full pl-12 pr-4 py-4 rounded-xl bg-teal-950/50 border border-teal-800/30 text-white placeholder-gray-600 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 outline-none transition-all"
+                      className="w-full pl-12 pr-4 py-4 rounded-xl bg-white border border-gray-300 text-gray-900 placeholder-gray-600 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 outline-none transition-all"
                     />
                   </div>
                 </div>
@@ -353,18 +353,18 @@ function OrderContent() {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">Этаж</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Этаж</label>
                   <input
                     type="number"
                     inputMode="numeric"
                     placeholder="9"
                     value={address.floor}
                     onChange={(e) => setAddress({ ...address, floor: e.target.value })}
-                    className="w-full px-4 py-4 rounded-xl bg-teal-950/50 border border-teal-800/30 text-white placeholder-gray-600 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 outline-none transition-all"
+                    className="w-full px-4 py-4 rounded-xl bg-white border border-gray-300 text-gray-900 placeholder-gray-600 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 outline-none transition-all"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
                     Квартира <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
@@ -374,7 +374,7 @@ function OrderContent() {
                       placeholder="45"
                       value={address.apartment}
                       onChange={(e) => setAddress({ ...address, apartment: e.target.value })}
-                      className="w-full pl-12 pr-4 py-4 rounded-xl bg-teal-950/50 border border-teal-800/30 text-white placeholder-gray-600 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 outline-none transition-all"
+                      className="w-full pl-12 pr-4 py-4 rounded-xl bg-white border border-gray-300 text-gray-900 placeholder-gray-600 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 outline-none transition-all"
                       required
                     />
                   </div>
@@ -382,7 +382,7 @@ function OrderContent() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
                   Код домофона
                   <span className="text-gray-500 ml-2">(необязательно)</span>
                 </label>
@@ -392,7 +392,7 @@ function OrderContent() {
                   placeholder="1234 или КБ123"
                   value={address.intercom}
                   onChange={(e) => setAddress({ ...address, intercom: e.target.value })}
-                  className="w-full px-4 py-4 rounded-xl bg-teal-950/50 border border-teal-800/30 text-white placeholder-gray-600 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 outline-none transition-all"
+                  className="w-full px-4 py-4 rounded-xl bg-white border border-gray-300 text-gray-900 placeholder-gray-600 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 outline-none transition-all"
                 />
                      <p className="text-xs text-gray-500 mt-2">
                        💡 Если домофона нет, оставьте пустым
@@ -408,10 +408,10 @@ function OrderContent() {
           <>
             <div className="flex items-center gap-3 mb-2">
               <div className="w-12 h-12 bg-orange-500 rounded-xl flex items-center justify-center">
-                <Clock className="w-6 h-6 text-white" />
+                <Clock className="w-6 h-6 text-gray-900" />
               </div>
               <div>
-                <h2 className="text-xl font-bold text-white">Время</h2>
+                <h2 className="text-xl font-bold text-gray-900">Время</h2>
                 <p className="text-gray-500 text-sm">Выберите слот</p>
               </div>
             </div>
@@ -431,20 +431,20 @@ function OrderContent() {
                 <div className="flex items-center justify-between relative z-10">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 bg-orange-500 rounded-full flex items-center justify-center animate-pulse">
-                      <Zap className="w-6 h-6 text-white fill-white" />
+                      <Zap className="w-6 h-6 text-gray-900 fill-white" />
                     </div>
                     <div>
                       <div className="flex items-center gap-2">
-                        <p className="text-white font-bold text-lg">СРОЧНО</p>
-                        <span className="bg-orange-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full uppercase">
+                        <p className="text-gray-900 font-bold text-lg">СРОЧНО</p>
+                        <span className="bg-orange-500 text-gray-900 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase">
                           Hot
                         </span>
                       </div>
-                      <p className="text-orange-200 text-sm">Приедем в течение часа</p>
+                      <p className="text-orange-900 text-sm">Приедем в течение часа</p>
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="text-white font-bold text-xl">450 ₽</p>
+                    <p className="text-gray-900 font-bold text-xl">450 ₽</p>
                   </div>
                 </div>
                 <div className="absolute top-0 right-0 w-32 h-32 bg-orange-500/20 rounded-full blur-[40px] -mr-10 -mt-10" />
@@ -467,16 +467,16 @@ function OrderContent() {
                       onClick={isAvailable ? () => setSlot(s.id) : undefined}
                       className={`
                         ${!isAvailable ? 'opacity-40 grayscale cursor-not-allowed' : ''} 
-                        ${slot === s.id ? 'border-teal-500 ring-2 ring-teal-500/30 bg-teal-900/40' : ''}
+                        ${slot === s.id ? 'border-teal-500 ring-2 ring-teal-500/30 bg-teal-100' : ''}
                       `}
                     >
                       <div className="flex items-center justify-between">
                         <div>
-                          <p className="text-white font-semibold text-lg">{s.time}</p>
+                          <p className="text-gray-900 font-semibold text-lg">{s.time}</p>
                           <p className="text-gray-500 text-sm">{s.label}</p>
                         </div>
                         <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${slot === s.id ? 'bg-teal-500 border-teal-500' : 'border-gray-600'}`}>
-                          {slot === s.id && <Check className="w-4 h-4 text-white" />}
+                          {slot === s.id && <Check className="w-4 h-4 text-gray-900" />}
                         </div>
                       </div>
                       {s.status === 'past' && <p className="text-red-500 text-xs mt-2">Время вышло</p>}
@@ -494,10 +494,10 @@ function OrderContent() {
           <>
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 bg-green-500 rounded-xl flex items-center justify-center">
-                <Check className="w-6 h-6 text-white" />
+                <Check className="w-6 h-6 text-gray-900" />
               </div>
               <div>
-                <h2 className="text-xl font-bold text-white">Проверьте</h2>
+                <h2 className="text-xl font-bold text-gray-900">Проверьте</h2>
                 <p className="text-gray-500 text-sm">Детали заказа</p>
               </div>
             </div>
@@ -508,7 +508,7 @@ function OrderContent() {
                   <MapPin className="w-5 h-5 text-teal-500 mt-1 flex-shrink-0" />
                   <div className="flex-1">
                     <p className="text-gray-400 text-sm mb-1">Адрес</p>
-                    <p className="text-white font-medium">
+                    <p className="text-gray-900 font-medium">
                       {address.street}, д. {address.building}
                       {address.entrance && `, подъезд ${address.entrance}`}
                       {address.floor && `, эт. ${address.floor}`}
@@ -526,7 +526,7 @@ function OrderContent() {
                   <Clock className="w-5 h-5 text-teal-500 mt-1 flex-shrink-0" />
                   <div className="flex-1">
                     <p className="text-gray-400 text-sm mb-1">Время</p>
-                    <p className={`font-medium ${slot === 'urgent' ? 'text-orange-500' : 'text-white'}`}>
+                    <p className={`font-medium ${slot === 'urgent' ? 'text-orange-500' : 'text-gray-900'}`}>
                       {slot === 'urgent' ? '⚡️ СРОЧНО (в течение часа)' : timeSlots.find((s) => s.id === slot)?.time}
                     </p>
                   </div>
@@ -534,9 +534,9 @@ function OrderContent() {
                 
                 <div className="h-px bg-teal-900/30" />
                 
-                <div className="flex items-center justify-between bg-teal-900/40 p-4 rounded-xl">
-                  <span className="text-gray-300 font-medium">Итого к оплате</span>
-                  <span className="text-teal-400 font-bold text-3xl">{slot === 'urgent' ? '450' : '300'} ₽</span>
+                <div className="flex items-center justify-between bg-teal-100 p-4 rounded-xl">
+                  <span className="text-gray-700 font-medium">Итого к оплате</span>
+                  <span className="text-teal-600 font-bold text-3xl">{slot === 'urgent' ? '450' : '300'} ₽</span>
                 </div>
               </div>
             </Card>
@@ -551,11 +551,11 @@ function OrderContent() {
                     flex flex-col items-center justify-center gap-2 p-4 rounded-2xl border cursor-pointer transition-all
                     ${pickupMethod === 'door' 
                       ? 'bg-teal-900/60 border-teal-500/50 shadow-lg shadow-emerald-900/20' 
-                      : 'bg-teal-950/30 border-teal-800/30 opacity-60 hover:opacity-100'}
+                      : 'bg-teal-950/30 border-gray-300 opacity-60 hover:opacity-100'}
                   `}
                 >
-                  <DoorOpen className={`w-6 h-6 ${pickupMethod === 'door' ? 'text-teal-400' : 'text-gray-500'}`} />
-                  <span className={`text-sm font-medium ${pickupMethod === 'door' ? 'text-white' : 'text-gray-400'}`}>У двери</span>
+                  <DoorOpen className={`w-6 h-6 ${pickupMethod === 'door' ? 'text-teal-600' : 'text-gray-500'}`} />
+                  <span className={`text-sm font-medium ${pickupMethod === 'door' ? 'text-gray-900' : 'text-gray-400'}`}>У двери</span>
                 </div>
 
                 <div 
@@ -564,11 +564,11 @@ function OrderContent() {
                     flex flex-col items-center justify-center gap-2 p-4 rounded-2xl border cursor-pointer transition-all
                     ${pickupMethod === 'hand' 
                       ? 'bg-orange-900/40 border-orange-500/50 shadow-lg shadow-orange-900/20' 
-                      : 'bg-teal-950/30 border-teal-800/30 opacity-60 hover:opacity-100'}
+                      : 'bg-teal-950/30 border-gray-300 opacity-60 hover:opacity-100'}
                   `}
                 >
                   <User className={`w-6 h-6 ${pickupMethod === 'hand' ? 'text-orange-400' : 'text-gray-500'}`} />
-                  <span className={`text-sm font-medium ${pickupMethod === 'hand' ? 'text-white' : 'text-gray-400'}`}>В руки</span>
+                  <span className={`text-sm font-medium ${pickupMethod === 'hand' ? 'text-gray-900' : 'text-gray-400'}`}>В руки</span>
                 </div>
               </div>
               
@@ -580,9 +580,9 @@ function OrderContent() {
             </div>
 
             {slot === 'urgent' && (
-              <div className="bg-orange-950/30 border border-orange-800/30 rounded-2xl p-4 flex gap-3">
+              <div className="bg-orange-50 border border-orange-200 rounded-2xl p-4 flex gap-3">
                 <AlertCircle className="w-5 h-5 text-orange-500 shrink-0" />
-                <p className="text-orange-200 text-sm">
+                <p className="text-orange-900 text-sm">
                   Курьер будет назначен мгновенно.
                 </p>
               </div>

@@ -29,10 +29,10 @@ export function Button({
   };
 
   const styles = {
-    primary: 'bg-orange-500 hover:bg-orange-600 text-white shadow-lg shadow-orange-500/30',
-    secondary: 'bg-teal-900/50 hover:bg-teal-900/70 text-teal-100 border border-teal-700/50',
-    outline: 'border-2 border-teal-500 text-teal-500 hover:bg-teal-500/10',
-    ghost: 'text-gray-400 hover:text-white hover:bg-white/5',
+    primary: 'bg-teal-600 hover:bg-teal-700 text-white shadow-lg shadow-teal-600/30',
+    secondary: 'bg-gray-100 hover:bg-gray-200 text-gray-900 border border-gray-300',
+    outline: 'border-2 border-teal-600 text-teal-600 hover:bg-teal-50',
+    ghost: 'text-gray-600 hover:text-gray-900 hover:bg-gray-100',
   };
 
   return (

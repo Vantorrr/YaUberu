@@ -11,11 +11,12 @@ export function Card({ children, className = '', onClick }: CardProps) {
     <div
       onClick={onClick}
       className={`
-        bg-teal-950/40 
-        border border-teal-800/30 
+        bg-white
+        border-2 border-gray-200 
         rounded-2xl 
         p-5
-        ${onClick ? 'cursor-pointer hover:bg-teal-950/60 hover:border-teal-700/40 active:scale-[0.99] transition-all' : ''}
+        shadow-sm
+        ${onClick ? 'cursor-pointer hover:bg-gray-50 hover:border-gray-300 hover:shadow-md active:scale-[0.99] transition-all' : ''}
         ${className}
       `}
     >
