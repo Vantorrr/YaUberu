@@ -261,43 +261,16 @@ function OrderContent() {
                 <label className="block text-sm font-medium text-gray-300 mb-2">📍 Нажмите на карту для выбора адреса</label>
                 <MapPicker
                   center={mapCenter}
-                  onLocationSelect={(lat, lon, fullAddress) => {
-                    console.log('[ORDER] Location selected:', { lat, lon, fullAddress });
-                    
-                    // Parse address from Nominatim response
-                    // fullAddress example: "улица Ленина, 25, Москва, Россия"
-                    const parts = fullAddress.split(',').map(p => p.trim());
-                    
-                    // Try to find street and building
-                    let street = '';
-                    let building = '';
-                    
-                    if (parts.length > 0) {
-                      // First part usually contains street and building
-                      const firstPart = parts[0];
-                      const buildingMatch = firstPart.match(/\b(\d+[а-яА-Яa-zA-Z]*)\b/);
-                      
-                      if (buildingMatch) {
-                        building = buildingMatch[1];
-                        street = firstPart.replace(buildingMatch[0], '').replace(/,/g, '').trim();
-                      } else {
-                        street = firstPart;
-                      }
-                      
-                      // If no building in first part, check second part
-                      if (!building && parts.length > 1) {
-                        const secondMatch = parts[1].match(/\b(\d+[а-яА-Яa-zA-Z]*)\b/);
-                        if (secondMatch) building = secondMatch[1];
-                      }
-                    }
+                  onLocationSelect={(data) => {
+                    console.log('[ORDER] Location selected:', data);
                     
                     setAddress({ 
                       ...address, 
-                      street: street || '',
-                      building: building || ''
+                      street: data.street,
+                      building: data.building
                     });
                     
-                    alert(`📍 Адрес найден!\n\n${street || 'Улица не определена'}, ${building || 'дом не определён'}\n\nУточните детали ниже 👇`);
+                    alert(`📍 Адрес выбран!\n\n${data.fullAddress}\n\nУточните детали ниже 👇`);
                   }}
                 />
                 <div className="flex items-center justify-between mt-3">

@@ -15,10 +15,10 @@ L.Icon.Default.mergeOptions({
 
 interface MapPickerProps {
   center: { lat: number; lon: number };
-  onLocationSelect: (lat: number, lon: number, address: string) => void;
+  onLocationSelect: (data: { lat: number; lon: number; street: string; building: string; fullAddress: string }) => void;
 }
 
-function LocationMarker({ onLocationSelect }: { onLocationSelect: (lat: number, lon: number, address: string) => void }) {
+function LocationMarker({ onLocationSelect }: { onLocationSelect: (data: { lat: number; lon: number; street: string; building: string; fullAddress: string }) => void }) {
   const [position, setPosition] = useState<L.LatLng | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -67,13 +67,25 @@ function LocationMarker({ onLocationSelect }: { onLocationSelect: (lat: number, 
             fullAddress = `${e.latlng.lat.toFixed(6)}, ${e.latlng.lng.toFixed(6)}`;
           }
           
-          onLocationSelect(e.latlng.lat, e.latlng.lng, fullAddress);
+          onLocationSelect({
+            lat: e.latlng.lat,
+            lon: e.latlng.lng,
+            street: street || '',
+            building: building || '',
+            fullAddress: fullAddress
+          });
           setLoading(false);
         })
         .catch(err => {
           console.error('[MAP] Geocoding error:', err);
           const fallbackAddress = `${e.latlng.lat.toFixed(6)}, ${e.latlng.lng.toFixed(6)}`;
-          onLocationSelect(e.latlng.lat, e.latlng.lng, fallbackAddress);
+          onLocationSelect({
+            lat: e.latlng.lat,
+            lon: e.latlng.lng,
+            street: '',
+            building: '',
+            fullAddress: fallbackAddress
+          });
           setLoading(false);
         });
     },
