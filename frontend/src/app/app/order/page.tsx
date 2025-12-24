@@ -104,9 +104,6 @@ function OrderContent() {
   const next = async () => {
     // Validation for address step
     if (step === 'address') {
-      console.log('[NEXT] Current address state:', address);
-      console.log('[NEXT] street:', address.street, 'building:', address.building, 'apartment:', address.apartment);
-      
       if (!address.street || address.street.trim() === '') {
         alert('⚠️ Укажите улицу');
         return;
@@ -119,8 +116,6 @@ function OrderContent() {
         alert('⚠️ Укажите квартиру');
         return;
       }
-      
-      console.log('[NEXT] ✅ All fields valid, proceeding to next step');
     }
     
     // Validation for time step
@@ -402,28 +397,6 @@ function OrderContent() {
                      <p className="text-xs text-gray-500 mt-2">
                        💡 Если домофона нет, оставьте пустым
                      </p>
-                   </div>
-                   
-                   {/* DEBUG: Show current values */}
-                   <div className="mt-4 p-4 bg-blue-900/20 border border-blue-500/30 rounded-xl">
-                     <p className="text-blue-400 text-xs font-bold mb-2">🔧 ОТЛАДКА (для проверки):</p>
-                     <div className="space-y-1 text-xs">
-                       <p className="text-gray-300">
-                         Улица: <span className={address.street ? 'text-green-400' : 'text-red-400'}>
-                           {address.street || '❌ Не заполнено'}
-                         </span>
-                       </p>
-                       <p className="text-gray-300">
-                         Дом: <span className={address.building ? 'text-green-400' : 'text-red-400'}>
-                           {address.building || '❌ Не заполнено'}
-                         </span>
-                       </p>
-                       <p className="text-gray-300">
-                         Квартира: <span className={address.apartment ? 'text-green-400' : 'text-red-400'}>
-                           {address.apartment || '❌ Не заполнено'}
-                         </span>
-                       </p>
-                     </div>
                    </div>
                  </div>
 

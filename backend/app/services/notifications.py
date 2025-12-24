@@ -83,3 +83,19 @@ async def notify_client_order_completed(client_telegram_id: int, bags_count: int
     print(f"[NOTIFY] Result: {result}")
     return result
 
+
+# ============ NOTIFICATIONS FOR ADMINS ============
+
+async def notify_admins_new_order(admin_telegram_ids: list, order_id: int, address: str, time_slot: str, client_name: str = "Клиент"):
+    """Notify all admins about a new order"""
+    text = (
+        f"📋 **Новый заказ #{order_id}**\n\n"
+        f"👤 Клиент: {client_name}\n"
+        f"📍 Адрес: {address}\n"
+        f"🕐 Время: {time_slot}\n\n"
+        f"_Курьеры получили уведомление_"
+    )
+    
+    for tg_id in admin_telegram_ids:
+        await send_telegram_notification(tg_id, text)
+
