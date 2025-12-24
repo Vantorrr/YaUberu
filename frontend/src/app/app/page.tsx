@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/Button';
-import { Trash2, Zap, Crown, Package, ChevronRight, Check } from 'lucide-react';
+import { Trash2, Zap, Crown, Package, ChevronRight, Check, Building2, FileText, Shield, Info } from 'lucide-react';
 import { api } from '@/lib/api';
 
 const tariffs = [
@@ -131,6 +131,111 @@ export default function HomePage() {
               </div>
             </div>
           ))}
+        </div>
+      </div>
+
+      {/* Реквизиты компании */}
+      <div>
+        <div className="flex items-center gap-2 mb-4">
+          <Building2 className="w-5 h-5 text-teal-500" />
+          <h2 className="text-xl font-bold text-white">Реквизиты компании</h2>
+        </div>
+        
+        <div className="bg-zinc-900/50 border border-zinc-800 rounded-2xl p-5 space-y-3">
+          <div>
+            <p className="text-zinc-500 text-xs mb-1">Наименование</p>
+            <p className="text-white text-sm font-medium">Индивидуальный предприниматель ЕСАЯН ЭДГАР АШОТОВИЧ</p>
+          </div>
+          
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <p className="text-zinc-500 text-xs mb-1">ИНН</p>
+              <p className="text-white text-sm font-mono">504710511280</p>
+            </div>
+            <div>
+              <p className="text-zinc-500 text-xs mb-1">БИК</p>
+              <p className="text-white text-sm font-mono">044525411</p>
+            </div>
+          </div>
+          
+          <div>
+            <p className="text-zinc-500 text-xs mb-1">Банк</p>
+            <p className="text-white text-sm">ФИЛИАЛ "ЦЕНТРАЛЬНЫЙ" БАНКА ВТБ (ПАО)</p>
+          </div>
+          
+          <div>
+            <p className="text-zinc-500 text-xs mb-1">Корреспондентский счёт</p>
+            <p className="text-white text-sm font-mono">30101810145250000411</p>
+          </div>
+          
+          <div>
+            <p className="text-zinc-500 text-xs mb-1">Расчётный счёт</p>
+            <p className="text-white text-sm font-mono">40802810400810057684</p>
+          </div>
+          
+          <div className="pt-3 border-t border-zinc-800">
+            <p className="text-zinc-400 text-xs">
+              💳 Для оплаты по реквизитам свяжитесь с нами
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Правовая информация */}
+      <div className="pb-4">
+        <div className="flex items-center gap-2 mb-4">
+          <FileText className="w-5 h-5 text-teal-500" />
+          <h2 className="text-xl font-bold text-white">Правовая информация</h2>
+        </div>
+        
+        <div className="space-y-3">
+          <div 
+            onClick={() => router.push('/app/privacy')}
+            className="bg-zinc-900/50 border border-zinc-800 rounded-2xl p-4 flex items-center justify-between cursor-pointer hover:border-zinc-700 transition-all"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-teal-500/10 rounded-xl flex items-center justify-center">
+                <Shield className="w-5 h-5 text-teal-500" />
+              </div>
+              <div>
+                <p className="text-white font-medium text-sm">Политика конфиденциальности</p>
+                <p className="text-zinc-500 text-xs">Как мы защищаем ваши данные</p>
+              </div>
+            </div>
+            <ChevronRight className="w-5 h-5 text-zinc-600" />
+          </div>
+          
+          <div 
+            onClick={() => router.push('/app/security')}
+            className="bg-zinc-900/50 border border-zinc-800 rounded-2xl p-4 flex items-center justify-between cursor-pointer hover:border-zinc-700 transition-all"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-teal-500/10 rounded-xl flex items-center justify-center">
+                <Shield className="w-5 h-5 text-teal-500" />
+              </div>
+              <div>
+                <p className="text-white font-medium text-sm">Безопасность</p>
+                <p className="text-zinc-500 text-xs">Меры защиты информации</p>
+              </div>
+            </div>
+            <ChevronRight className="w-5 h-5 text-zinc-600" />
+          </div>
+          
+          <div 
+            onClick={() => router.push('/app/terms')}
+            className="bg-zinc-900/50 border border-zinc-800 rounded-2xl p-4 flex items-center justify-between cursor-pointer hover:border-zinc-700 transition-all"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-teal-500/10 rounded-xl flex items-center justify-center">
+                <Info className="w-5 h-5 text-teal-500" />
+              </div>
+              <div>
+                <p className="text-white font-medium text-sm">Правовая информация</p>
+                <p className="text-zinc-500 text-xs">Условия использования сервиса</p>
+              </div>
+            </div>
+            <ChevronRight className="w-5 h-5 text-zinc-600" />
+          </div>
         </div>
       </div>
     </div>
