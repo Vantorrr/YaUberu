@@ -14,7 +14,8 @@ router = APIRouter()
 
 
 class AddressCreate(BaseModel):
-    complex_id: int
+    complex_id: Optional[int] = None
+    street: Optional[str] = None
     building: str
     entrance: Optional[str] = None
     floor: Optional[str] = None
@@ -25,7 +26,8 @@ class AddressCreate(BaseModel):
 
 class AddressResponse(BaseModel):
     id: int
-    complex_name: str
+    complex_name: Optional[str]
+    street: Optional[str]
     building: str
     entrance: Optional[str]
     floor: Optional[str]
@@ -103,17 +105,18 @@ async def create_address(
     """
     Save a new address
     """
-    # Verify complex exists
-    result = await db.execute(
-        select(ResidentialComplex).where(ResidentialComplex.id == request.complex_id)
-    )
-    complex = result.scalar_one_or_none()
-    
-    if not complex:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Residential complex not found"
+    # Verify complex exists (if provided)
+    if request.complex_id:
+        result = await db.execute(
+            select(ResidentialComplex).where(ResidentialComplex.id == request.complex_id)
         )
+        complex = result.scalar_one_or_none()
+        
+        if not complex:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Residential complex not found"
+            )
     
     # If this is default, unset other defaults
     if request.is_default:
@@ -129,6 +132,7 @@ async def create_address(
     address = Address(
         user_id=current_user.id,
         complex_id=request.complex_id,
+        street=request.street,
         building=request.building,
         entrance=request.entrance,
         floor=request.floor,

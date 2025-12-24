@@ -34,8 +34,9 @@ class Address(Base):
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     
     # Address fields
-    complex_id = Column(Integer, ForeignKey("residential_complexes.id"))
-    building = Column(String(20), nullable=False)
+    complex_id = Column(Integer, ForeignKey("residential_complexes.id"), nullable=True)
+    street = Column(String(200), nullable=True)  # Улица
+    building = Column(String(20), nullable=False)  # Номер дома
     entrance = Column(String(10))
     floor = Column(String(10))
     apartment = Column(String(10), nullable=False)

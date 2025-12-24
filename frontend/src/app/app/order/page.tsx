@@ -27,7 +27,7 @@ function OrderContent() {
 
   const [step, setStep] = useState<Step>('address');
   const [slot, setSlot] = useState<number | 'urgent' | null>(null);
-  const [address, setAddress] = useState({ complexId: '', building: '', entrance: '', floor: '', apartment: '', intercom: '' });
+  const [address, setAddress] = useState({ complexId: '0', building: '', entrance: '', floor: '', apartment: '', intercom: '', street: '' });
   const [pickupMethod, setPickupMethod] = useState<'door' | 'hand'>('door');
   const [loading, setLoading] = useState(false);
   const [locationLoading, setLocationLoading] = useState(false);
@@ -104,6 +104,10 @@ function OrderContent() {
   const next = async () => {
     // Validation for address step
     if (step === 'address') {
+      if (!address.street) {
+        alert('⚠️ Укажите улицу');
+        return;
+      }
       if (!address.building) {
         alert('⚠️ Укажите номер дома');
         return;
@@ -132,6 +136,7 @@ function OrderContent() {
         // 1. Create Address
         const addressRes = await api.createAddress({
           complex_id: address.complexId === '0' ? null : Number(address.complexId),
+          street: address.street,
           building: address.building,
           entrance: address.entrance || '1',
           floor: address.floor || '1',
@@ -253,19 +258,46 @@ function OrderContent() {
             <div className="space-y-4">
               {/* ИНТЕРАКТИВНАЯ КАРТА */}
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">📍 Выберите на карте</label>
+                <label className="block text-sm font-medium text-gray-300 mb-2">📍 Нажмите на карту для выбора адреса</label>
                 <MapPicker
                   center={mapCenter}
                   onLocationSelect={(lat, lon, fullAddress) => {
                     console.log('[ORDER] Location selected:', { lat, lon, fullAddress });
                     
-                    // Try to extract building number from address
-                    const buildingMatch = fullAddress.match(/\b(\d+[а-яА-Яa-zA-Z]?)\b/);
-                    if (buildingMatch) {
-                      setAddress({ ...address, building: buildingMatch[1] });
+                    // Parse address from Nominatim response
+                    // fullAddress example: "улица Ленина, 25, Москва, Россия"
+                    const parts = fullAddress.split(',').map(p => p.trim());
+                    
+                    // Try to find street and building
+                    let street = '';
+                    let building = '';
+                    
+                    if (parts.length > 0) {
+                      // First part usually contains street and building
+                      const firstPart = parts[0];
+                      const buildingMatch = firstPart.match(/\b(\d+[а-яА-Яa-zA-Z]*)\b/);
+                      
+                      if (buildingMatch) {
+                        building = buildingMatch[1];
+                        street = firstPart.replace(buildingMatch[0], '').replace(/,/g, '').trim();
+                      } else {
+                        street = firstPart;
+                      }
+                      
+                      // If no building in first part, check second part
+                      if (!building && parts.length > 1) {
+                        const secondMatch = parts[1].match(/\b(\d+[а-яА-Яa-zA-Z]*)\b/);
+                        if (secondMatch) building = secondMatch[1];
+                      }
                     }
                     
-                    alert(`📍 Адрес выбран!\n\n${fullAddress}\n\nУточните детали в полях ниже 👇`);
+                    setAddress({ 
+                      ...address, 
+                      street: street || '',
+                      building: building || ''
+                    });
+                    
+                    alert(`📍 Адрес найден!\n\n${street || 'Улица не определена'}, ${building || 'дом не определён'}\n\nУточните детали ниже 👇`);
                   }}
                 />
                 <div className="flex items-center justify-between mt-3">
@@ -287,61 +319,25 @@ function OrderContent() {
                       </>
                     )}
                   </button>
-                  <p className="text-xs text-gray-500">💡 Или введите адрес вручную ниже</p>
+                  <p className="text-xs text-gray-500">💡 Или введите вручную ниже</p>
                 </div>
               </div>
 
+              {/* УЛИЦА */}
               <div>
-                <label className="block text-sm text-gray-400 mb-2">Жилой комплекс (необязательно)</label>
-                
-                <div className="grid grid-cols-1 gap-3">
-                  <button
-                    type="button"
-                    onClick={() => setAddress({ ...address, complexId: '0' })}
-                    className={`
-                      p-4 rounded-xl border-2 transition-all text-left flex items-center gap-3
-                      ${address.complexId === '0'
-                        ? 'bg-teal-600 border-teal-500 text-white' 
-                        : 'bg-teal-950/30 border-teal-800/30 text-gray-300 hover:border-teal-600/50'
-                      }
-                    `}
-                  >
-                    <MapPin className={`w-5 h-5 flex-shrink-0 ${
-                      address.complexId === '0' ? 'text-white' : 'text-teal-500'
-                    }`} />
-                    <div className="flex-1">
-                      <p className="font-semibold">Другой адрес</p>
-                      <p className="text-sm opacity-70">Не живу в ЖК</p>
-                    </div>
-                    {address.complexId === '0' && (
-                      <Check className="w-5 h-5 text-white" />
-                    )}
-                  </button>
-                  {complexes.length > 0 && complexes.map((c) => (
-                    <button
-                      key={c.id}
-                      type="button"
-                      onClick={() => setAddress({ ...address, complexId: String(c.id) })}
-                      className={`
-                        p-4 rounded-xl border-2 transition-all text-left flex items-center gap-3
-                        ${address.complexId === String(c.id)
-                          ? 'bg-teal-600 border-teal-500 text-white' 
-                          : 'bg-teal-950/30 border-teal-800/30 text-gray-300 hover:border-teal-600/50'
-                        }
-                      `}
-                    >
-                      <Building className={`w-5 h-5 flex-shrink-0 ${
-                        address.complexId === String(c.id) ? 'text-white' : 'text-teal-500'
-                      }`} />
-                      <div className="flex-1">
-                        <p className="font-semibold">{c.name}</p>
-                        {c.short_name && <p className="text-sm opacity-70">{c.short_name}</p>}
-                      </div>
-                      {address.complexId === String(c.id) && (
-                        <Check className="w-5 h-5 text-white" />
-                      )}
-                    </button>
-                  ))}
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  Улица <span className="text-red-500">*</span>
+                </label>
+                <div className="relative">
+                  <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-teal-500" />
+                  <input
+                    type="text"
+                    placeholder="Ленина"
+                    value={address.street}
+                    onChange={(e) => setAddress({ ...address, street: e.target.value })}
+                    className="w-full pl-12 pr-4 py-4 rounded-xl bg-teal-950/50 border border-teal-800/30 text-white placeholder-gray-600 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 outline-none transition-all"
+                    required
+                  />
                 </div>
               </div>
 
@@ -535,7 +531,7 @@ function OrderContent() {
                   <div className="flex-1">
                     <p className="text-gray-400 text-sm mb-1">Адрес</p>
                     <p className="text-white font-medium">
-                      {selectedComplexName || 'ЖК'}, д. {address.building}
+                      {address.street}, д. {address.building}
                       {address.entrance && `, подъезд ${address.entrance}`}
                       {address.floor && `, эт. ${address.floor}`}
                       , кв. {address.apartment}
@@ -622,7 +618,7 @@ function OrderContent() {
         <Button
           fullWidth
           onClick={next}
-          disabled={((step === 'address' && (!address.building || !address.apartment)) || (step === 'time' && !slot)) || loading}
+          disabled={((step === 'address' && (!address.street || !address.building || !address.apartment)) || (step === 'time' && !slot)) || loading}
         >
           {step === 'confirm' ? (loading ? 'Обработка...' : 'Подтвердить и вызвать') : 'Продолжить'}
         </Button>

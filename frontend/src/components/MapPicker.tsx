@@ -28,22 +28,44 @@ function LocationMarker({ onLocationSelect }: { onLocationSelect: (lat: number, 
       setLoading(true);
       
       // Geocode the clicked location using OpenStreetMap Nominatim
-      fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${e.latlng.lat}&lon=${e.latlng.lng}&accept-language=ru`)
+      fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${e.latlng.lat}&lon=${e.latlng.lng}&accept-language=ru&addressdetails=1`)
         .then(res => res.json())
         .then(data => {
           console.log('[MAP] Geocoded:', data);
           
-          const address = data.address || {};
-          let building = address.house_number || '';
-          let street = address.road || address.street || '';
+          const addr = data.address || {};
           
-          // Try to extract building number from display_name if not in house_number
-          if (!building && data.display_name) {
-            const match = data.display_name.match(/\b\d+[а-яА-Яa-zA-Z]?\b/);
-            if (match) building = match[0];
+          // Extract street (улица)
+          let street = addr.road || addr.street || addr.pedestrian || addr.cycleway || addr.footway || '';
+          
+          // Extract building number (номер дома)
+          let building = addr.house_number || '';
+          
+          // Build full address string for display
+          let fullAddress = '';
+          if (street && building) {
+            fullAddress = `${street}, ${building}`;
+          } else if (street) {
+            fullAddress = street;
+          } else if (data.display_name) {
+            // Fallback to display_name and try to parse it
+            const parts = data.display_name.split(',');
+            if (parts.length > 0) {
+              fullAddress = parts[0].trim();
+              // Try to extract building from first part
+              const buildingMatch = fullAddress.match(/\b(\d+[а-яА-Яa-zA-Z\/\-]*)\b/);
+              if (buildingMatch) {
+                building = buildingMatch[1];
+                street = fullAddress.replace(buildingMatch[0], '').replace(/,/g, '').trim();
+              } else {
+                street = fullAddress;
+              }
+            }
           }
           
-          const fullAddress = data.display_name || `${e.latlng.lat.toFixed(6)}, ${e.latlng.lng.toFixed(6)}`;
+          if (!fullAddress) {
+            fullAddress = `${e.latlng.lat.toFixed(6)}, ${e.latlng.lng.toFixed(6)}`;
+          }
           
           onLocationSelect(e.latlng.lat, e.latlng.lng, fullAddress);
           setLoading(false);
@@ -90,9 +112,9 @@ export default function MapPicker({ center, onLocationSelect }: MapPickerProps) 
         scrollWheelZoom={true}
         style={{ height: '400px', width: '100%', borderRadius: '1rem', zIndex: 0 }}
         className="rounded-2xl border-2 border-teal-700/50"
+        attributionControl={false}
       >
         <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
         <LocationMarker onLocationSelect={onLocationSelect} />
