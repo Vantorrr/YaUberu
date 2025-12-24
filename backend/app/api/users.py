@@ -14,8 +14,8 @@ router = APIRouter()
 
 
 class AddressCreate(BaseModel):
+    street: str  # Street is required
     complex_id: Optional[int] = None
-    street: Optional[str] = None
     building: str
     entrance: Optional[str] = None
     floor: Optional[str] = None
@@ -93,7 +93,31 @@ async def get_addresses(
     )
     addresses = result.scalars().all()
     
-    return addresses
+    # Format response with complex_name
+    response = []
+    for addr in addresses:
+        complex_name = None
+        if addr.complex_id:
+            complex_result = await db.execute(
+                select(ResidentialComplex).where(ResidentialComplex.id == addr.complex_id)
+            )
+            complex_obj = complex_result.scalar_one_or_none()
+            if complex_obj:
+                complex_name = complex_obj.name
+        
+        response.append(AddressResponse(
+            id=addr.id,
+            complex_name=complex_name,
+            street=addr.street if hasattr(addr, 'street') else None,
+            building=addr.building,
+            entrance=addr.entrance,
+            floor=addr.floor,
+            apartment=addr.apartment,
+            intercom=addr.intercom,
+            is_default=addr.is_default
+        ))
+    
+    return response
 
 
 @router.post("/addresses", response_model=AddressResponse)
@@ -105,6 +129,8 @@ async def create_address(
     """
     Save a new address
     """
+    complex_name = None
+    
     # Verify complex exists (if provided)
     if request.complex_id:
         result = await db.execute(
@@ -117,6 +143,7 @@ async def create_address(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Residential complex not found"
             )
+        complex_name = complex.name
     
     # If this is default, unset other defaults
     if request.is_default:
@@ -144,7 +171,18 @@ async def create_address(
     await db.commit()
     await db.refresh(address)
     
-    return address
+    # Return formatted response
+    return AddressResponse(
+        id=address.id,
+        complex_name=complex_name,
+        street=address.street,
+        building=address.building,
+        entrance=address.entrance,
+        floor=address.floor,
+        apartment=address.apartment,
+        intercom=address.intercom,
+        is_default=address.is_default
+    )
 
 
 @router.get("/can-use-trial")
