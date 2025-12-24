@@ -6,6 +6,10 @@ import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { ArrowLeft, MapPin, Clock, Check, Building, Home, DoorOpen, Hash, Zap, AlertCircle, User } from 'lucide-react';
 import { api } from '@/lib/api';
+import dynamic from 'next/dynamic';
+
+// Dynamic import to avoid SSR issues with Leaflet
+const MapPicker = dynamic(() => import('@/components/MapPicker'), { ssr: false });
 
 const steps = ['address', 'time', 'confirm'] as const;
 type Step = typeof steps[number];
@@ -247,20 +251,23 @@ function OrderContent() {
             </div>
 
             <div className="space-y-4">
-              {/* ЯНДЕКС.КАРТЫ В МОДАЛЬНОМ ОКНЕ */}
+              {/* ИНТЕРАКТИВНАЯ КАРТА */}
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">📍 Выберите на карте</label>
-                <div className="rounded-2xl overflow-hidden border-2 border-teal-700/50 h-[400px] bg-teal-950/20">
-                  <iframe
-                    key={`map-${mapCenter.lat}-${mapCenter.lon}`}
-                    src={`https://yandex.ru/map-widget/v1/?ll=${mapCenter.lon}%2C${mapCenter.lat}&z=16&l=map`}
-                    width="100%"
-                    height="100%"
-                    frameBorder="0"
-                    allowFullScreen
-                    style={{ position: 'relative' }}
-                  />
-                </div>
+                <MapPicker
+                  center={mapCenter}
+                  onLocationSelect={(lat, lon, fullAddress) => {
+                    console.log('[ORDER] Location selected:', { lat, lon, fullAddress });
+                    
+                    // Try to extract building number from address
+                    const buildingMatch = fullAddress.match(/\b(\d+[а-яА-Яa-zA-Z]?)\b/);
+                    if (buildingMatch) {
+                      setAddress({ ...address, building: buildingMatch[1] });
+                    }
+                    
+                    alert(`📍 Адрес выбран!\n\n${fullAddress}\n\nУточните детали в полях ниже 👇`);
+                  }}
+                />
                 <div className="flex items-center justify-between mt-3">
                   <button
                     type="button"
@@ -280,68 +287,62 @@ function OrderContent() {
                       </>
                     )}
                   </button>
-                  <p className="text-xs text-gray-500">💡 Укажите адрес вручную ниже</p>
+                  <p className="text-xs text-gray-500">💡 Или введите адрес вручную ниже</p>
                 </div>
               </div>
 
               <div>
                 <label className="block text-sm text-gray-400 mb-2">Жилой комплекс (необязательно)</label>
                 
-                {complexes.length === 0 ? (
-                  <div className="p-4 rounded-xl bg-teal-950/30 border border-teal-800/30 text-gray-400 text-sm text-center">
-                    ⚠️ Список ЖК недоступен. Введите адрес вручную.
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-1 gap-3">
+                <div className="grid grid-cols-1 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setAddress({ ...address, complexId: '0' })}
+                    className={`
+                      p-4 rounded-xl border-2 transition-all text-left flex items-center gap-3
+                      ${address.complexId === '0'
+                        ? 'bg-teal-600 border-teal-500 text-white' 
+                        : 'bg-teal-950/30 border-teal-800/30 text-gray-300 hover:border-teal-600/50'
+                      }
+                    `}
+                  >
+                    <MapPin className={`w-5 h-5 flex-shrink-0 ${
+                      address.complexId === '0' ? 'text-white' : 'text-teal-500'
+                    }`} />
+                    <div className="flex-1">
+                      <p className="font-semibold">Другой адрес</p>
+                      <p className="text-sm opacity-70">Не живу в ЖК</p>
+                    </div>
+                    {address.complexId === '0' && (
+                      <Check className="w-5 h-5 text-white" />
+                    )}
+                  </button>
+                  {complexes.length > 0 && complexes.map((c) => (
                     <button
+                      key={c.id}
                       type="button"
-                      onClick={() => setAddress({ ...address, complexId: '0' })}
+                      onClick={() => setAddress({ ...address, complexId: String(c.id) })}
                       className={`
                         p-4 rounded-xl border-2 transition-all text-left flex items-center gap-3
-                        ${address.complexId === '0'
+                        ${address.complexId === String(c.id)
                           ? 'bg-teal-600 border-teal-500 text-white' 
                           : 'bg-teal-950/30 border-teal-800/30 text-gray-300 hover:border-teal-600/50'
                         }
                       `}
                     >
-                      <MapPin className={`w-5 h-5 flex-shrink-0 ${
-                        address.complexId === '0' ? 'text-white' : 'text-teal-500'
+                      <Building className={`w-5 h-5 flex-shrink-0 ${
+                        address.complexId === String(c.id) ? 'text-white' : 'text-teal-500'
                       }`} />
                       <div className="flex-1">
-                        <p className="font-semibold">Другой адрес</p>
-                        <p className="text-sm opacity-70">Не живу в ЖК</p>
+                        <p className="font-semibold">{c.name}</p>
+                        {c.short_name && <p className="text-sm opacity-70">{c.short_name}</p>}
                       </div>
-                      {address.complexId === '0' && (
+                      {address.complexId === String(c.id) && (
                         <Check className="w-5 h-5 text-white" />
                       )}
                     </button>
-                    {complexes.map((c) => (
-                      <button
-                        key={c.id}
-                        type="button"
-                        onClick={() => setAddress({ ...address, complexId: String(c.id) })}
-                        className={`
-                          p-4 rounded-xl border-2 transition-all text-left flex items-center gap-3
-                          ${address.complexId === String(c.id)
-                            ? 'bg-teal-600 border-teal-500 text-white' 
-                            : 'bg-teal-950/30 border-teal-800/30 text-gray-300 hover:border-teal-600/50'
-                          }
-                        `}
-                      >
-                        <Building className={`w-5 h-5 flex-shrink-0 ${
-                          address.complexId === String(c.id) ? 'text-white' : 'text-teal-500'
-                        }`} />
-                        <div className="flex-1">
-                          <p className="font-semibold">{c.name}</p>
-                          {c.short_name && <p className="text-sm opacity-70">{c.short_name}</p>}
-                        </div>
-                        {address.complexId === String(c.id) && (
-                          <Check className="w-5 h-5 text-white" />
-                        )}
-                      </button>
-                    ))}
-                  </div>
-                )}
+                  ))}
+                </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">

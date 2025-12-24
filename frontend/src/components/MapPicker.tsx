@@ -1,11 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
-import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
 
-// Fix for default marker icon in Next.js
+// Fix default marker icon issue with Next.js
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
@@ -14,150 +14,93 @@ L.Icon.Default.mergeOptions({
 });
 
 interface MapPickerProps {
-  initialLat?: number;
-  initialLon?: number;
+  center: { lat: number; lon: number };
   onLocationSelect: (lat: number, lon: number, address: string) => void;
-  onClose: () => void;
-  embedded?: boolean;
 }
 
-function LocationMarker({ initialPosition, onLocationSelect }: { initialPosition: [number, number]; onLocationSelect: (lat: number, lon: number) => void }) {
-  const [position, setPosition] = useState<[number, number]>(initialPosition);
+function LocationMarker({ onLocationSelect }: { onLocationSelect: (lat: number, lon: number, address: string) => void }) {
+  const [position, setPosition] = useState<L.LatLng | null>(null);
+  const [loading, setLoading] = useState(false);
 
-  useMapEvents({
+  const map = useMapEvents({
     click(e) {
-      const { lat, lng } = e.latlng;
-      setPosition([lat, lng]);
-      onLocationSelect(lat, lng);
+      setPosition(e.latlng);
+      setLoading(true);
+      
+      // Geocode the clicked location using OpenStreetMap Nominatim
+      fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${e.latlng.lat}&lon=${e.latlng.lng}&accept-language=ru`)
+        .then(res => res.json())
+        .then(data => {
+          console.log('[MAP] Geocoded:', data);
+          
+          const address = data.address || {};
+          let building = address.house_number || '';
+          let street = address.road || address.street || '';
+          
+          // Try to extract building number from display_name if not in house_number
+          if (!building && data.display_name) {
+            const match = data.display_name.match(/\b\d+[а-яА-Яa-zA-Z]?\b/);
+            if (match) building = match[0];
+          }
+          
+          const fullAddress = data.display_name || `${e.latlng.lat.toFixed(6)}, ${e.latlng.lng.toFixed(6)}`;
+          
+          onLocationSelect(e.latlng.lat, e.latlng.lng, fullAddress);
+          setLoading(false);
+        })
+        .catch(err => {
+          console.error('[MAP] Geocoding error:', err);
+          const fallbackAddress = `${e.latlng.lat.toFixed(6)}, ${e.latlng.lng.toFixed(6)}`;
+          onLocationSelect(e.latlng.lat, e.latlng.lng, fallbackAddress);
+          setLoading(false);
+        });
     },
   });
 
-  return <Marker position={position} />;
+  return position === null ? null : (
+    <Marker position={position}>
+      {loading && <div>Загрузка...</div>}
+    </Marker>
+  );
 }
 
-export function MapPicker({ initialLat = 55.7558, initialLon = 37.6173, onLocationSelect, onClose, embedded = false }: MapPickerProps) {
-  const [loading, setLoading] = useState(false);
-  const [currentAddress, setCurrentAddress] = useState('');
+export default function MapPicker({ center, onLocationSelect }: MapPickerProps) {
+  const [mounted, setMounted] = useState(false);
 
-  console.log('[MAP] Rendering MapPicker', { initialLat, initialLon, embedded });
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
-  const handleLocationSelect = async (lat: number, lon: number) => {
-    setLoading(true);
-    try {
-      const response = await fetch(
-        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&accept-language=ru`,
-        {
-          headers: {
-            'User-Agent': 'YaUberu-App/1.0'
-          }
-        }
-      );
-
-      if (!response.ok) throw new Error('Geocoding failed');
-
-      const data = await response.json();
-      const addr = data.address || {};
-      const street = addr.road || addr.street || '';
-      const house = addr.house_number || '';
-      const fullAddress = `${street}${house ? ', д. ' + house : ''}`;
-      
-      setCurrentAddress(fullAddress);
-      onLocationSelect(lat, lon, fullAddress);
-    } catch (error) {
-      console.error('[MAP] Geocoding error:', error);
-      setCurrentAddress(`${lat.toFixed(6)}, ${lon.toFixed(6)}`);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Embedded режим - просто карта
-  if (embedded) {
+  if (!mounted) {
     return (
-      <div className="w-full h-full relative bg-teal-950/20">
-        <MapContainer
-          center={[initialLat, initialLon]}
-          zoom={16}
-          style={{ height: '100%', width: '100%' }}
-          className="z-0"
-          scrollWheelZoom={true}
-          key={`${initialLat}-${initialLon}`}
-        >
-          <TileLayer
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          />
-          <LocationMarker 
-            initialPosition={[initialLat, initialLon]}
-            onLocationSelect={handleLocationSelect} 
-          />
-        </MapContainer>
-        {currentAddress && (
-          <div className="absolute top-2 left-2 right-2 z-[1000] bg-teal-950/95 backdrop-blur-sm px-3 py-2 rounded-xl border border-teal-600/30">
-            <p className="text-teal-400 text-xs font-medium">
-              {loading ? '🔄 Определяю адрес...' : `📌 ${currentAddress}`}
-            </p>
-          </div>
-        )}
+      <div className="w-full h-[400px] rounded-2xl bg-teal-950/20 border-2 border-teal-700/50 flex items-center justify-center">
+        <div className="flex items-center gap-3">
+          <div className="w-6 h-6 border-2 border-teal-400 border-t-transparent rounded-full animate-spin" />
+          <span className="text-teal-400 text-sm font-medium">Загрузка карты...</span>
+        </div>
       </div>
     );
   }
 
-  // Модальный режим - полный интерфейс
   return (
-    <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4">
-      <div className="bg-zinc-900 rounded-2xl overflow-hidden max-w-2xl w-full max-h-[80vh] flex flex-col">
-        {/* Header */}
-        <div className="p-4 bg-teal-950/50 border-b border-teal-800/30">
-          <div className="flex items-center justify-between mb-2">
-            <h3 className="text-white font-bold text-lg">📍 Укажите точное место</h3>
-            <button
-              onClick={onClose}
-              className="text-gray-400 hover:text-white transition-colors"
-            >
-              ✕
-            </button>
-          </div>
-          {currentAddress && (
-            <p className="text-teal-400 text-sm">
-              {loading ? '🔄 Определяю адрес...' : `📌 ${currentAddress}`}
-            </p>
-          )}
-          <p className="text-gray-500 text-xs mt-1">Нажмите на карту или перетащите маркер</p>
-        </div>
-
-        {/* Map */}
-        <div className="flex-1 relative">
-          <MapContainer
-            center={[initialLat, initialLon]}
-            zoom={16}
-            style={{ height: '100%', width: '100%' }}
-            className="z-0"
-            scrollWheelZoom={true}
-          >
-            <TileLayer
-              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-            />
-            <LocationMarker 
-              initialPosition={[initialLat, initialLon]}
-              onLocationSelect={handleLocationSelect} 
-            />
-          </MapContainer>
-        </div>
-
-        {/* Footer */}
-        <div className="p-4 bg-teal-950/50 border-t border-teal-800/30">
-          <button
-            onClick={onClose}
-            disabled={!currentAddress}
-            className="w-full py-3 px-4 bg-teal-600 hover:bg-teal-500 disabled:bg-gray-700 disabled:text-gray-500 text-white font-bold rounded-xl transition-all"
-          >
-            {currentAddress ? '✓ Выбрать этот адрес' : 'Нажмите на карту'}
-          </button>
-        </div>
+    <div className="relative">
+      <MapContainer
+        center={[center.lat, center.lon]}
+        zoom={16}
+        scrollWheelZoom={true}
+        style={{ height: '400px', width: '100%', borderRadius: '1rem', zIndex: 0 }}
+        className="rounded-2xl border-2 border-teal-700/50"
+      >
+        <TileLayer
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        />
+        <LocationMarker onLocationSelect={onLocationSelect} />
+      </MapContainer>
+      
+      <div className="absolute top-3 left-3 bg-teal-900/90 backdrop-blur-sm text-white text-xs px-3 py-2 rounded-lg z-[1000] pointer-events-none shadow-lg">
+        👆 Нажмите на карту для выбора адреса
       </div>
     </div>
   );
 }
-
