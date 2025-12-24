@@ -181,35 +181,14 @@ function OrderContent() {
         {/* Step 1: Address */}
         {step === 'address' && (
           <>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 bg-teal-600 rounded-xl flex items-center justify-center">
-                  <MapPin className="w-6 h-6 text-gray-900" />
-                </div>
-                <div>
-                  <h2 className="text-xl font-bold text-gray-900">Адрес</h2>
-                  <p className="text-gray-500 text-sm">Куда приехать?</p>
-                </div>
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 bg-teal-600 rounded-xl flex items-center justify-center">
+                <MapPin className="w-6 h-6 text-gray-900" />
               </div>
-              
-              <button
-                type="button"
-                onClick={handleLocationRequest}
-                disabled={locationLoading}
-                className="px-3 py-2 rounded-xl bg-teal-100 border border-teal-600/30 text-teal-600 text-sm font-medium hover:bg-teal-900/60 hover:border-teal-500/50 transition-all disabled:opacity-50 flex items-center gap-2 active:scale-95"
-              >
-                {locationLoading ? (
-                  <>
-                    <div className="w-4 h-4 border-2 border-teal-400 border-t-transparent rounded-full animate-spin" />
-                    <span className="text-xs">Ищу...</span>
-                  </>
-                ) : (
-                  <>
-                    <MapPin className="w-4 h-4" />
-                    <span className="text-xs font-semibold">📍 Где я?</span>
-                  </>
-                )}
-              </button>
+              <div>
+                <h2 className="text-xl font-bold text-gray-900">Адрес</h2>
+                <p className="text-gray-500 text-sm">Куда приехать?</p>
+              </div>
             </div>
 
             <div className="space-y-4">

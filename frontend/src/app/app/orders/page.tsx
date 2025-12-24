@@ -124,12 +124,11 @@ export default function OrdersPage() {
                     </div>
 
                     {/* Address */}
-                    {order.address && (
+                    {order.address_details && (
                       <div className="flex items-start gap-3 mb-4">
                         <MapPin className="w-5 h-5 text-gray-400 mt-0.5" />
                         <p className="text-gray-600 text-sm">
-                          {order.address.street && `${order.address.street}, `}
-                          д. {order.address.building}, кв. {order.address.apartment}
+                          {order.address_details}
                         </p>
                       </div>
                     )}
