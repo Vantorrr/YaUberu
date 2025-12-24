@@ -198,15 +198,15 @@ function OrderContent() {
   const selectedComplexName = complexes.find(c => c.id === Number(address.complexId))?.name;
 
   return (
-    <div className="min-h-screen bg-[#0f1714]">
+    <div className="min-h-screen bg-white">
       {/* Header */}
-      <div className="sticky top-0 z-10 bg-[#0f1714]/95 backdrop-blur border-b border-teal-900/30 px-5 py-4">
+      <div className="sticky top-0 z-10 bg-white/95 backdrop-blur border-b border-gray-200 px-5 py-4">
         <div className="flex items-center gap-4">
-          <button onClick={back} className="w-10 h-10 bg-teal-900/50 rounded-xl flex items-center justify-center text-white">
+          <button onClick={back} className="w-10 h-10 bg-gray-100 rounded-xl flex items-center justify-center text-gray-900 hover:bg-gray-200 transition">
             <ArrowLeft className="w-5 h-5" />
           </button>
           <div>
-            <h1 className="text-lg font-bold text-white">Оформление</h1>
+            <h1 className="text-lg font-bold text-gray-900">Оформление</h1>
             <p className="text-gray-500 text-sm">Шаг {stepIndex + 1} из {steps.length}</p>
           </div>
         </div>
@@ -214,7 +214,7 @@ function OrderContent() {
         {/* Progress */}
         <div className="flex gap-2 mt-4">
           {steps.map((_, i) => (
-            <div key={i} className={`h-1 flex-1 rounded-full ${i <= stepIndex ? 'bg-teal-500' : 'bg-teal-900/30'}`} />
+            <div key={i} className={`h-1 flex-1 rounded-full ${i <= stepIndex ? 'bg-teal-600' : 'bg-gray-200'}`} />
           ))}
         </div>
       </div>
@@ -592,7 +592,7 @@ function OrderContent() {
       </div>
 
       {/* Bottom */}
-      <div className="fixed bottom-0 left-0 right-0 p-5 pb-24 bg-gradient-to-t from-[#0f1714] via-[#0f1714]/95 to-transparent z-50">
+      <div className="fixed bottom-0 left-0 right-0 p-5 pb-24 bg-gradient-to-t from-white via-white/95 to-transparent z-50 border-t border-gray-200">
         {/* Validation hints */}
         {step === 'address' && (!address.street || !address.building || !address.apartment) && (
           <div className="mb-3 bg-orange-900/30 border border-orange-500/50 rounded-xl p-3 animate-pulse">
@@ -632,7 +632,7 @@ function OrderContent() {
 
 export default function OrderPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-[#0f1714] flex items-center justify-center text-teal-500">Загрузка...</div>}>
+    <Suspense fallback={<div className="min-h-screen bg-white flex items-center justify-center text-teal-600">Загрузка...</div>}>
       <OrderContent />
     </Suspense>
   );

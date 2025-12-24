@@ -2,9 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Card } from '@/components/ui/Card';
-import { Button } from '@/components/ui/Button';
-import { Calendar, Clock, MapPin, Pencil, CheckCircle, Plus, Package } from 'lucide-react';
+import { Calendar, Clock, MapPin, Pencil, CheckCircle, Package, ChevronRight, AlertCircle } from 'lucide-react';
 import { api, Order } from '@/lib/api';
 
 export default function OrdersPage() {
@@ -73,186 +71,194 @@ export default function OrdersPage() {
   const completedOrders = orders.filter(o => o.status === 'completed');
 
   return (
-    <div className="px-5 py-6 space-y-6 pb-24">
+    <div className="min-h-screen bg-white px-5 py-6 space-y-6 pb-24">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold text-white">Мои заказы</h1>
+        <h1 className="text-3xl font-bold text-gray-900">Мои заказы</h1>
         <p className="text-gray-500 text-sm mt-1">Управляйте расписанием</p>
       </div>
 
-      {/* Upcoming */}
-      <div>
-        <h2 className="text-sm font-semibold text-teal-500 uppercase tracking-wider mb-3">
-          Предстоящие
-        </h2>
-        
-        {loading ? (
-          <div className="text-center py-8 text-gray-500">Загрузка...</div>
-        ) : upcomingOrders.length === 0 ? (
-          <Card>
-            <div className="flex flex-col items-center py-6">
-              <Package className="w-12 h-12 text-gray-600 mb-3" />
-              <p className="text-gray-400">Нет запланированных выносов</p>
-              <p className="text-gray-600 text-sm mt-1">Закажите первый вынос!</p>
-            </div>
-          </Card>
-        ) : (
-          <div className="space-y-3">
-            {upcomingOrders.map((order) => (
-              <Card key={order.id}>
-                <div className="flex items-start justify-between mb-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 bg-teal-600 rounded-xl flex items-center justify-center">
-                      <Calendar className="w-6 h-6 text-white" />
-                    </div>
-                    <div>
-                      <p className="text-white font-semibold text-lg">{order.scheduled_date}</p>
-                      <p className="text-gray-500 text-sm">{order.time_slot}</p>
-                    </div>
-                  </div>
-                  <button 
-                    onClick={() => openEditModal(order)}
-                    className="p-2 rounded-lg bg-teal-900/50 text-teal-400 hover:bg-teal-900 transition-colors"
-                  >
-                    <Pencil className="w-4 h-4" />
-                  </button>
-                </div>
-
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2 text-gray-400 text-sm">
-                    <Clock className="w-4 h-4 text-teal-500" />
-                    <span>{order.time_slot}</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-gray-400 text-sm">
-                    <MapPin className="w-4 h-4 text-teal-500" />
-                    <span>{order.address_details}</span>
-                  </div>
-                </div>
-              </Card>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* Add button */}
-      <div>
-        <Button 
-          variant="secondary" 
-          fullWidth
-          onClick={() => router.push('/app/order')}
-        >
-          <Plus className="w-5 h-5" />
-          Заказать вынос
-        </Button>
-        <p className="text-center text-gray-600 text-xs mt-2">Будет списан 1 кредит</p>
-      </div>
-
-      {/* History */}
-      {completedOrders.length > 0 && (
-        <div>
-          <h2 className="text-sm font-semibold text-teal-500 uppercase tracking-wider mb-3">
-            История
-          </h2>
-          <div className="bg-teal-950/30 rounded-2xl border border-teal-800/20 overflow-hidden">
-            {completedOrders.map((order, i) => (
-              <div 
-                key={order.id} 
-                className={`flex items-center justify-between p-4 ${i !== completedOrders.length - 1 ? 'border-b border-teal-800/20' : ''}`}
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 bg-green-900/50 rounded-full flex items-center justify-center">
-                    <CheckCircle className="w-5 h-5 text-green-500" />
-                  </div>
-                  <div>
-                    <p className="text-white font-medium text-sm">{order.scheduled_date}</p>
-                    <p className="text-gray-500 text-xs">{order.time_slot}</p>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <p className="text-green-500 text-xs font-semibold">Выполнен</p>
-                </div>
-              </div>
-            ))}
-          </div>
+      {loading ? (
+        <div className="flex items-center justify-center py-20">
+          <div className="w-8 h-8 border-4 border-teal-600 border-t-transparent rounded-full animate-spin" />
         </div>
+      ) : (
+        <>
+          {/* Upcoming Orders */}
+          {upcomingOrders.length > 0 && (
+            <div>
+              <h2 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-3">
+                Предстоящие
+              </h2>
+              <div className="space-y-3">
+                {upcomingOrders.map((order) => (
+                  <div
+                    key={order.id}
+                    className="bg-white border-2 border-gray-200 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow"
+                  >
+                    {/* Status Badge */}
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="inline-flex items-center gap-2 bg-blue-100 px-3 py-1 rounded-full">
+                        <Clock className="w-4 h-4 text-blue-600" />
+                        <span className="text-blue-700 text-xs font-semibold">
+                          {order.status === 'in_progress' ? 'Курьер выехал' : 'Запланировано'}
+                        </span>
+                      </div>
+                      <span className="text-gray-500 text-xs">№{order.id}</span>
+                    </div>
+
+                    {/* Date & Time */}
+                    <div className="flex items-start gap-3 mb-3">
+                      <Calendar className="w-5 h-5 text-gray-400 mt-0.5" />
+                      <div>
+                        <p className="text-gray-900 font-semibold text-sm">
+                          {new Date(order.scheduled_date).toLocaleDateString('ru-RU', {
+                            day: 'numeric',
+                            month: 'long',
+                            year: 'numeric'
+                          })}
+                        </p>
+                        <p className="text-gray-600 text-xs mt-0.5">{order.time_slot}</p>
+                      </div>
+                    </div>
+
+                    {/* Address */}
+                    {order.address && (
+                      <div className="flex items-start gap-3 mb-4">
+                        <MapPin className="w-5 h-5 text-gray-400 mt-0.5" />
+                        <p className="text-gray-600 text-sm">
+                          {order.address.street && `${order.address.street}, `}
+                          д. {order.address.building}, кв. {order.address.apartment}
+                        </p>
+                      </div>
+                    )}
+
+                    {/* Actions */}
+                    <div className="flex gap-2 pt-3 border-t border-gray-200">
+                      <button
+                        onClick={() => openEditModal(order)}
+                        className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-gray-100 text-gray-900 font-medium rounded-xl hover:bg-gray-200 transition text-sm"
+                      >
+                        <Pencil className="w-4 h-4" />
+                        Перенести
+                      </button>
+                      <button
+                        onClick={() => handleCancel(order.id)}
+                        className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-red-50 text-red-600 font-medium rounded-xl hover:bg-red-100 transition text-sm"
+                      >
+                        Отменить
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Completed Orders */}
+          {completedOrders.length > 0 && (
+            <div>
+              <h2 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-3">
+                Выполненные
+              </h2>
+              <div className="space-y-3">
+                {completedOrders.map((order) => (
+                  <div
+                    key={order.id}
+                    className="bg-white border-2 border-gray-200 rounded-2xl p-5 shadow-sm opacity-75"
+                  >
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="inline-flex items-center gap-2 bg-green-100 px-3 py-1 rounded-full">
+                        <CheckCircle className="w-4 h-4 text-green-600" />
+                        <span className="text-green-700 text-xs font-semibold">Выполнено</span>
+                      </div>
+                      <span className="text-gray-500 text-xs">№{order.id}</span>
+                    </div>
+
+                    <div className="flex items-start gap-3">
+                      <Calendar className="w-5 h-5 text-gray-400 mt-0.5" />
+                      <div>
+                        <p className="text-gray-900 font-semibold text-sm">
+                          {new Date(order.scheduled_date).toLocaleDateString('ru-RU', {
+                            day: 'numeric',
+                            month: 'long'
+                          })}
+                        </p>
+                        <p className="text-gray-600 text-xs mt-0.5">{order.time_slot}</p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Empty State */}
+          {upcomingOrders.length === 0 && completedOrders.length === 0 && (
+            <div className="flex flex-col items-center justify-center py-16 text-center">
+              <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                <Package className="w-12 h-12 text-gray-400" />
+              </div>
+              <h3 className="text-gray-900 font-bold text-lg mb-2">Заказов пока нет</h3>
+              <p className="text-gray-500 text-sm mb-6 max-w-xs">
+                Оформите первый заказ и мы заберём мусор в удобное время
+              </p>
+              <button
+                onClick={() => router.push('/app/tariffs')}
+                className="bg-teal-600 hover:bg-teal-700 text-white font-semibold px-8 py-3 rounded-xl shadow-lg transition"
+              >
+                Оформить заказ
+              </button>
+            </div>
+          )}
+        </>
       )}
 
       {/* Edit Modal */}
       {showEditModal && selectedOrder && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 px-4">
-          <div className="bg-zinc-900 rounded-3xl w-full max-w-md p-6 space-y-6 border border-teal-700/30">
-            {/* Header */}
-            <div className="flex items-center justify-between">
-              <h2 className="text-xl font-bold text-white">Изменить время</h2>
-              <button 
-                onClick={() => setShowEditModal(false)}
-                className="text-gray-400 hover:text-white transition-colors"
-              >
-                ✕
-              </button>
-            </div>
-
-            {/* Warning */}
-            <div className="p-4 bg-orange-900/20 border border-orange-700/30 rounded-xl">
-              <p className="text-orange-400 text-sm">
-                ⚠️ Изменить можно за 24+ часа до выноса
-              </p>
-            </div>
-
-            {/* Date */}
+        <div className="fixed inset-0 bg-black/50 flex items-end justify-center z-50 p-5">
+          <div className="bg-white rounded-3xl w-full max-w-md p-6 space-y-4 animate-slideUp">
+            <h3 className="text-gray-900 font-bold text-xl">Перенести заказ</h3>
+            
             <div>
-              <label className="block text-sm font-medium text-gray-400 mb-2">📅 Новая дата</label>
+              <label className="block text-gray-700 text-sm font-medium mb-2">Новая дата</label>
               <input
                 type="date"
                 value={newDate}
                 onChange={(e) => setNewDate(e.target.value)}
-                min={new Date(Date.now() + 86400000 * 2).toISOString().split('T')[0]}
-                className="w-full px-4 py-3 bg-teal-950/30 border border-teal-700/30 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
+                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl text-gray-900 focus:border-teal-500 focus:outline-none"
               />
             </div>
 
-            {/* Time Slot */}
             <div>
-              <label className="block text-sm font-medium text-gray-400 mb-2">🕐 Новое время</label>
+              <label className="block text-gray-700 text-sm font-medium mb-2">Новое время</label>
               <select
                 value={newTimeSlot}
                 onChange={(e) => setNewTimeSlot(e.target.value)}
-                className="w-full px-4 py-3 bg-teal-950/30 border border-teal-700/30 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
+                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl text-gray-900 focus:border-teal-500 focus:outline-none"
               >
-                <option value="08-10">08:00 - 10:00</option>
-                <option value="12-14">12:00 - 14:00</option>
-                <option value="16-18">16:00 - 18:00</option>
-                <option value="20-22">20:00 - 22:00</option>
+                <option value="08:00-10:00">08:00 - 10:00</option>
+                <option value="12:00-14:00">12:00 - 14:00</option>
+                <option value="16:00-18:00">16:00 - 18:00</option>
+                <option value="20:00-22:00">20:00 - 22:00</option>
               </select>
             </div>
 
-            {/* Actions */}
-            <div className="flex gap-3">
+            <div className="flex gap-3 pt-2">
               <button
                 onClick={() => setShowEditModal(false)}
-                className="flex-1 py-3 px-4 bg-zinc-800 hover:bg-zinc-700 text-white font-semibold rounded-xl transition-colors"
+                className="flex-1 py-3 bg-gray-100 text-gray-900 font-semibold rounded-xl hover:bg-gray-200 transition"
               >
                 Отмена
               </button>
               <button
                 onClick={handleReschedule}
-                disabled={editLoading || !newDate || !newTimeSlot}
-                className="flex-1 py-3 px-4 bg-teal-600 hover:bg-teal-500 disabled:bg-gray-700 disabled:text-gray-500 text-white font-bold rounded-xl transition-colors"
+                disabled={editLoading}
+                className="flex-1 py-3 bg-teal-600 text-white font-semibold rounded-xl hover:bg-teal-700 transition disabled:opacity-50"
               >
-                {editLoading ? '⏳ Сохраняю...' : '✓ Сохранить'}
+                {editLoading ? 'Сохранение...' : 'Сохранить'}
               </button>
             </div>
-
-            {/* Cancel Order */}
-            <button
-              onClick={() => {
-                setShowEditModal(false);
-                handleCancel(selectedOrder.id);
-              }}
-              className="w-full py-3 px-4 bg-red-950/30 hover:bg-red-950/50 border border-red-700/30 text-red-400 font-semibold rounded-xl transition-colors"
-            >
-              🗑️ Отменить заказ
-            </button>
           </div>
         </div>
       )}
