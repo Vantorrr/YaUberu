@@ -262,15 +262,20 @@ function OrderContent() {
                 <MapPicker
                   center={mapCenter}
                   onLocationSelect={(data) => {
-                    console.log('[ORDER] Location selected:', data);
+                    console.log('[ORDER] RECEIVED DATA:', JSON.stringify(data, null, 2));
                     
-                    setAddress({ 
-                      ...address, 
-                      street: data.street,
-                      building: data.building
+                    // ИСПРАВЛЯЕМ: используем функциональную форму setState!
+                    setAddress((prevAddress) => {
+                      const newAddress = {
+                        ...prevAddress,
+                        street: data.street,
+                        building: data.building
+                      };
+                      console.log('[ORDER] Updating address from', JSON.stringify(prevAddress, null, 2), 'to', JSON.stringify(newAddress, null, 2));
+                      return newAddress;
                     });
                     
-                    alert(`📍 Адрес выбран!\n\n${data.fullAddress}\n\nУточните детали ниже 👇`);
+                    alert(`📍 Адрес выбран!\n\n${data.fullAddress}\n\nУлица: ${data.street}\nДом: ${data.building}\n\nУточните детали ниже 👇`);
                   }}
                 />
                 <div className="flex items-center justify-between mt-3">

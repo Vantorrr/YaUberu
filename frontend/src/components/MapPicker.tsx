@@ -31,15 +31,18 @@ function LocationMarker({ onLocationSelect }: { onLocationSelect: (data: { lat: 
       fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${e.latlng.lat}&lon=${e.latlng.lng}&accept-language=ru&addressdetails=1`)
         .then(res => res.json())
         .then(data => {
-          console.log('[MAP] Geocoded:', data);
+          console.log('[MAP] Geocoded FULL DATA:', JSON.stringify(data, null, 2));
           
           const addr = data.address || {};
           
           // Extract street (улица)
           let street = addr.road || addr.street || addr.pedestrian || addr.cycleway || addr.footway || '';
+          console.log('[MAP] Extracted STREET:', street);
           
-          // Extract building number (номер дома)
-          let building = addr.house_number || '';
+          // Extract building number (номер дома) - проверяем РАЗНЫЕ поля!
+          let building = addr.house_number || addr.quarter || addr.building || addr.house_name || '';
+          console.log('[MAP] Extracted BUILDING:', building);
+          console.log('[MAP] address object:', JSON.stringify(addr, null, 2));
           
           // Build full address string for display
           let fullAddress = '';
@@ -67,13 +70,16 @@ function LocationMarker({ onLocationSelect }: { onLocationSelect: (data: { lat: 
             fullAddress = `${e.latlng.lat.toFixed(6)}, ${e.latlng.lng.toFixed(6)}`;
           }
           
-          onLocationSelect({
+          const result = {
             lat: e.latlng.lat,
             lon: e.latlng.lng,
             street: street || '',
             building: building || '',
             fullAddress: fullAddress
-          });
+          };
+          console.log('[MAP] SENDING TO CALLBACK:', JSON.stringify(result, null, 2));
+          
+          onLocationSelect(result);
           setLoading(false);
         })
         .catch(err => {
