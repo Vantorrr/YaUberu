@@ -225,7 +225,7 @@ function OrderContent() {
       </div>
 
       {/* Content */}
-      <div className="px-5 py-6 pb-28 space-y-6">
+      <div className="px-5 py-6 pb-40 space-y-6">
         {/* Step 1: Address */}
         {step === 'address' && (
           <>
@@ -619,7 +619,7 @@ function OrderContent() {
       </div>
 
       {/* Bottom */}
-      <div className="fixed bottom-0 left-0 right-0 p-5 bg-gradient-to-t from-[#0f1714] via-[#0f1714]/95 to-transparent z-20">
+      <div className="fixed bottom-0 left-0 right-0 p-5 pb-24 bg-gradient-to-t from-[#0f1714] via-[#0f1714]/95 to-transparent z-50">
         {/* Validation hints */}
         {step === 'address' && (!address.street || !address.building || !address.apartment) && (
           <div className="mb-3 bg-orange-900/30 border border-orange-500/50 rounded-xl p-3 animate-pulse">
