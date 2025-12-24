@@ -2,22 +2,32 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Card } from '@/components/ui/Card';
-import { User, MapPin, History, HelpCircle, Info, ChevronRight, LogOut, Phone, Shield, MessageCircle } from 'lucide-react';
+import { User, History, HelpCircle, Info, ChevronRight, LogOut, Phone, Shield, MessageCircle, Building2, FileText, Package } from 'lucide-react';
 import { api } from '@/lib/api';
 
 export default function ProfilePage() {
   const router = useRouter();
   const [user, setUser] = useState<any>(null);
+  const [balance, setBalance] = useState<number | null>(null);
 
   useEffect(() => {
     loadUser();
+    loadBalance();
   }, []);
 
   const loadUser = async () => {
     try {
       const userData = await api.getMe();
       setUser(userData);
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const loadBalance = async () => {
+    try {
+      const res = await api.getBalance();
+      setBalance(res.credits);
     } catch (e) {
       console.error(e);
     }
@@ -33,108 +43,171 @@ export default function ProfilePage() {
   };
 
   return (
-    <div className="px-5 py-6 space-y-6 pb-24">
+    <div className="min-h-screen bg-white px-5 py-6 space-y-6 pb-24">
       {/* Header */}
-      <h1 className="text-3xl font-bold text-white">Профиль</h1>
+      <h1 className="text-3xl font-bold text-gray-900">Профиль</h1>
 
-      {/* User */}
-      <Card>
-        <div className="flex items-center gap-4">
-          <div className="w-16 h-16 bg-teal-600 rounded-full flex items-center justify-center">
+      {/* User Card */}
+      <div className="bg-gradient-to-br from-teal-50 to-teal-100 border-2 border-teal-200 rounded-3xl p-6 shadow-sm">
+        <div className="flex items-center gap-4 mb-4">
+          <div className="w-16 h-16 bg-teal-600 rounded-full flex items-center justify-center shadow-md">
             <span className="text-2xl font-bold text-white uppercase">
-                {user?.name?.[0] || 'Я'}
+              {user?.name?.[0] || 'Я'}
             </span>
           </div>
           <div className="flex-1">
-            <p className="text-white font-bold text-lg">{user?.name || 'Загрузка...'}</p>
-            <div className="flex items-center gap-1.5 text-gray-500 text-sm mt-1">
+            <p className="text-gray-900 font-bold text-xl">{user?.name || 'Загрузка...'}</p>
+            <div className="flex items-center gap-1.5 text-gray-600 text-sm mt-1">
               <Phone className="w-4 h-4" />
               <span>{user?.phone || 'Не указан'}</span>
             </div>
             <div className="flex items-center gap-1.5 mt-2">
-              <span className="inline-flex items-center gap-1 text-green-500 text-xs font-semibold bg-green-900/30 px-2 py-0.5 rounded-full">
+              <span className="inline-flex items-center gap-1 text-green-700 text-xs font-semibold bg-green-100 px-2 py-1 rounded-full">
                 <Shield className="w-3 h-3" />
                 Верифицирован
               </span>
             </div>
           </div>
         </div>
-      </Card>
+        
+        {/* Balance */}
+        <div className="flex items-center justify-between bg-white rounded-2xl p-4 shadow-sm">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-teal-100 rounded-xl flex items-center justify-center">
+              <Package className="w-5 h-5 text-teal-600" />
+            </div>
+            <div>
+              <p className="text-gray-500 text-xs">Ваш баланс</p>
+              <p className="text-gray-900 font-bold text-lg">{balance !== null ? balance : '...'} выносов</p>
+            </div>
+          </div>
+        </div>
+      </div>
 
       {/* Actions */}
       <div>
-        <h2 className="text-sm font-semibold text-teal-500 uppercase tracking-wider mb-3">
+        <h2 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-3">
           Управление
         </h2>
-        <div className="bg-teal-950/30 rounded-2xl border border-teal-800/20 overflow-hidden">
+        <div className="bg-white rounded-2xl border-2 border-gray-200 overflow-hidden shadow-sm">
           <button 
             onClick={() => router.push('/app/orders')}
-            className="w-full flex items-center gap-4 p-4 text-left hover:bg-teal-900/30 transition-colors border-b border-teal-800/20"
+            className="w-full flex items-center gap-4 p-4 text-left hover:bg-gray-50 transition-colors border-b border-gray-200"
           >
-            <div className="w-10 h-10 bg-teal-900/50 rounded-xl flex items-center justify-center text-teal-400">
+            <div className="w-10 h-10 bg-teal-100 rounded-xl flex items-center justify-center text-teal-600">
               <History className="w-5 h-5" />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-white font-medium text-sm">Мои заказы</p>
-              <p className="text-gray-500 text-xs truncate">История и предстоящие</p>
+              <p className="text-gray-900 font-semibold text-sm">Мои заказы</p>
+              <p className="text-gray-500 text-xs truncate">История и подписки</p>
             </div>
-            <ChevronRight className="w-5 h-5 text-gray-600" />
+            <ChevronRight className="w-5 h-5 text-gray-400" />
           </button>
 
           <button 
-            onClick={() => router.push('/app/order')}
-            className="w-full flex items-center gap-4 p-4 text-left hover:bg-teal-900/30 transition-colors"
+            onClick={() => router.push('/app/tariffs')}
+            className="w-full flex items-center gap-4 p-4 text-left hover:bg-gray-50 transition-colors"
           >
-            <div className="w-10 h-10 bg-orange-900/50 rounded-xl flex items-center justify-center text-orange-400">
-              <MapPin className="w-5 h-5" />
+            <div className="w-10 h-10 bg-orange-100 rounded-xl flex items-center justify-center text-orange-600">
+              <Package className="w-5 h-5" />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-white font-medium text-sm">Новый заказ</p>
+              <p className="text-gray-900 font-semibold text-sm">Новый заказ</p>
               <p className="text-gray-500 text-xs truncate">Оформить вывоз</p>
             </div>
-            <ChevronRight className="w-5 h-5 text-gray-600" />
+            <ChevronRight className="w-5 h-5 text-gray-400" />
+          </button>
+        </div>
+      </div>
+
+      {/* Info */}
+      <div>
+        <h2 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-3">
+          Информация
+        </h2>
+        <div className="bg-white rounded-2xl border-2 border-gray-200 overflow-hidden shadow-sm">
+          <button 
+            onClick={() => router.push('/app/how-it-works')}
+            className="w-full flex items-center gap-4 p-4 text-left hover:bg-gray-50 transition-colors border-b border-gray-200"
+          >
+            <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center text-blue-600">
+              <HelpCircle className="w-5 h-5" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-gray-900 font-semibold text-sm">Как работает сервис</p>
+              <p className="text-gray-500 text-xs truncate">Инструкция для пользователей</p>
+            </div>
+            <ChevronRight className="w-5 h-5 text-gray-400" />
+          </button>
+
+          <button 
+            onClick={() => router.push('/app/company-info')}
+            className="w-full flex items-center gap-4 p-4 text-left hover:bg-gray-50 transition-colors border-b border-gray-200"
+          >
+            <div className="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center text-purple-600">
+              <Building2 className="w-5 h-5" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-gray-900 font-semibold text-sm">Реквизиты компании</p>
+              <p className="text-gray-500 text-xs truncate">Для юр. оплат</p>
+            </div>
+            <ChevronRight className="w-5 h-5 text-gray-400" />
+          </button>
+
+          <button 
+            onClick={() => router.push('/app/privacy')}
+            className="w-full flex items-center gap-4 p-4 text-left hover:bg-gray-50 transition-colors border-b border-gray-200"
+          >
+            <div className="w-10 h-10 bg-green-100 rounded-xl flex items-center justify-center text-green-600">
+              <Shield className="w-5 h-5" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-gray-900 font-semibold text-sm">Политика конфиденциальности</p>
+              <p className="text-gray-500 text-xs truncate">Защита данных</p>
+            </div>
+            <ChevronRight className="w-5 h-5 text-gray-400" />
+          </button>
+
+          <button 
+            onClick={() => router.push('/app/terms')}
+            className="w-full flex items-center gap-4 p-4 text-left hover:bg-gray-50 transition-colors"
+          >
+            <div className="w-10 h-10 bg-gray-100 rounded-xl flex items-center justify-center text-gray-600">
+              <FileText className="w-5 h-5" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-gray-900 font-semibold text-sm">Правовая информация</p>
+              <p className="text-gray-500 text-xs truncate">Условия использования</p>
+            </div>
+            <ChevronRight className="w-5 h-5 text-gray-400" />
           </button>
         </div>
       </div>
 
       {/* Support */}
       <div>
-        <h2 className="text-sm font-semibold text-teal-500 uppercase tracking-wider mb-3">
+        <h2 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-3">
           Помощь
         </h2>
-        <div className="bg-teal-950/30 rounded-2xl border border-teal-800/20 overflow-hidden">
-          <button 
-            onClick={openSupport}
-            className="w-full flex items-center gap-4 p-4 text-left hover:bg-teal-900/30 transition-colors border-b border-teal-800/20"
-          >
-            <div className="w-10 h-10 bg-blue-900/50 rounded-xl flex items-center justify-center text-blue-400">
-              <MessageCircle className="w-5 h-5" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-white font-medium text-sm">Поддержка</p>
-              <p className="text-gray-500 text-xs truncate">Написать в Telegram</p>
-            </div>
-            <ChevronRight className="w-5 h-5 text-gray-600" />
-          </button>
-
-          <div className="p-4">
-            <div className="flex items-center gap-4">
-              <div className="w-10 h-10 bg-teal-900/50 rounded-xl flex items-center justify-center text-teal-400">
-                <Info className="w-5 h-5" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-white font-medium text-sm">О сервисе</p>
-                <p className="text-gray-500 text-xs">Мы забираем мусор от вашей двери в удобное время. Просто оставьте пакет — мы всё сделаем!</p>
-              </div>
-            </div>
+        <button 
+          onClick={openSupport}
+          className="w-full flex items-center gap-4 p-4 text-left hover:bg-gray-50 transition-colors bg-white rounded-2xl border-2 border-gray-200 shadow-sm"
+        >
+          <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center text-blue-600">
+            <MessageCircle className="w-5 h-5" />
           </div>
-        </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-gray-900 font-semibold text-sm">Поддержка</p>
+            <p className="text-gray-500 text-xs truncate">Написать в Telegram</p>
+          </div>
+          <ChevronRight className="w-5 h-5 text-gray-400" />
+        </button>
       </div>
 
       {/* Logout */}
       <button 
         onClick={handleLogout}
-        className="w-full flex items-center justify-center gap-2 py-4 text-red-500 font-semibold bg-red-950/20 rounded-2xl border border-red-900/30 hover:bg-red-950/30 transition-colors"
+        className="w-full flex items-center justify-center gap-2 py-4 text-red-600 font-semibold bg-red-50 rounded-2xl border-2 border-red-200 hover:bg-red-100 transition-colors"
       >
         <LogOut className="w-5 h-5" />
         Выйти из аккаунта
