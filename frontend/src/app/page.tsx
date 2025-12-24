@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/Button';
 import { ArrowRight } from 'lucide-react';
@@ -13,34 +13,33 @@ import 'swiper/css/pagination';
 
 export default function WelcomePage() {
   const router = useRouter();
+  const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    // Check if already logged in or auto-login via Telegram
-    const checkAuth = async () => {
-        try {
-            // Try to get user with existing token
-            const user = await api.getMe();
-            if (user) {
-                router.push('/app');
-                return;
-            }
-        } catch {
-            // No valid token, try auto-login if in Telegram
-            try {
-                if (typeof window !== 'undefined' && (window as any).Telegram?.WebApp?.initData) {
-                    // We're in Telegram, try auto-login
-                    await api.login('User');
-                    router.push('/app');
-                }
-            } catch {
-                // Auto-login failed, user needs to register
-            }
+  const handleStart = async () => {
+    setLoading(true);
+    
+    try {
+      // Check if already logged in
+      const user = await api.getMe();
+      if (user) {
+        router.push('/app');
+        return;
+      }
+    } catch {
+      // Not logged in, try Telegram auto-login
+      try {
+        if (typeof window !== 'undefined' && (window as any).Telegram?.WebApp?.initData) {
+          // We're in Telegram, try auto-login
+          await api.login('User');
+          router.push('/app');
+          return;
         }
-    };
-    checkAuth();
-  }, [router]);
-
-  const handleStart = () => {
+      } catch {
+        // Auto-login failed
+      }
+    }
+    
+    // No valid auth, go to registration
     router.push('/auth/contact');
   };
 
@@ -115,9 +114,14 @@ export default function WelcomePage() {
 
       {/* Fixed Footer */}
       <div className="px-6 pb-10 space-y-3 relative z-20">
-        <Button fullWidth onClick={handleStart} className="shadow-2xl shadow-teal-500/20">
-          Открыть ЯУБЕРУ
-          <ArrowRight className="w-5 h-5" />
+        <Button 
+          fullWidth 
+          onClick={handleStart} 
+          disabled={loading}
+          className="shadow-2xl shadow-teal-500/20"
+        >
+          {loading ? '⏳ Загрузка...' : 'Открыть ЯУБЕРУ'}
+          {!loading && <ArrowRight className="w-5 h-5" />}
         </Button>
         
         <p className="text-center text-gray-500 text-xs pt-4">
