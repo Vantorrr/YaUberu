@@ -6,10 +6,6 @@ import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { ArrowLeft, MapPin, Clock, Check, Building, Home, DoorOpen, Hash, Zap, AlertCircle, User } from 'lucide-react';
 import { api } from '@/lib/api';
-import dynamic from 'next/dynamic';
-
-// Dynamic import to avoid SSR issues with Leaflet
-const MapPicker = dynamic(() => import('@/components/MapPicker'), { ssr: false });
 
 const steps = ['address', 'time', 'confirm'] as const;
 type Step = typeof steps[number];
@@ -27,11 +23,9 @@ function OrderContent() {
 
   const [step, setStep] = useState<Step>('address');
   const [slot, setSlot] = useState<number | 'urgent' | null>(null);
-  const [address, setAddress] = useState({ complexId: '0', building: '', entrance: '', floor: '', apartment: '', intercom: '', street: '' });
+  const [address, setAddress] = useState({ complexId: '0', building: '', entrance: '', floor: '', apartment: '', intercom: '' });
   const [pickupMethod, setPickupMethod] = useState<'door' | 'hand'>('door');
   const [loading, setLoading] = useState(false);
-  const [locationLoading, setLocationLoading] = useState(false);
-  const [mapCenter, setMapCenter] = useState({ lat: 55.7558, lon: 37.6173 }); // Москва по умолчанию
   
   // Dynamic Complexes
   const [complexes, setComplexes] = useState<any[]>([]);
@@ -57,55 +51,14 @@ function OrderContent() {
       });
   }, []);
 
-  // Центрирование карты на текущей геолокации
-  const handleLocationRequest = async () => {
-    if (!navigator.geolocation) {
-      alert('❌ Ваш браузер не поддерживает геолокацию');
-      return;
-    }
-
-    setLocationLoading(true);
-
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        const { latitude, longitude } = position.coords;
-        console.log('[LOCATION] Got coords:', latitude, longitude);
-        
-        setLocationLoading(false);
-        setMapCenter({ lat: latitude, lon: longitude });
-        alert(`📍 Ваше местоположение найдено!\n\nУточните адрес в полях ниже.`);
-      },
-      (error) => {
-        setLocationLoading(false);
-        console.error('[LOCATION] Error:', error);
-
-        let errorMessage = '❌ Не удалось получить геолокацию';
-
-        if (error.code === error.PERMISSION_DENIED) {
-          errorMessage = '🚫 Доступ к геолокации запрещён';
-        } else if (error.code === error.POSITION_UNAVAILABLE) {
-          errorMessage = '📡 Не удалось определить местоположение';
-        } else if (error.code === error.TIMEOUT) {
-          errorMessage = '⏱ Превышено время ожидания';
-        }
-
-        alert(errorMessage);
-      },
-      {
-        enableHighAccuracy: true,
-        timeout: 15000,
-        maximumAge: 0
-      }
-    );
-  };
 
   const stepIndex = steps.indexOf(step);
 
   const next = async () => {
     // Validation for address step
     if (step === 'address') {
-      if (!address.street || address.street.trim() === '') {
-        alert('⚠️ Укажите улицу');
+      if (!address.complexId || address.complexId === '0') {
+        alert('⚠️ Выберите ЖК');
         return;
       }
       if (!address.building || address.building.trim() === '') {
@@ -133,10 +86,14 @@ function OrderContent() {
         
         console.log('[ORDER] Creating address:', address);
         
+        // Get selected complex name for street
+        const selectedComplex = complexes.find(c => c.id === Number(address.complexId));
+        const streetName = selectedComplex ? selectedComplex.name : '';
+        
         // 1. Create Address
         const addressRes = await api.createAddress({
-          complex_id: address.complexId === '0' ? null : Number(address.complexId),
-          street: address.street,
+          complex_id: Number(address.complexId),
+          street: streetName,
           building: address.building,
           entrance: address.entrance || '1',
           floor: address.floor || '1',
@@ -256,67 +213,35 @@ function OrderContent() {
             </div>
 
             <div className="space-y-4">
-              {/* ИНТЕРАКТИВНАЯ КАРТА */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">📍 Нажмите на карту для выбора адреса</label>
-                <MapPicker
-                  center={mapCenter}
-                  onLocationSelect={(data) => {
-                    console.log('[ORDER] RECEIVED DATA:', JSON.stringify(data, null, 2));
-                    
-                    // ИСПРАВЛЯЕМ: используем функциональную форму setState!
-                    setAddress((prevAddress) => {
-                      const newAddress = {
-                        ...prevAddress,
-                        street: data.street,
-                        building: data.building
-                      };
-                      console.log('[ORDER] Updating address from', JSON.stringify(prevAddress, null, 2), 'to', JSON.stringify(newAddress, null, 2));
-                      return newAddress;
-                    });
-                    
-                    alert(`📍 Адрес выбран!\n\n${data.fullAddress}\n\nУлица: ${data.street}\nДом: ${data.building}\n\nУточните детали ниже 👇`);
-                  }}
-                />
-                <div className="flex items-center justify-between mt-3">
-                  <button
-                    type="button"
-                    onClick={handleLocationRequest}
-                    disabled={locationLoading}
-                    className="px-4 py-2 rounded-xl bg-teal-100 border border-teal-600/30 text-teal-600 text-sm font-medium hover:bg-teal-900/60 transition-all disabled:opacity-50 flex items-center gap-2"
-                  >
-                    {locationLoading ? (
-                      <>
-                        <div className="w-4 h-4 border-2 border-teal-400 border-t-transparent rounded-full animate-spin" />
-                        Ищу...
-                      </>
-                    ) : (
-                      <>
-                        <MapPin className="w-4 h-4" />
-                        Где я?
-                      </>
-                    )}
-                  </button>
-                  <p className="text-xs text-gray-500">💡 Или введите вручную ниже</p>
-                </div>
-              </div>
-
-              {/* УЛИЦА */}
+              {/* ЖК (Residential Complex) */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Улица <span className="text-red-500">*</span>
+                  🏢 Выберите ЖК <span className="text-red-500">*</span>
                 </label>
                 <div className="relative">
-                  <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-teal-500" />
-                  <input
-                    type="text"
-                    placeholder="Ленина"
-                    value={address.street}
-                    onChange={(e) => setAddress({ ...address, street: e.target.value })}
-                    className="w-full pl-12 pr-4 py-4 rounded-xl bg-white border border-gray-300 text-gray-900 placeholder-gray-600 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 outline-none transition-all"
+                  <Building className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-teal-600" />
+                  <select
+                    value={address.complexId}
+                    onChange={(e) => setAddress({ ...address, complexId: e.target.value })}
+                    className="w-full pl-12 pr-4 py-4 rounded-xl bg-white border-2 border-gray-200 text-gray-900 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 outline-none transition-all appearance-none"
                     required
-                  />
+                  >
+                    <option value="0">-- Выберите ЖК --</option>
+                    {complexes.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.name}
+                      </option>
+                    ))}
+                  </select>
+                  <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
+                    <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </div>
                 </div>
+                {complexes.length === 0 && (
+                  <p className="text-xs text-gray-500 mt-2">⏳ Загрузка списка ЖК...</p>
+                )}
               </div>
 
               <div className="grid grid-cols-2 gap-3">
@@ -509,7 +434,7 @@ function OrderContent() {
                   <div className="flex-1">
                     <p className="text-gray-400 text-sm mb-1">Адрес</p>
                     <p className="text-gray-900 font-medium">
-                      {address.street}, д. {address.building}
+                      {complexes.find(c => c.id === Number(address.complexId))?.name || 'ЖК'}, д. {address.building}
                       {address.entrance && `, подъезд ${address.entrance}`}
                       {address.floor && `, эт. ${address.floor}`}
                       , кв. {address.apartment}
@@ -594,11 +519,11 @@ function OrderContent() {
       {/* Bottom */}
       <div className="fixed bottom-0 left-0 right-0 p-5 pb-24 bg-gradient-to-t from-white via-white/95 to-transparent z-50 border-t border-gray-200">
         {/* Validation hints */}
-        {step === 'address' && (!address.street || !address.building || !address.apartment) && (
-          <div className="mb-3 bg-orange-900/30 border border-orange-500/50 rounded-xl p-3 animate-pulse">
-            <p className="text-orange-300 text-sm font-medium text-center">
+        {step === 'address' && (address.complexId === '0' || !address.building || !address.apartment) && (
+          <div className="mb-3 bg-orange-50 border-2 border-orange-300 rounded-xl p-3">
+            <p className="text-orange-900 text-sm font-semibold text-center">
               ⚠️ Заполните обязательные поля:{' '}
-              {!address.street && 'Улица'}{!address.street && (!address.building || !address.apartment) && ', '}
+              {address.complexId === '0' && 'ЖК'}{address.complexId === '0' && (!address.building || !address.apartment) && ', '}
               {!address.building && 'Дом'}{!address.building && !address.apartment && ', '}
               {!address.apartment && 'Квартира'}
             </p>
@@ -616,9 +541,9 @@ function OrderContent() {
         <Button
           fullWidth
           onClick={next}
-          disabled={((step === 'address' && (!address.street || !address.building || !address.apartment)) || (step === 'time' && !slot)) || loading}
+          disabled={((step === 'address' && (address.complexId === '0' || !address.building || !address.apartment)) || (step === 'time' && !slot)) || loading}
           className={
-            ((step === 'address' && (!address.street || !address.building || !address.apartment)) || (step === 'time' && !slot))
+            ((step === 'address' && (address.complexId === '0' || !address.building || !address.apartment)) || (step === 'time' && !slot))
               ? 'opacity-50 cursor-not-allowed'
               : ''
           }
