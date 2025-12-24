@@ -592,13 +592,38 @@ function OrderContent() {
       </div>
 
       {/* Bottom */}
-      <div className="fixed bottom-0 left-0 right-0 p-5 bg-gradient-to-t from-[#0f1714] to-transparent z-20">
+      <div className="fixed bottom-0 left-0 right-0 p-5 bg-gradient-to-t from-[#0f1714] via-[#0f1714]/95 to-transparent z-20">
+        {/* Validation hints */}
+        {step === 'address' && (!address.street || !address.building || !address.apartment) && (
+          <div className="mb-3 bg-orange-900/30 border border-orange-500/50 rounded-xl p-3 animate-pulse">
+            <p className="text-orange-300 text-sm font-medium text-center">
+              ⚠️ Заполните обязательные поля:{' '}
+              {!address.street && 'Улица'}{!address.street && (!address.building || !address.apartment) && ', '}
+              {!address.building && 'Дом'}{!address.building && !address.apartment && ', '}
+              {!address.apartment && 'Квартира'}
+            </p>
+          </div>
+        )}
+        
+        {step === 'time' && !slot && (
+          <div className="mb-3 bg-orange-900/30 border border-orange-500/50 rounded-xl p-3 animate-pulse">
+            <p className="text-orange-300 text-sm font-medium text-center">
+              ⚠️ Выберите время вывоза
+            </p>
+          </div>
+        )}
+
         <Button
           fullWidth
           onClick={next}
           disabled={((step === 'address' && (!address.street || !address.building || !address.apartment)) || (step === 'time' && !slot)) || loading}
+          className={
+            ((step === 'address' && (!address.street || !address.building || !address.apartment)) || (step === 'time' && !slot))
+              ? 'opacity-50 cursor-not-allowed'
+              : ''
+          }
         >
-          {step === 'confirm' ? (loading ? 'Обработка...' : 'Подтвердить и вызвать') : 'Продолжить'}
+          {loading ? '⏳ Обработка...' : step === 'confirm' ? '✅ Подтвердить и вызвать' : '➡️ Продолжить'}
         </Button>
       </div>
     </div>
