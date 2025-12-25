@@ -10,6 +10,15 @@ from app.services.scheduler import generate_orders_for_today
 # Import models to ensure they are registered with Base
 from app import models
 
+# ============== DEBUG: PRINT BOT TOKENS AT STARTUP ==============
+print("=" * 60)
+print("🚀 YA UBERU BACKEND STARTING")
+print("=" * 60)
+print(f"[TOKENS] CLIENT BOT: {settings.TELEGRAM_BOT_TOKEN[:30] if settings.TELEGRAM_BOT_TOKEN else '❌ EMPTY'}...")
+print(f"[TOKENS] COURIER BOT: {settings.TELEGRAM_COURIER_BOT_TOKEN[:30] if settings.TELEGRAM_COURIER_BOT_TOKEN else '❌ EMPTY'}...")
+print(f"[TOKENS] ADMIN IDS: {settings.admin_ids}")
+print("=" * 60)
+
 
 async def scheduler_background_task():
     """

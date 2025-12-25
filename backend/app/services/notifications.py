@@ -10,6 +10,10 @@ async def send_telegram_notification(chat_id: int, text: str, reply_markup: dict
     # Choose bot token based on recipient type
     bot_token = settings.TELEGRAM_COURIER_BOT_TOKEN if use_courier_bot else settings.TELEGRAM_BOT_TOKEN
     
+    # DEBUG: Show which token is being used
+    token_preview = bot_token[:20] + "..." if bot_token else "EMPTY"
+    print(f"[NOTIFY DEBUG] use_courier_bot={use_courier_bot}, token={token_preview}")
+    
     if not bot_token or not chat_id:
         print(f"[NOTIFY] Skipping notification: token={bool(bot_token)}, chat_id={chat_id}, courier_bot={use_courier_bot}")
         return False
