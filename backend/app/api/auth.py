@@ -4,7 +4,8 @@ from sqlalchemy import select
 from pydantic import BaseModel
 from typing import Optional
 
-from app.models import get_db, User, Balance
+from app.models import get_db, User, Balance, Order
+from sqlalchemy import func
 from app.services.auth import create_access_token, verify_telegram_data
 
 router = APIRouter()
