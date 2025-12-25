@@ -6,7 +6,7 @@ from app.config import settings
 
 
 async def send_telegram_notification(chat_id: int, text: str, reply_markup: dict = None, use_courier_bot: bool = False):
-    """Send a notification message to a Telegram user with optional inline keyboard"""
+    """Send a notification message to a Telegram user"""
     # Choose bot token based on recipient type
     bot_token = settings.TELEGRAM_COURIER_BOT_TOKEN if use_courier_bot else settings.TELEGRAM_BOT_TOKEN
     
@@ -24,7 +24,8 @@ async def send_telegram_notification(chat_id: int, text: str, reply_markup: dict
             payload = {
                 "chat_id": chat_id,
                 "text": text,
-                "parse_mode": "Markdown",
+                # DISABLED parse_mode to avoid 400 Bad Request with special chars in addresses
+                # "parse_mode": "Markdown", 
             }
             if reply_markup:
                 payload["reply_markup"] = reply_markup
@@ -43,9 +44,9 @@ async def send_telegram_notification(chat_id: int, text: str, reply_markup: dict
 # ============ NOTIFICATIONS FOR COURIERS ============
 
 async def notify_all_couriers_new_order(courier_telegram_ids: list, order_id: int, address: str, time_slot: str, comment: str = None):
-    """Notify ALL couriers about a new order - sent via CLIENT BOT (courier bot is busy handling commands)"""
+    """Notify ALL couriers about a new order - sent via CLIENT BOT"""
     text = (
-        f"🆕 **Новый заказ #{order_id}!**\n\n"
+        f"🆕 Новый заказ #{order_id}!\n\n"
         f"📍 {address}\n"
         f"🕐 {time_slot}\n"
     )
@@ -58,6 +59,7 @@ async def notify_all_couriers_new_order(courier_telegram_ids: list, order_id: in
     print(f"[NOTIFY] Sending order #{order_id} to {len(courier_telegram_ids)} couriers via CLIENT BOT")
     
     for tg_id in courier_telegram_ids:
+        # use_courier_bot=False to avoid 401 conflict
         result = await send_telegram_notification(tg_id, text, use_courier_bot=False)
         if result:
             print(f"[NOTIFY] ✅ Courier {tg_id} notified")
@@ -70,11 +72,11 @@ async def notify_all_couriers_new_order(courier_telegram_ids: list, order_id: in
 async def notify_client_order_created(client_telegram_id: int, order_id: int, address: str, time_slot: str):
     """Notify client that their order was created successfully"""
     text = (
-        f"✅ **Заказ #{order_id} создан!**\n\n"
+        f"✅ Заказ #{order_id} создан!\n\n"
         f"📍 Адрес: {address}\n"
         f"🕐 Время: {time_slot}\n\n"
         f"⏳ Ожидаем курьера...\n"
-        f"_Мы сообщим, когда курьер возьмет заказ_"
+        f"Мы сообщим, когда курьер возьмет заказ"
     )
     await send_telegram_notification(client_telegram_id, text)
 
@@ -83,11 +85,11 @@ async def notify_client_courier_took_order(client_telegram_id: int, courier_name
     """Notify client that a courier took their order"""
     print(f"[NOTIFY] Sending 'courier took order' to client {client_telegram_id}")
     text = (
-        f"🚀 **Курьер выехал!**\n\n"
-        f"👤 Ваш курьер: **{courier_name}**\n"
+        f"🚀 Курьер выехал!\n\n"
+        f"👤 Ваш курьер: {courier_name}\n"
         f"🕐 Время прибытия: {time_slot}\n\n"
         f"📦 Не забудьте выставить пакет у двери!\n"
-        f"_(Если выбрали \"В руки\" — ожидайте звонка)_"
+        f"(Если выбрали 'В руки' — ожидайте звонка)"
     )
     result = await send_telegram_notification(client_telegram_id, text)
     print(f"[NOTIFY] Result: {result}")
@@ -106,10 +108,10 @@ async def notify_client_order_completed(client_telegram_id: int, bags_count: int
         bags_text = f"{bags_count} пакетов"
     
     text = (
-        f"✅ **Готово!**\n\n"
+        f"✅ Готово!\n\n"
         f"📦 Мы забрали {bags_text}\n"
-        f"💚 Спасибо, что пользуетесь сервисом **«Я УБЕРУ»**\n\n"
-        f"_С баланса списан 1 кредит_"
+        f"💚 Спасибо, что пользуетесь сервисом «Я УБЕРУ»\n\n"
+        f"С баланса списан 1 кредит"
     )
     result = await send_telegram_notification(client_telegram_id, text)
     print(f"[NOTIFY] Result: {result}")
@@ -119,13 +121,13 @@ async def notify_client_order_completed(client_telegram_id: int, bags_count: int
 # ============ NOTIFICATIONS FOR ADMINS ============
 
 async def notify_admins_new_order(admin_telegram_ids: list, order_id: int, address: str, time_slot: str, client_name: str = "Клиент"):
-    """Notify all admins about a new order - sent via CLIENT BOT (courier bot is busy handling commands)"""
+    """Notify all admins about a new order - sent via CLIENT BOT"""
     text = (
-        f"📋 **Новый заказ #{order_id}**\n\n"
+        f"📋 Новый заказ #{order_id}\n\n"
         f"👤 Клиент: {client_name}\n"
         f"📍 Адрес: {address}\n"
         f"🕐 Время: {time_slot}\n\n"
-        f"_Курьеры получили уведомление_"
+        f"Курьеры получили уведомление"
     )
     
     print(f"[NOTIFY] Sending order #{order_id} to {len(admin_telegram_ids)} admins via CLIENT BOT")
@@ -141,10 +143,10 @@ async def notify_admins_new_order(admin_telegram_ids: list, order_id: int, addre
 async def notify_admins_courier_took_order(admin_telegram_ids: list, order_id: int, courier_name: str, address: str):
     """Notify all admins that a courier took an order - sent via CLIENT BOT"""
     text = (
-        f"🚀 **Заказ #{order_id} взят!**\n\n"
-        f"👤 Курьер: **{courier_name}**\n"
+        f"🚀 Заказ #{order_id} взят!\n\n"
+        f"👤 Курьер: {courier_name}\n"
         f"📍 Адрес: {address}\n\n"
-        f"_Клиент получил уведомление_"
+        f"Клиент получил уведомление"
     )
     
     print(f"[NOTIFY] Order #{order_id} taken by {courier_name}, notifying {len(admin_telegram_ids)} admins via CLIENT BOT")
@@ -163,10 +165,10 @@ async def notify_admins_order_completed(admin_telegram_ids: list, order_id: int,
         bags_text = f"{bags_count} пакетов"
     
     text = (
-        f"✅ **Заказ #{order_id} выполнен!**\n\n"
-        f"👤 Курьер: **{courier_name}**\n"
+        f"✅ Заказ #{order_id} выполнен!\n\n"
+        f"👤 Курьер: {courier_name}\n"
         f"📦 Забрали: {bags_text}\n\n"
-        f"_Клиент получил уведомление_"
+        f"Клиент получил уведомление"
     )
     
     print(f"[NOTIFY] Order #{order_id} completed by {courier_name}, notifying {len(admin_telegram_ids)} admins via CLIENT BOT")
