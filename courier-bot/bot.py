@@ -527,7 +527,7 @@ async def show_orders_in_building(callback: CallbackQuery, state: FSMContext):
     complex_id = int(parts[1])
     building = parts[2]
     
-    await state.update_data(building=building)
+    await state.update_data(building=building, complex_id=complex_id)
     
     orders = await fetch(f"/courier/orders?complex_id={complex_id}&building={building}")
     
@@ -541,11 +541,26 @@ async def show_orders_in_building(callback: CallbackQuery, state: FSMContext):
         )
         return
     
+    courier_tg_id = callback.from_user.id
+    
     text = f"🏠 **Дом {building}**\n\n"
+    buttons = []
+    
     for order in orders:
-        status_emoji = "🟡" if order['status'] == 'scheduled' else "🔵"
+        is_mine = order.get('courier_telegram_id') == courier_tg_id
+        
+        if order['status'] == 'scheduled':
+            status_emoji = "🟡"
+            status_text = "🟢 Доступен"
+        elif order['status'] == 'in_progress' and is_mine:
+            status_emoji = "🔵"
+            status_text = "💼 Ваш заказ"
+        else:
+            status_emoji = "🔵"
+            status_text = "🔵 Взят"
+        
         text += (
-            f"{status_emoji} **Заказ #{order['id']}**\n"
+            f"{status_emoji} **Заказ #{order['id']}** — {status_text}\n"
             f"┌ 📍 {order.get('full_address', f'д. {building}')}\n"
             f"├ 🕐 {order['time_slot']}\n"
             f"├ 🚪 Подъезд {order['entrance']}, этаж {order['floor']}\n"
@@ -555,11 +570,28 @@ async def show_orders_in_building(callback: CallbackQuery, state: FSMContext):
         if order.get('comment'):
             text += f"└ 💬 _{order['comment']}_\n"
         text += "\n"
+        
+        # Add buttons based on status
+        if order['status'] == 'scheduled':
+            # Available order - show "Take" button
+            buttons.append([InlineKeyboardButton(
+                text=f"🚀 Взять заказ #{order['id']}",
+                callback_data=f"take_{order['id']}"
+            )])
+        elif order['status'] == 'in_progress' and is_mine:
+            # My order in progress - show "Complete" button
+            buttons.append([InlineKeyboardButton(
+                text=f"✅ Выполнить заказ #{order['id']}",
+                callback_data=f"complete_{order['id']}"
+            )])
     
-    first_order = orders[0]
+    # Navigation buttons
+    buttons.append([InlineKeyboardButton(text="🔄 Обновить", callback_data=f"building_{complex_id}_{building}")])
+    buttons.append([InlineKeyboardButton(text="⬅️ Назад", callback_data=f"complex_{complex_id}")])
+    
     await callback.message.edit_text(
         text,
-        reply_markup=get_order_keyboard(first_order["id"]),
+        reply_markup=InlineKeyboardMarkup(inline_keyboard=buttons),
         parse_mode="Markdown"
     )
 
@@ -576,41 +608,77 @@ async def take_order_handler(callback: CallbackQuery, state: FSMContext):
         await callback.answer("❌ Заказ уже взят другим курьером!", show_alert=True)
         return
     
-    # Get order details from state to show full info
+    # Show success notification
+    await callback.answer(f"✅ Заказ #{order_id} взят!", show_alert=False)
+    
+    # Get state to refresh the same page
     data = await state.get_data()
     complex_id = data.get("complex_id")
     building = data.get("building")
     
-    # Fetch fresh order details
+    # Refresh the orders list (stay on the same page)
     orders = await fetch(f"/courier/orders?complex_id={complex_id}&building={building}")
-    order_info = next((o for o in orders if o['id'] == order_id), None) if orders else None
     
-    text = f"📦 **Заказ #{order_id} — ваш!**\n\n"
+    if not orders:
+        await callback.message.edit_text(
+            f"🏠 **Дом {building}**\n\n✅ Все заказы выполнены!",
+            reply_markup=InlineKeyboardMarkup(inline_keyboard=[
+                [InlineKeyboardButton(text="⬅️ Назад", callback_data=f"complex_{complex_id}")]
+            ]),
+            parse_mode="Markdown"
+        )
+        return
     
-    if order_info:
-        text += f"📍 **{order_info.get('full_address', 'Адрес')}**\n"
-        text += f"🚪 Подъезд {order_info['entrance']}, этаж {order_info['floor']}\n"
-        text += f"🏠 Квартира {order_info['apartment']}\n"
-        text += f"🔑 Домофон: `{order_info['intercom']}`\n"
-        if order_info.get('comment'):
-            text += f"💬 _{order_info['comment']}_\n"
+    # Rebuild the list
+    text = f"🏠 **Дом {building}**\n\n"
+    buttons = []
+    
+    for order in orders:
+        is_mine = order.get('courier_telegram_id') == courier_tg_id
+        
+        if order['status'] == 'scheduled':
+            status_emoji = "🟡"
+            status_text = "🟢 Доступен"
+        elif order['status'] == 'in_progress' and is_mine:
+            status_emoji = "🔵"
+            status_text = "💼 Ваш заказ"
+        else:
+            status_emoji = "🔵"
+            status_text = "🔵 Взят"
+        
+        text += (
+            f"{status_emoji} **Заказ #{order['id']}** — {status_text}\n"
+            f"┌ 📍 {order.get('full_address', f'д. {building}')}\n"
+            f"├ 🕐 {order['time_slot']}\n"
+            f"├ 🚪 Подъезд {order['entrance']}, этаж {order['floor']}\n"
+            f"├ 🏠 Квартира {order['apartment']}\n"
+            f"├ 🔑 Домофон: `{order['intercom']}`\n"
+        )
+        if order.get('comment'):
+            text += f"└ 💬 _{order['comment']}_\n"
         text += "\n"
+        
+        # Add buttons based on status
+        if order['status'] == 'scheduled':
+            # Available order - show "Take" button
+            buttons.append([InlineKeyboardButton(
+                text=f"🚀 Взять заказ #{order['id']}",
+                callback_data=f"take_{order['id']}"
+            )])
+        elif order['status'] == 'in_progress' and is_mine:
+            # My order in progress - show "Complete" button
+            buttons.append([InlineKeyboardButton(
+                text=f"✅ Выполнить заказ #{order['id']}",
+                callback_data=f"complete_{order['id']}"
+            )])
     
-    text += """✅ **Клиент уведомлен, что вы едете!**
-
-━━━━━━━━━━━━━━━━━━━━
-
-**Что делать:**
-1. Приехать по адресу
-2. Забрать пакет(ы) у двери
-3. Нажать «Выполнено»
-
-⚠️ Если пакета нет — позвоните клиенту!
-"""
+    # Navigation buttons
+    buttons.append([InlineKeyboardButton(text="🔄 Обновить", callback_data=f"building_{complex_id}_{building}")])
+    buttons.append([InlineKeyboardButton(text="⬅️ Назад", callback_data=f"complex_{complex_id}")])
     
     await callback.message.edit_text(
         text,
-        reply_markup=get_complete_keyboard(order_id),
+        reply_markup=InlineKeyboardMarkup(inline_keyboard=buttons),
         parse_mode="Markdown"
     )
 
@@ -626,7 +694,7 @@ async def complete_order_handler(callback: CallbackQuery):
     )
 
 @router.callback_query(F.data.startswith("bags_"))
-async def set_bags_and_complete(callback: CallbackQuery):
+async def set_bags_and_complete(callback: CallbackQuery, state: FSMContext):
     parts = callback.data.split("_")
     order_id = int(parts[1])
     bags_count = int(parts[2])
@@ -643,20 +711,76 @@ async def set_bags_and_complete(callback: CallbackQuery):
     else:
         bags_text = f"{bags_count} пакетов"
     
+    # Show success notification
+    await callback.answer(f"✅ Заказ #{order_id} выполнен! Забрали {bags_text}", show_alert=False)
+    
+    # Get state to refresh the same page
+    data = await state.get_data()
+    complex_id = data.get("complex_id")
+    building = data.get("building")
+    
+    # Refresh the orders list (stay on the same page)
+    orders = await fetch(f"/courier/orders?complex_id={complex_id}&building={building}")
+    courier_tg_id = callback.from_user.id
+    
+    if not orders:
+        await callback.message.edit_text(
+            f"🏠 **Дом {building}**\n\n✅ Все заказы выполнены!",
+            reply_markup=InlineKeyboardMarkup(inline_keyboard=[
+                [InlineKeyboardButton(text="⬅️ Назад", callback_data=f"complex_{complex_id}")]
+            ]),
+            parse_mode="Markdown"
+        )
+        return
+    
+    # Rebuild the list
+    text = f"🏠 **Дом {building}**\n\n"
+    buttons = []
+    
+    for order in orders:
+        is_mine = order.get('courier_telegram_id') == courier_tg_id
+        
+        if order['status'] == 'scheduled':
+            status_emoji = "🟡"
+            status_text = "🟢 Доступен"
+        elif order['status'] == 'in_progress' and is_mine:
+            status_emoji = "🔵"
+            status_text = "💼 Ваш заказ"
+        else:
+            status_emoji = "🔵"
+            status_text = "🔵 Взят"
+        
+        text += (
+            f"{status_emoji} **Заказ #{order['id']}** — {status_text}\n"
+            f"┌ 📍 {order.get('full_address', f'д. {building}')}\n"
+            f"├ 🕐 {order['time_slot']}\n"
+            f"├ 🚪 Подъезд {order['entrance']}, этаж {order['floor']}\n"
+            f"├ 🏠 Квартира {order['apartment']}\n"
+            f"├ 🔑 Домофон: `{order['intercom']}`\n"
+        )
+        if order.get('comment'):
+            text += f"└ 💬 _{order['comment']}_\n"
+        text += "\n"
+        
+        # Add buttons based on status
+        if order['status'] == 'scheduled':
+            buttons.append([InlineKeyboardButton(
+                text=f"🚀 Взять заказ #{order['id']}",
+                callback_data=f"take_{order['id']}"
+            )])
+        elif order['status'] == 'in_progress' and is_mine:
+            buttons.append([InlineKeyboardButton(
+                text=f"✅ Выполнить заказ #{order['id']}",
+                callback_data=f"complete_{order['id']}"
+            )])
+    
+    # Navigation buttons
+    buttons.append([InlineKeyboardButton(text="🔄 Обновить", callback_data=f"building_{complex_id}_{building}")])
+    buttons.append([InlineKeyboardButton(text="⬅️ Назад", callback_data=f"complex_{complex_id}")])
+    
     await callback.message.edit_text(
-        f"""
-✅ **Заказ #{order_id} выполнен!**
-
-📦 Забрали: **{bags_text}**
-💰 Начислено: +1 заказ (100 ₽)
-
-━━━━━━━━━━━━━━━━━━━━
-
-✅ **Клиент получил уведомление о завершении!**
-
-_Если ошиблись — можете отменить (5 мин)_
-""",
-        reply_markup=get_undo_keyboard(order_id),
+        text,
+        reply_markup=InlineKeyboardMarkup(inline_keyboard=buttons),
         parse_mode="Markdown"
     )
 

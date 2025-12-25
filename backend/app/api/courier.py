@@ -257,6 +257,12 @@ async def get_orders(complex_id: int, building: str, db: AsyncSession = Depends(
             full_address = f"д. {addr.building}"
             complex_name = "Другой адрес"
         
+        # Get courier telegram_id if assigned
+        courier_telegram_id = None
+        if order.courier_id:
+            courier_result = await db.execute(select(User.telegram_id).where(User.id == order.courier_id))
+            courier_telegram_id = courier_result.scalar_one_or_none()
+        
         response.append({
             "id": order.id,
             "complex_name": complex_name,
@@ -268,7 +274,8 @@ async def get_orders(complex_id: int, building: str, db: AsyncSession = Depends(
             "intercom": addr.intercom,
             "time_slot": order.time_slot,
             "status": order.status.value,
-            "comment": order.comment
+            "comment": order.comment,
+            "courier_telegram_id": courier_telegram_id
         })
         
     return response
