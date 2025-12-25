@@ -45,7 +45,8 @@ function OrderContent() {
   
   // Volume/Duration for dynamic pricing
   const [bagsCount, setBagsCount] = useState(1);
-  const [duration, setDuration] = useState<14 | 30>(14);
+  const [duration, setDuration] = useState<number>(14); // days
+  const [frequency, setFrequency] = useState<'daily' | 'every_other_day' | 'twice_week'>('every_other_day');
   
   // Dynamic Complexes
   const [complexes, setComplexes] = useState<any[]>([]);
@@ -395,62 +396,129 @@ function OrderContent() {
         {/* Step 2: Volume/Duration - ONLY FOR MONTHLY */}
         {step === 'volume' && tariffId === 'monthly' && (
           <>
-            <div className="flex items-center gap-3 mb-2">
+            <div className="flex items-center gap-3 mb-6">
               <div className="w-12 h-12 bg-purple-500 rounded-xl flex items-center justify-center">
                 <Package className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h2 className="text-xl font-bold text-gray-900">Объём и срок</h2>
-                <p className="text-gray-500 text-sm">Настройте детали</p>
+                <h2 className="text-xl font-bold text-gray-900">Объём и длительность</h2>
+                <p className="text-gray-500 text-sm">Настройте детали подписки</p>
               </div>
             </div>
 
-            <div className="space-y-4">
-              <p className="text-gray-700 font-semibold">Выберите срок</p>
-              <div className="space-y-3">
-                {/* 2 WEEKS OPTION */}
-                <div
-                  onClick={() => setDuration(14)}
-                  className={`
-                    p-5 rounded-2xl border-2 cursor-pointer transition-all
-                    ${duration === 14
-                      ? 'bg-teal-50 border-teal-600 ring-2 ring-teal-600/30'
-                      : 'bg-white border-gray-200 hover:border-gray-300'
-                    }
-                  `}
-                >
-                  <div className="flex justify-between items-center">
-                    <div>
-                      <p className="text-gray-900 font-bold text-lg">2 недели</p>
-                      <p className="text-gray-600 text-sm">Вынос через день</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-gray-400 line-through text-sm">756 ₽</p>
-                      <p className="text-teal-600 font-bold text-2xl">199 ₽</p>
-                    </div>
+            <div className="space-y-6">
+              {/* BAGS COUNT */}
+              <div className="bg-gradient-to-br from-teal-50 to-emerald-50 rounded-2xl p-6 border-2 border-teal-200">
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <p className="text-gray-500 text-xs font-medium uppercase tracking-wide mb-1">От пакета из супермаркета</p>
+                    <p className="text-gray-900 font-bold text-lg">до большого мусорного мешка</p>
+                  </div>
+                  <div className="w-16 h-20 bg-teal-600 rounded-2xl flex flex-col items-center justify-center text-white relative shadow-lg">
+                    <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-8 h-3 bg-teal-700 rounded-t-full"></div>
+                    <p className="text-2xl font-black">{bagsCount * 10}</p>
+                    <p className="text-[10px] font-semibold">КГ</p>
                   </div>
                 </div>
-
-                {/* 30 DAYS OPTION */}
-                <div
-                  onClick={() => setDuration(30)}
-                  className={`
-                    p-5 rounded-2xl border-2 cursor-pointer transition-all
-                    ${duration === 30
-                      ? 'bg-teal-50 border-teal-600 ring-2 ring-teal-600/30'
-                      : 'bg-white border-gray-200 hover:border-gray-300'
-                    }
-                  `}
-                >
-                  <div className="flex justify-between items-center">
-                    <div>
-                      <p className="text-gray-900 font-bold text-lg">30 дней</p>
-                      <p className="text-gray-600 text-sm">Регулярный вынос по расписанию</p>
-                    </div>
-                    <p className="text-teal-600 font-bold text-2xl">1 350 ₽</p>
+                
+                <div className="flex items-center justify-between bg-white rounded-xl p-3 shadow-sm">
+                  <p className="text-gray-700 font-semibold">Кол-во мешков</p>
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={() => setBagsCount(Math.max(1, bagsCount - 1))}
+                      className="w-10 h-10 rounded-xl bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-900 font-bold text-xl transition-all active:scale-95"
+                    >
+                      −
+                    </button>
+                    <span className="text-2xl font-bold text-gray-900 w-8 text-center">{bagsCount}</span>
+                    <button
+                      onClick={() => setBagsCount(Math.min(10, bagsCount + 1))}
+                      className="w-10 h-10 rounded-xl bg-teal-600 hover:bg-teal-700 flex items-center justify-center text-white font-bold text-xl transition-all active:scale-95"
+                    >
+                      +
+                    </button>
                   </div>
                 </div>
               </div>
+
+              {/* DURATION */}
+              <div>
+                <label className="block text-gray-700 font-semibold mb-2">Длительность</label>
+                <select
+                  value={duration}
+                  onChange={(e) => setDuration(Number(e.target.value))}
+                  className="w-full px-4 py-4 rounded-xl bg-white border-2 border-gray-200 text-gray-900 font-semibold focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 outline-none transition-all appearance-none cursor-pointer"
+                  style={{
+                    backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%239ca3af'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
+                    backgroundRepeat: 'no-repeat',
+                    backgroundPosition: 'right 1rem center',
+                    backgroundSize: '1.5rem'
+                  }}
+                >
+                  <option value={14}>14 дней</option>
+                  <option value={30}>30 дней</option>
+                  <option value={60}>60 дней</option>
+                  <option value={90}>90 дней</option>
+                </select>
+              </div>
+
+              {/* FREQUENCY */}
+              <div>
+                <label className="block text-gray-700 font-semibold mb-2">Курьер будет забирать мусор</label>
+                <select
+                  value={frequency}
+                  onChange={(e) => setFrequency(e.target.value as any)}
+                  className="w-full px-4 py-4 rounded-xl bg-white border-2 border-gray-200 text-gray-900 font-semibold focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 outline-none transition-all appearance-none cursor-pointer"
+                  style={{
+                    backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%239ca3af'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
+                    backgroundRepeat: 'no-repeat',
+                    backgroundPosition: 'right 1rem center',
+                    backgroundSize: '1.5rem'
+                  }}
+                >
+                  <option value="every_other_day">Через день</option>
+                  <option value="daily">Каждый день</option>
+                  <option value="twice_week">2 раза в неделю</option>
+                </select>
+              </div>
+
+              {/* PRICE CALCULATION */}
+              {(() => {
+                const basePrice = 150; // base price per pickup
+                const frequencyMultiplier = {
+                  daily: 1,
+                  every_other_day: 0.5,
+                  twice_week: 2/7
+                };
+                const daysInPeriod = duration;
+                const pickupsCount = Math.ceil(daysInPeriod * frequencyMultiplier[frequency]);
+                const totalPrice = basePrice * pickupsCount * bagsCount;
+                const discount = duration >= 60 ? 0.3 : duration >= 30 ? 0.2 : duration >= 14 ? 0.1 : 0;
+                const discountedPrice = Math.round(totalPrice * (1 - discount));
+                const savingsPercent = Math.round(discount * 100);
+
+                return (
+                  <div className="bg-white rounded-2xl border-2 border-teal-200 p-5 space-y-3">
+                    {savingsPercent > 0 && (
+                      <div className="inline-block bg-teal-600 text-white px-3 py-1 rounded-full text-sm font-bold">
+                        ⚡ Выгода {savingsPercent}%
+                      </div>
+                    )}
+                    <div className="flex items-center justify-between">
+                      <span className="text-gray-700 font-semibold text-lg">Стоимость</span>
+                      <div className="text-right">
+                        {discount > 0 && (
+                          <p className="text-gray-400 line-through text-sm">{totalPrice} ₽</p>
+                        )}
+                        <p className="text-teal-600 font-bold text-3xl">{discountedPrice} ₽</p>
+                      </div>
+                    </div>
+                    <p className="text-gray-500 text-xs">
+                      {pickupsCount} выносов × {bagsCount} мешок{bagsCount > 1 ? (bagsCount < 5 ? 'а' : 'ов') : ''}
+                    </p>
+                  </div>
+                );
+              })()}
             </div>
           </>
         )}
@@ -594,6 +662,28 @@ function OrderContent() {
                     <div className="h-px bg-gray-200" />
                   </>
                 )}
+
+                {/* SUBSCRIPTION DETAILS - only for monthly */}
+                {tariffId === 'monthly' && (
+                  <>
+                    <div className="h-px bg-gray-200" />
+                    
+                    <div className="flex items-start gap-3">
+                      <Package className="w-5 h-5 text-teal-600 mt-1 flex-shrink-0" />
+                      <div className="flex-1">
+                        <p className="text-gray-500 text-xs mb-1 font-medium uppercase tracking-wide">Детали подписки</p>
+                        <p className="text-gray-900 font-semibold text-base">
+                          {bagsCount} мешок{bagsCount > 1 ? (bagsCount < 5 ? 'а' : 'ов') : ''} × {duration} дней
+                        </p>
+                        <p className="text-gray-600 text-sm mt-1">
+                          Частота: {frequency === 'daily' ? 'Каждый день' : frequency === 'every_other_day' ? 'Через день' : '2 раза в неделю'}
+                        </p>
+                      </div>
+                    </div>
+                    
+                    <div className="h-px bg-gray-200" />
+                  </>
+                )}
                 
                 <div className="flex items-center justify-between bg-teal-50 p-4 rounded-xl border border-teal-200">
                   <span className="text-gray-700 font-semibold">Итого к оплате</span>
@@ -601,8 +691,22 @@ function OrderContent() {
                     {(() => {
                       if (slot === 'urgent') return '450';
                       if (tariffId === 'single') return String(150 * bagsCount);
-                      if (tariffId === 'trial') return duration === 14 ? '199' : '1350';
-                      if (tariffId === 'monthly') return duration === 14 ? '199' : '1350';
+                      if (tariffId === 'trial') return '199'; // Fixed trial price
+                      if (tariffId === 'monthly') {
+                        // Dynamic calculation for monthly
+                        const basePrice = 150;
+                        const frequencyMultiplier = {
+                          daily: 1,
+                          every_other_day: 0.5,
+                          twice_week: 2/7
+                        };
+                        const daysInPeriod = duration;
+                        const pickupsCount = Math.ceil(daysInPeriod * frequencyMultiplier[frequency]);
+                        const totalPrice = basePrice * pickupsCount * bagsCount;
+                        const discount = duration >= 60 ? 0.3 : duration >= 30 ? 0.2 : duration >= 14 ? 0.1 : 0;
+                        const discountedPrice = Math.round(totalPrice * (1 - discount));
+                        return String(discountedPrice);
+                      }
                       return '150';
                     })()} ₽
                   </span>
