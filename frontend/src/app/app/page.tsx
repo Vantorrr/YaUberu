@@ -1,43 +1,11 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/Button';
 import { Trash2 } from 'lucide-react';
-import { api } from '@/lib/api';
 
 export default function HomePage() {
   const router = useRouter();
-  const [checking, setChecking] = useState(true);
-
-  useEffect(() => {
-    const checkOnboarding = async () => {
-      try {
-        await new Promise(resolve => setTimeout(resolve, 800));
-        const user = await api.getMe();
-        
-        // SIMPLE: If user has phone = OLD (shared contact) = NO onboarding
-        // If user has NO phone = NEW = show onboarding
-        if (!user.phone) {
-          router.push('/onboarding');
-        } else {
-          setChecking(false);
-        }
-      } catch (error) {
-        setChecking(false);
-      }
-    };
-    
-    checkOnboarding();
-  }, [router]);
-
-  if (checking) {
-    return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
-        <div className="text-teal-600">Загрузка...</div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-white flex flex-col items-center justify-center px-6 pb-32">

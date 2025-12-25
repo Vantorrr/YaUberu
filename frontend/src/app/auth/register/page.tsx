@@ -18,12 +18,10 @@ export default function RegisterPage() {
       const mockPhone = "+79990000000"; 
       const user = await api.login(name, mockPhone);
       
-      // Check if user is new (0 orders) - redirect to onboarding
-      if (user && user.is_new_user === true) {
-        console.log('[REGISTER] New user - redirect to onboarding');
+      // If no phone - show onboarding first
+      if (!user || !user.phone || user.phone === '') {
         router.push('/onboarding');
       } else {
-        console.log('[REGISTER] Existing user - redirect to app');
         router.push('/app');
       }
     } catch (error) {

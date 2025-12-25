@@ -14,15 +14,12 @@ export default function LoginPage() {
   const handleAuth = async () => {
     try {
       setLoading(true);
-      // Login and get user data
       const user = await api.login('User');
       
-      // Check if user is new (0 orders)
-      if (user && user.is_new_user === true) {
-        console.log('[AUTH] New user - redirect to onboarding');
+      // If no phone - need to share it (and show onboarding first)
+      if (!user || !user.phone || user.phone === '') {
         router.push('/onboarding');
       } else {
-        console.log('[AUTH] Existing user - redirect to app');
         router.push('/app');
       }
     } catch (error) {
