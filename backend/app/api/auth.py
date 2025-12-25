@@ -76,6 +76,12 @@ async def telegram_auth(
         await db.commit()
         await db.refresh(user)
     
+    # Count user's orders to determine if they are new
+    result = await db.execute(
+        select(func.count(Order.id)).where(Order.user_id == user.id)
+    )
+    orders_count = result.scalar() or 0
+    
     # Create access token
     access_token = create_access_token(data={"sub": str(user.id)})
     
@@ -86,6 +92,7 @@ async def telegram_auth(
             "name": user.name,
             "phone": user.phone,
             "role": user.role.value,
+            "is_new_user": orders_count == 0,  # TRUE if 0 orders
         }
     )
 
@@ -150,6 +157,12 @@ async def telegram_contact_auth(
         await db.commit()
         await db.refresh(user)
     
+    # Count user's orders to determine if they are new
+    result = await db.execute(
+        select(func.count(Order.id)).where(Order.user_id == user.id)
+    )
+    orders_count = result.scalar() or 0
+    
     # Create access token
     access_token = create_access_token(data={"sub": str(user.id)})
     
@@ -160,5 +173,6 @@ async def telegram_contact_auth(
             "name": user.name,
             "phone": user.phone,
             "role": user.role.value,
+            "is_new_user": orders_count == 0,  # TRUE if 0 orders
         }
     )
