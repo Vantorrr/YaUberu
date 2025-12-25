@@ -12,42 +12,18 @@ export default function HomePage() {
 
   useEffect(() => {
     const checkOnboarding = async () => {
-      // Check if user is new and redirect to onboarding
-      if (typeof window !== 'undefined' && (window as any).Telegram?.WebApp?.CloudStorage) {
-        const cloudStorage = (window as any).Telegram.WebApp.CloudStorage;
+      try {
+        await new Promise(resolve => setTimeout(resolve, 800));
+        const user = await api.getMe();
         
-        cloudStorage.getItem('onboarding_completed', async (err: any, value: string) => {
-          if (err || value === 'true') {
-            // Already seen or error - show main page
-            setChecking(false);
-            return;
-          }
-          
-          // Check if user is new via API
-          try {
-            await new Promise(resolve => setTimeout(resolve, 1200));
-            const user = await api.getMe();
-            
-            console.log('[ONBOARDING] API response:', user);
-            console.log('[ONBOARDING] is_new_user:', user?.is_new_user);
-            console.log('[ONBOARDING] typeof is_new_user:', typeof user?.is_new_user);
-            
-            if (user && user.is_new_user === true) {
-              console.log('[ONBOARDING] REDIRECT TO /onboarding');
-              // Redirect to onboarding
-              router.push('/onboarding');
-            } else {
-              console.log('[ONBOARDING] SKIP - mark as completed');
-              // Mark as seen
-              cloudStorage.setItem('onboarding_completed', 'true');
-              setChecking(false);
-            }
-          } catch (error) {
-            console.error('[ONBOARDING CHECK] ERROR:', error);
-            setChecking(false);
-          }
-        });
-      } else {
+        // SIMPLE: If user has phone = OLD (shared contact) = NO onboarding
+        // If user has NO phone = NEW = show onboarding
+        if (!user.phone) {
+          router.push('/onboarding');
+        } else {
+          setChecking(false);
+        }
+      } catch (error) {
         setChecking(false);
       }
     };

@@ -17,14 +17,8 @@ export default function OnboardingPage() {
   const router = useRouter();
 
   const handleComplete = () => {
-    // Mark onboarding as completed in CloudStorage
-    if (typeof window !== 'undefined' && (window as any).Telegram?.WebApp?.CloudStorage) {
-      const cloudStorage = (window as any).Telegram.WebApp.CloudStorage;
-      cloudStorage.setItem('onboarding_completed', 'true', (err: any) => {
-        if (err) console.error('[ONBOARDING] Failed to save flag:', err);
-      });
-    }
-    router.push('/app');
+    // Redirect to share phone page
+    router.push('/auth/share-phone');
   };
 
   return (
