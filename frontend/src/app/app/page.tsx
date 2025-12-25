@@ -21,32 +21,48 @@ export default function HomePage() {
   const [showOnboarding, setShowOnboarding] = useState<boolean | null>(null);
 
   useEffect(() => {
-    if (typeof window !== 'undefined') {
+    const checkNewUser = async () => {
       // 1. Check if we already showed onboarding on this device
-      const hasSeen = localStorage.getItem('onboarding_shown_v2');
-      if (hasSeen) {
-        setShowOnboarding(false);
-        return;
+      if (typeof window !== 'undefined') {
+        const hasSeen = localStorage.getItem('onboarding_shown_v3');
+        if (hasSeen) {
+          console.log('[ONBOARDING] Already seen - skip');
+          setShowOnboarding(false);
+          return;
+        }
       }
 
-      // 2. Check if user is already logged in (OLD USER)
-      // If they have a token, they are an existing user -> skip onboarding
-      const token = localStorage.getItem('token');
-      if (token) {
-        console.log('[ONBOARDING] Token found - returning user');
+      // 2. Check via API if user is new (0 orders)
+      try {
+        // Wait for auth to complete
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        const user = await api.getMe();
+        console.log('[ONBOARDING] User data:', user);
+        
+        if (user && user.is_new_user === true) {
+          console.log('[ONBOARDING] NEW USER - show onboarding');
+          setShowOnboarding(true);
+          // Mark as seen so it doesn't show again
+          if (typeof window !== 'undefined') {
+            localStorage.setItem('onboarding_shown_v3', 'true');
+          }
+        } else {
+          console.log('[ONBOARDING] EXISTING USER - skip');
+          setShowOnboarding(false);
+          // Mark as seen
+          if (typeof window !== 'undefined') {
+            localStorage.setItem('onboarding_shown_v3', 'true');
+          }
+        }
+      } catch (error) {
+        console.error('[ONBOARDING] Error:', error);
+        // On error, skip onboarding
         setShowOnboarding(false);
-        localStorage.setItem('onboarding_shown_v2', 'true'); // Mark as seen
-        return;
       }
+    };
 
-      // 3. No token + No flag = NEW USER -> Show onboarding
-      console.log('[ONBOARDING] New user - showing onboarding');
-      setShowOnboarding(true);
-      // Mark as seen immediately so it doesn't show again on reload
-      localStorage.setItem('onboarding_shown_v2', 'true');
-    } else {
-      setShowOnboarding(false);
-    }
+    checkNewUser();
   }, []);
 
   const handleSkipOnboarding = () => {

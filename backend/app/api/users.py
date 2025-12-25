@@ -6,8 +6,9 @@ from typing import List, Optional
 
 from app.models import (
     get_db, User, Address, Balance, 
-    ResidentialComplex, TrialUsage
+    ResidentialComplex, TrialUsage, Order
 )
+from sqlalchemy import func
 from app.api.deps import get_current_user
 
 router = APIRouter()
@@ -48,16 +49,24 @@ class BalanceResponse(BaseModel):
 
 @router.get("/me")
 async def get_current_user_profile(
+    db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
     """
-    Get current user profile
+    Get current user profile with is_new_user flag
     """
+    # Count user's orders to determine if they are new
+    result = await db.execute(
+        select(func.count(Order.id)).where(Order.user_id == current_user.id)
+    )
+    orders_count = result.scalar() or 0
+    
     return {
         "id": current_user.id,
         "name": current_user.name,
         "phone": current_user.phone,
         "role": current_user.role.value,
+        "is_new_user": orders_count == 0,  # TRUE if 0 orders, FALSE otherwise
     }
 
 

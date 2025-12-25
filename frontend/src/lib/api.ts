@@ -8,6 +8,7 @@ export interface User {
   phone?: string;
   role: string;
   balance?: number;
+  is_new_user?: boolean;  // true if 0 orders, false otherwise
 }
 
 export interface Order {
