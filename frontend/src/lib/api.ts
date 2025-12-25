@@ -215,7 +215,16 @@ class ApiClient {
       });
   }
 
-  // Tariffs
+  // Tariffs (PUBLIC - no auth required)
+  async getPublicTariffs() {
+    const response = await fetch(`${API_BASE}/admin/public/tariffs`);
+    if (!response.ok) {
+      throw new Error('Failed to fetch tariffs');
+    }
+    return response.json();
+  }
+
+  // Tariffs (ADMIN)
   async getTariffs() {
     return this.request('/admin/tariffs');
   }

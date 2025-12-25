@@ -35,6 +35,26 @@ class StatsResponse(BaseModel):
     total_revenue_month: float
 
 
+class TariffResponse(BaseModel):
+    id: int
+    tariff_type: str
+    name: str
+    price: str
+    old_price: Optional[str]
+    period: Optional[str]
+    description: Optional[str]
+
+
+@router.get("/public/tariffs", response_model=List[TariffResponse])
+async def get_public_tariffs(db: AsyncSession = Depends(get_db)):
+    """
+    PUBLIC endpoint - get all tariffs for client app
+    """
+    result = await db.execute(select(TariffPrice))
+    tariffs = result.scalars().all()
+    return tariffs
+
+
 @router.get("/stats", response_model=StatsResponse)
 async def get_dashboard_stats(
     db: AsyncSession = Depends(get_db),
