@@ -14,14 +14,8 @@ export default function LoginPage() {
   const handleAuth = async () => {
     try {
       setLoading(true);
-      const user = await api.login('User');
-      
-      // If no phone - need to share it (and show onboarding first)
-      if (!user || !user.phone || user.phone === '') {
-        router.push('/onboarding');
-      } else {
-        router.push('/app');
-      }
+      await api.login('User');
+      router.push('/app');
     } catch (error) {
       console.error(error);
       alert('Ошибка входа. Проверьте соединение с бэкендом.');

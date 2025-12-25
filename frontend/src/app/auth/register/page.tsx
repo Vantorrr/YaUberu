@@ -16,14 +16,8 @@ export default function RegisterPage() {
     try {
       setLoading(true);
       const mockPhone = "+79990000000"; 
-      const user = await api.login(name, mockPhone);
-      
-      // If no phone - show onboarding first
-      if (!user || !user.phone || user.phone === '') {
-        router.push('/onboarding');
-      } else {
-        router.push('/app');
-      }
+      await api.login(name, mockPhone);
+      router.push('/app');
     } catch (error) {
       console.error(error);
       alert('Ошибка соединения с сервером. Убедитесь, что бэкенд запущен на порту 8080.');
