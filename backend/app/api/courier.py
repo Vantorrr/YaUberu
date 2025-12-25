@@ -132,7 +132,7 @@ async def get_complexes_with_orders(db: AsyncSession = Depends(get_db)):
             .where(
                 and_(
                     Address.complex_id == comp.id,
-                    Order.date == today,
+                    # Order.date == today, # Show ALL active orders regardless of date
                     Order.status.in_([OrderStatus.SCHEDULED, OrderStatus.IN_PROGRESS])
                 )
             )
@@ -151,7 +151,7 @@ async def get_complexes_with_orders(db: AsyncSession = Depends(get_db)):
         .where(
             and_(
                 Address.complex_id.is_(None),
-                Order.date == today,
+                # Order.date == today, # Show ALL active orders regardless of date
                 Order.status.in_([OrderStatus.SCHEDULED, OrderStatus.IN_PROGRESS])
             )
         )
@@ -170,7 +170,7 @@ async def get_complexes_with_orders(db: AsyncSession = Depends(get_db)):
 @router.get("/buildings")
 async def get_buildings(complex_id: int, db: AsyncSession = Depends(get_db)):
     """Get buildings in complex with orders"""
-    today = date.today()
+    # today = date.today()
     
     if complex_id == 0:
         # Manual addresses: return "Street, Building"
@@ -180,7 +180,7 @@ async def get_buildings(complex_id: int, db: AsyncSession = Depends(get_db)):
             .where(
                 and_(
                     Address.complex_id.is_(None),
-                    Order.date == today,
+                    # Order.date == today,
                     Order.status.in_([OrderStatus.SCHEDULED, OrderStatus.IN_PROGRESS])
                 )
             )
@@ -197,7 +197,7 @@ async def get_buildings(complex_id: int, db: AsyncSession = Depends(get_db)):
         .where(
             and_(
                 Address.complex_id == complex_id,
-                Order.date == today,
+                # Order.date == today,
                 Order.status.in_([OrderStatus.SCHEDULED, OrderStatus.IN_PROGRESS])
             )
         )
@@ -210,7 +210,7 @@ async def get_buildings(complex_id: int, db: AsyncSession = Depends(get_db)):
 @router.get("/orders")
 async def get_orders(complex_id: int, building: str, db: AsyncSession = Depends(get_db)):
     """Get orders for specific building"""
-    today = date.today()
+    # today = date.today()
     
     query = select(Order, Address, ResidentialComplex)\
         .join(Address, Order.address_id == Address.id)\
@@ -230,7 +230,7 @@ async def get_orders(complex_id: int, building: str, db: AsyncSession = Depends(
                 Address.complex_id.is_(None),
                 Address.street == street_val,
                 Address.building == building_val,
-                Order.date == today,
+                # Order.date == today,
                 Order.status.in_([OrderStatus.SCHEDULED, OrderStatus.IN_PROGRESS])
             )
         )
@@ -239,7 +239,7 @@ async def get_orders(complex_id: int, building: str, db: AsyncSession = Depends(
             and_(
                 Address.complex_id == complex_id,
                 Address.building == building,
-                Order.date == today,
+                # Order.date == today,
                 Order.status.in_([OrderStatus.SCHEDULED, OrderStatus.IN_PROGRESS])
             )
         )
