@@ -25,19 +25,25 @@ export default function HomePage() {
           
           // Check if user is new via API
           try {
-            await new Promise(resolve => setTimeout(resolve, 800));
+            await new Promise(resolve => setTimeout(resolve, 1200));
             const user = await api.getMe();
             
+            console.log('[ONBOARDING] API response:', user);
+            console.log('[ONBOARDING] is_new_user:', user?.is_new_user);
+            console.log('[ONBOARDING] typeof is_new_user:', typeof user?.is_new_user);
+            
             if (user && user.is_new_user === true) {
+              console.log('[ONBOARDING] REDIRECT TO /onboarding');
               // Redirect to onboarding
               router.push('/onboarding');
             } else {
+              console.log('[ONBOARDING] SKIP - mark as completed');
               // Mark as seen
               cloudStorage.setItem('onboarding_completed', 'true');
               setChecking(false);
             }
           } catch (error) {
-            console.error('[ONBOARDING CHECK]', error);
+            console.error('[ONBOARDING CHECK] ERROR:', error);
             setChecking(false);
           }
         });
