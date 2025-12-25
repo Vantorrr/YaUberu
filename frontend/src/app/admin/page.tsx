@@ -2,16 +2,17 @@
 
 import { useState, useEffect } from 'react';
 import { api } from '@/lib/api';
-import { RefreshCw, Package, CheckCircle, TrendingUp, XCircle, Truck, X, Users, Building, Plus, Trash2 } from 'lucide-react';
+import { RefreshCw, Package, CheckCircle, TrendingUp, XCircle, Truck, X, Users, Building, Plus, Trash2, DollarSign, Edit } from 'lucide-react';
 
 export default function AdminPage() {
-  const [activeTab, setActiveTab] = useState<'orders' | 'couriers' | 'complexes' | 'clients'>('orders');
+  const [activeTab, setActiveTab] = useState<'orders' | 'couriers' | 'complexes' | 'clients' | 'tariffs'>('orders');
   
   const [stats, setStats] = useState<any>(null);
   const [orders, setOrders] = useState<any[]>([]);
   const [couriers, setCouriers] = useState<any[]>([]);
   const [complexes, setComplexes] = useState<any[]>([]);
   const [clients, setClients] = useState<any[]>([]);
+  const [tariffs, setTariffs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   
   // Modals / Forms
@@ -22,6 +23,10 @@ export default function AdminPage() {
   const [selectedClient, setSelectedClient] = useState<any>(null);
   const [creditsAmount, setCreditsAmount] = useState('1');
 
+  const [showEditTariffModal, setShowEditTariffModal] = useState(false);
+  const [selectedTariff, setSelectedTariff] = useState<any>(null);
+  const [tariffForm, setTariffForm] = useState<any>({});
+
   const [newCourierName, setNewCourierName] = useState('');
   const [newCourierId, setNewCourierId] = useState('');
   
@@ -30,18 +35,20 @@ export default function AdminPage() {
   const loadData = async () => {
     setLoading(true);
     try {
-      const [statsData, ordersData, couriersData, complexesData, clientsData] = await Promise.all([
+      const [statsData, ordersData, couriersData, complexesData, clientsData, tariffsData] = await Promise.all([
         api.getAdminStats(),
         api.getTodayOrders(),
         api.getCouriers(),
         api.getAdminComplexes(),
-        api.getClients()
+        api.getClients(),
+        api.getTariffs()
       ]);
       setStats(statsData);
       setOrders(ordersData);
       setCouriers(couriersData);
       setComplexes(complexesData);
       setClients(clientsData);
+      setTariffs(tariffsData);
     } catch (error) {
       console.error(error);
     } finally {

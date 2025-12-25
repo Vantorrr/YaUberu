@@ -214,6 +214,18 @@ class ApiClient {
           body: JSON.stringify({ user_id: userId, amount, description })
       });
   }
+
+  // Tariffs
+  async getTariffs() {
+    return this.request('/admin/tariffs');
+  }
+
+  async updateTariff(tariffId: string, data: any) {
+    return this.request(`/admin/tariffs/${tariffId}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  }
 }
 
 export const api = new ApiClient();
