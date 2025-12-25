@@ -196,6 +196,18 @@ class ApiClient {
           body: JSON.stringify({ name })
       });
   }
+
+  // Clients management
+  async getClients() {
+      return this.request('/admin/clients');
+  }
+
+  async addCreditsToClient(userId: number, amount: number, description?: string) {
+      return this.request('/admin/clients/add-credits', {
+          method: 'POST',
+          body: JSON.stringify({ user_id: userId, amount, description })
+      });
+  }
 }
 
 export const api = new ApiClient();

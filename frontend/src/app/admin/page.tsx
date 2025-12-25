@@ -5,17 +5,22 @@ import { api } from '@/lib/api';
 import { RefreshCw, Package, CheckCircle, TrendingUp, XCircle, Truck, X, Users, Building, Plus, Trash2 } from 'lucide-react';
 
 export default function AdminPage() {
-  const [activeTab, setActiveTab] = useState<'orders' | 'couriers' | 'complexes'>('orders');
+  const [activeTab, setActiveTab] = useState<'orders' | 'couriers' | 'complexes' | 'clients'>('orders');
   
   const [stats, setStats] = useState<any>(null);
   const [orders, setOrders] = useState<any[]>([]);
   const [couriers, setCouriers] = useState<any[]>([]);
   const [complexes, setComplexes] = useState<any[]>([]);
+  const [clients, setClients] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   
   // Modals / Forms
   const [showAssignModal, setShowAssignModal] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
+  
+  const [showAddCreditsModal, setShowAddCreditsModal] = useState(false);
+  const [selectedClient, setSelectedClient] = useState<any>(null);
+  const [creditsAmount, setCreditsAmount] = useState('1');
 
   const [newCourierName, setNewCourierName] = useState('');
   const [newCourierId, setNewCourierId] = useState('');
@@ -25,16 +30,18 @@ export default function AdminPage() {
   const loadData = async () => {
     setLoading(true);
     try {
-      const [statsData, ordersData, couriersData, complexesData] = await Promise.all([
+      const [statsData, ordersData, couriersData, complexesData, clientsData] = await Promise.all([
         api.getAdminStats(),
         api.getTodayOrders(),
         api.getCouriers(),
-        api.getAdminComplexes()
+        api.getAdminComplexes(),
+        api.getClients()
       ]);
       setStats(statsData);
       setOrders(ordersData);
       setCouriers(couriersData);
       setComplexes(complexesData);
+      setClients(clientsData);
     } catch (error) {
       console.error(error);
     } finally {
@@ -109,6 +116,30 @@ export default function AdminPage() {
     }
   };
 
+  const openAddCreditsModal = (client: any) => {
+    setSelectedClient(client);
+    setCreditsAmount('1');
+    setShowAddCreditsModal(true);
+  };
+
+  const handleAddCredits = async () => {
+    if (!selectedClient || !creditsAmount) return;
+    const amount = parseInt(creditsAmount, 10);
+    if (isNaN(amount) || amount <= 0) {
+      alert('Введите корректное количество');
+      return;
+    }
+    try {
+      await api.addCreditsToClient(selectedClient.id, amount, `Пополнение администратором (+${amount})`);
+      setShowAddCreditsModal(false);
+      setCreditsAmount('1');
+      setSelectedClient(null);
+      loadData();
+    } catch (e) {
+      alert('Ошибка пополнения');
+    }
+  };
+
   if (loading && !stats) {
     return (
       <div className="min-h-screen bg-gray-900 flex items-center justify-center text-white">
@@ -152,6 +183,13 @@ export default function AdminPage() {
         >
             <Package className="w-4 h-4" />
             Заказы
+        </button>
+        <button 
+            onClick={() => setActiveTab('clients')}
+            className={`px-4 py-2 rounded-xl text-sm font-medium transition-colors whitespace-nowrap flex items-center gap-2 ${activeTab === 'clients' ? 'bg-teal-600 text-white' : 'bg-gray-800 text-gray-400'}`}
+        >
+            <Users className="w-4 h-4" />
+            Клиенты
         </button>
         <button 
             onClick={() => setActiveTab('couriers')}
@@ -227,6 +265,64 @@ export default function AdminPage() {
                 <p>Нет активных заказов</p>
               </div>
             )}
+          </div>
+        )}
+
+        {/* CLIENTS TAB */}
+        {activeTab === 'clients' && (
+          <div className="space-y-4">
+            <h3 className="font-bold text-gray-300 mb-4 flex items-center gap-2">
+              <Users className="w-5 h-5 text-teal-500" />
+              Все клиенты ({clients.length})
+            </h3>
+            
+            <div className="space-y-3">
+              {clients.map(client => (
+                <div key={client.id} className="bg-gray-800/30 p-4 rounded-xl border border-gray-800">
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-teal-900/50 flex items-center justify-center text-teal-400 font-bold text-lg">
+                        {client.name[0]}
+                      </div>
+                      <div>
+                        <p className="font-bold text-white">{client.name}</p>
+                        <p className="text-xs text-gray-500">ID: {client.telegram_id}</p>
+                        {client.phone && <p className="text-xs text-gray-500">📱 {client.phone}</p>}
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-2xl font-bold text-teal-400">{client.balance}</p>
+                      <p className="text-xs text-gray-500">выносов</p>
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-3 mb-3 text-xs">
+                    <div className="bg-gray-900/50 p-2 rounded-lg">
+                      <p className="text-gray-500">Подписок</p>
+                      <p className="text-white font-bold">{client.active_subscriptions}</p>
+                    </div>
+                    <div className="bg-gray-900/50 p-2 rounded-lg">
+                      <p className="text-gray-500">Заказов</p>
+                      <p className="text-white font-bold">{client.total_orders}</p>
+                    </div>
+                  </div>
+                  
+                  <button 
+                    onClick={() => openAddCreditsModal(client)}
+                    className="w-full py-2 bg-teal-900/40 text-teal-400 text-sm font-medium rounded-lg border border-teal-800/50 hover:bg-teal-900/60 flex items-center justify-center gap-2"
+                  >
+                    <Plus className="w-4 h-4" />
+                    Добавить выносы
+                  </button>
+                </div>
+              ))}
+              
+              {clients.length === 0 && (
+                <div className="text-center py-10 text-gray-500 bg-gray-800/20 rounded-2xl border border-gray-800/50 border-dashed">
+                  <p>Пока нет клиентов</p>
+                </div>
+              )}
+            </div>
           </div>
         )}
 
@@ -351,6 +447,51 @@ export default function AdminPage() {
                 </button>
               ))}
               {couriers.length === 0 && <p className="text-gray-500 text-center py-4">Нет доступных курьеров</p>}
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* Add Credits Modal */}
+      {showAddCreditsModal && selectedClient && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+          <div className="w-full max-w-sm bg-gray-900 rounded-2xl border border-gray-800 p-5">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-bold text-white">Пополнение баланса</h3>
+              <button onClick={() => setShowAddCreditsModal(false)}><X className="w-5 h-5 text-gray-500" /></button>
+            </div>
+            
+            <div className="mb-4">
+              <p className="text-gray-400 text-sm mb-1">Клиент:</p>
+              <p className="text-white font-bold">{selectedClient.name}</p>
+              <p className="text-gray-500 text-xs">Текущий баланс: {selectedClient.balance} выносов</p>
+            </div>
+            
+            <div className="mb-4">
+              <label className="block text-gray-400 text-sm mb-2">Количество выносов:</label>
+              <input
+                type="number"
+                min="1"
+                value={creditsAmount}
+                onChange={(e) => setCreditsAmount(e.target.value)}
+                className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg p-3 text-lg font-bold focus:border-teal-500 outline-none text-center"
+                placeholder="1"
+              />
+            </div>
+            
+            <div className="flex gap-2">
+              <button
+                onClick={() => setShowAddCreditsModal(false)}
+                className="flex-1 py-3 bg-gray-800 text-gray-400 rounded-lg font-medium hover:bg-gray-700"
+              >
+                Отмена
+              </button>
+              <button
+                onClick={handleAddCredits}
+                className="flex-1 py-3 bg-teal-600 text-white rounded-lg font-medium hover:bg-teal-500"
+              >
+                Добавить
+              </button>
             </div>
           </div>
         </div>

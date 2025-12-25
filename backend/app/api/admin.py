@@ -259,6 +259,116 @@ async def deactivate_courier(
     return {"status": "ok", "message": "Courier deactivated"}
 
 
+# ================== CLIENTS ==================
+
+@router.get("/clients")
+async def list_clients(
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    List all clients (users with CLIENT role)
+    """
+    result = await db.execute(
+        select(User).where(User.role == UserRole.CLIENT).order_by(User.created_at.desc())
+    )
+    clients = result.scalars().all()
+    
+    client_list = []
+    for client in clients:
+        # Get balance
+        balance_result = await db.execute(
+            select(Balance).where(Balance.user_id == client.id)
+        )
+        balance = balance_result.scalar_one_or_none()
+        
+        # Get active subscriptions count
+        subs_result = await db.execute(
+            select(func.count(Subscription.id)).where(
+                Subscription.user_id == client.id,
+                Subscription.is_active == True
+            )
+        )
+        active_subs = subs_result.scalar() or 0
+        
+        # Get total orders count
+        orders_result = await db.execute(
+            select(func.count(Order.id)).where(Order.user_id == client.id)
+        )
+        total_orders = orders_result.scalar() or 0
+        
+        client_list.append({
+            "id": client.id,
+            "name": client.name,
+            "telegram_id": client.telegram_id,
+            "phone": client.phone,
+            "balance": balance.credits if balance else 0,
+            "active_subscriptions": active_subs,
+            "total_orders": total_orders,
+            "created_at": client.created_at.isoformat() if client.created_at else None,
+        })
+    
+    return client_list
+
+
+class AddCreditsRequest(BaseModel):
+    user_id: int
+    amount: int
+    description: Optional[str] = None
+
+
+@router.post("/clients/add-credits")
+async def add_credits_to_client(
+    request: AddCreditsRequest,
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Add credits to a client's balance (admin action)
+    """
+    # Get client
+    result = await db.execute(
+        select(User).where(User.id == request.user_id, User.role == UserRole.CLIENT)
+    )
+    client = result.scalar_one_or_none()
+    
+    if not client:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Client not found"
+        )
+    
+    # Get or create balance
+    result = await db.execute(
+        select(Balance).where(Balance.user_id == client.id)
+    )
+    balance = result.scalar_one_or_none()
+    
+    if not balance:
+        balance = Balance(user_id=client.id, credits=0)
+        db.add(balance)
+        await db.flush()
+    
+    # Add credits
+    balance.credits += request.amount
+    
+    # Create transaction record
+    transaction = BalanceTransaction(
+        balance_id=balance.id,
+        amount=request.amount,
+        description=request.description or f"Пополнение администратором (+{request.amount} вынос)",
+        order_id=None,
+    )
+    db.add(transaction)
+    
+    await db.commit()
+    await db.refresh(balance)
+    
+    return {
+        "status": "ok", 
+        "message": f"Added {request.amount} credits to {client.name}",
+        "new_balance": balance.credits
+    }
+
+
 # ================== SCHEDULER ==================
 
 @router.post("/scheduler/run")
