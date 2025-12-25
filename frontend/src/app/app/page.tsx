@@ -21,17 +21,29 @@ export default function HomePage() {
   const [showOnboarding, setShowOnboarding] = useState<boolean | null>(null);
 
   useEffect(() => {
-    // Check localStorage only - simpler and more reliable
-    // Show onboarding ONCE per device
     if (typeof window !== 'undefined') {
+      // 1. Check if we already showed onboarding on this device
       const hasSeen = localStorage.getItem('onboarding_shown_v2');
       if (hasSeen) {
         setShowOnboarding(false);
-      } else {
-        setShowOnboarding(true);
-        // Mark as seen immediately so it doesn't show again on reload
-        localStorage.setItem('onboarding_shown_v2', 'true');
+        return;
       }
+
+      // 2. Check if user is already logged in (OLD USER)
+      // If they have a token, they are an existing user -> skip onboarding
+      const token = localStorage.getItem('token');
+      if (token) {
+        console.log('[ONBOARDING] Token found - returning user');
+        setShowOnboarding(false);
+        localStorage.setItem('onboarding_shown_v2', 'true'); // Mark as seen
+        return;
+      }
+
+      // 3. No token + No flag = NEW USER -> Show onboarding
+      console.log('[ONBOARDING] New user - showing onboarding');
+      setShowOnboarding(true);
+      // Mark as seen immediately so it doesn't show again on reload
+      localStorage.setItem('onboarding_shown_v2', 'true');
     } else {
       setShowOnboarding(false);
     }
