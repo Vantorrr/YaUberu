@@ -22,23 +22,39 @@ export default function HomePage() {
 
   useEffect(() => {
     const checkIfNewUser = async () => {
+      // First, check localStorage (most reliable)
+      if (typeof window !== 'undefined') {
+        const hasSeenOnboarding = localStorage.getItem('onboarding_completed');
+        if (hasSeenOnboarding === 'true') {
+          console.log('[ONBOARDING] localStorage flag found - returning user');
+          setShowOnboarding(false);
+          return;
+        }
+      }
+      
       // Wait for Telegram WebApp to initialize
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await new Promise(resolve => setTimeout(resolve, 800));
       
       try {
         const orders = await api.getOrders();
         console.log('[ONBOARDING] User orders count:', orders.length);
         
-        // If 0 orders = NEW user = show onboarding
-        if (orders.length === 0) {
-          setShowOnboarding(true);
-        } else {
+        // If user has orders, they've seen onboarding before
+        if (orders.length > 0) {
+          console.log('[ONBOARDING] User has orders - returning user');
           setShowOnboarding(false);
+          // Save flag to localStorage
+          if (typeof window !== 'undefined') {
+            localStorage.setItem('onboarding_completed', 'true');
+          }
+        } else {
+          console.log('[ONBOARDING] New user - showing onboarding');
+          setShowOnboarding(true);
         }
       } catch (error) {
         console.error('[ONBOARDING] Error checking orders:', error);
-        // On error, skip onboarding (assume returning user)
-        setShowOnboarding(false);
+        // On error, show onboarding (better to show it once to old user than never to new user)
+        setShowOnboarding(true);
       }
     };
 
@@ -46,6 +62,10 @@ export default function HomePage() {
   }, []);
 
   const handleSkipOnboarding = () => {
+    // Save flag to localStorage
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('onboarding_completed', 'true');
+    }
     setShowOnboarding(false);
   };
 
