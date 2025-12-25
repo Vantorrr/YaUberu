@@ -10,10 +10,10 @@ import { api } from '@/lib/api';
 type Step = 'address' | 'volume' | 'time' | 'confirm';
 
 const timeSlots = [
-  { id: 1, time: '08:00 — 10:00', label: 'Утро', status: 'past' },
-  { id: 2, time: '12:00 — 14:00', label: 'День', status: 'current' },
-  { id: 3, time: '16:00 — 18:00', label: 'Вечер', status: 'available' },
-  { id: 4, time: '20:00 — 22:00', label: 'Ночь', status: 'available' },
+  { id: 1, time: '08:00 — 10:00', label: 'Утро' },
+  { id: 2, time: '12:00 — 14:00', label: 'День' },
+  { id: 3, time: '16:00 — 18:00', label: 'Вечер' },
+  { id: 4, time: '20:00 — 22:00', label: 'Ночь' },
 ];
 
 // Dynamic steps based on tariff
@@ -583,31 +583,26 @@ function OrderContent() {
 
               {/* STANDARD SLOTS */}
               <div className="space-y-3">
-                {timeSlots.map((s) => {
-                  const isAvailable = s.status === 'available';
-                  return (
-                    <Card 
-                      key={s.id} 
-                      onClick={isAvailable ? () => setSlot(s.id) : undefined}
-                      className={`
-                        ${!isAvailable ? 'opacity-40 grayscale cursor-not-allowed' : ''} 
-                        ${slot === s.id ? 'border-teal-500 ring-2 ring-teal-500/30 bg-teal-100' : ''}
-                      `}
-                    >
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-gray-900 font-semibold text-lg">{s.time}</p>
-                          <p className="text-gray-500 text-sm">{s.label}</p>
-                        </div>
-                        <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${slot === s.id ? 'bg-teal-500 border-teal-500' : 'border-gray-600'}`}>
-                          {slot === s.id && <Check className="w-4 h-4 text-gray-900" />}
-                        </div>
+                {timeSlots.map((s) => (
+                  <Card 
+                    key={s.id} 
+                    onClick={() => setSlot(s.id)}
+                    className={`
+                      cursor-pointer hover:border-teal-300 transition-all
+                      ${slot === s.id ? 'border-teal-500 ring-2 ring-teal-500/30 bg-teal-50' : 'border-gray-200'}
+                    `}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-gray-900 font-semibold text-lg">{s.time}</p>
+                        <p className="text-gray-500 text-sm">{s.label}</p>
                       </div>
-                      {s.status === 'past' && <p className="text-red-500 text-xs mt-2">Время вышло</p>}
-                      {s.status === 'current' && <p className="text-orange-400 text-xs mt-2">Идет сейчас (только срочно)</p>}
-                    </Card>
-                  );
-                })}
+                      <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${slot === s.id ? 'bg-teal-500 border-teal-500' : 'border-gray-300'}`}>
+                        {slot === s.id && <Check className="w-4 h-4 text-white" />}
+                      </div>
+                    </div>
+                  </Card>
+                ))}
               </div>
             </div>
           </>
