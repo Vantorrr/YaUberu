@@ -110,6 +110,21 @@ class ApiClient {
     return this.request('/users/balance');
   }
 
+  async getAddresses(): Promise<Array<{
+    id: number;
+    complex_id?: number;
+    complex_name?: string;
+    street?: string;
+    building: string;
+    entrance?: string;
+    floor?: string;
+    apartment: string;
+    intercom?: string;
+    is_default: boolean;
+  }>> {
+    return this.request('/users/addresses');
+  }
+
   async createAddress(data: any) {
     return this.request('/users/addresses', {
       method: 'POST',
