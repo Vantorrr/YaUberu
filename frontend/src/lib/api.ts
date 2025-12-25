@@ -42,6 +42,11 @@ class ApiClient {
   }
 
   private async request(endpoint: string, options: RequestInit = {}) {
+    // CRITICAL FIX: Always check localStorage for token (SSR issue)
+    if (!this.token && typeof window !== 'undefined') {
+      this.token = localStorage.getItem('token');
+    }
+
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
       ...(options.headers as Record<string, string>),
