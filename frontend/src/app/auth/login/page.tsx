@@ -14,10 +14,17 @@ export default function LoginPage() {
   const handleAuth = async () => {
     try {
       setLoading(true);
-      // При входе используем тот же механизм, что и при регистрации
-      // Если ID сохранился в браузере - мы попадем в свой аккаунт
-      await api.login('User'); 
-      router.push('/app');
+      // Login and get user data
+      const user = await api.login('User');
+      
+      // Check if user is new (0 orders)
+      if (user && user.is_new_user === true) {
+        console.log('[AUTH] New user - redirect to onboarding');
+        router.push('/onboarding');
+      } else {
+        console.log('[AUTH] Existing user - redirect to app');
+        router.push('/app');
+      }
     } catch (error) {
       console.error(error);
       alert('Ошибка входа. Проверьте соединение с бэкендом.');

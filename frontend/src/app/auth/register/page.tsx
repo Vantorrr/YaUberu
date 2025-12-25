@@ -15,11 +15,17 @@ export default function RegisterPage() {
   const handleAuth = async () => {
     try {
       setLoading(true);
-      // В браузере мы не можем получить реальный телефон без WebApp,
-      // поэтому используем тестовый, но запрос идет на БЭКЕНД по-настоящему.
       const mockPhone = "+79990000000"; 
-      await api.login(name, mockPhone);
-      router.push('/app');
+      const user = await api.login(name, mockPhone);
+      
+      // Check if user is new (0 orders) - redirect to onboarding
+      if (user && user.is_new_user === true) {
+        console.log('[REGISTER] New user - redirect to onboarding');
+        router.push('/onboarding');
+      } else {
+        console.log('[REGISTER] Existing user - redirect to app');
+        router.push('/app');
+      }
     } catch (error) {
       console.error(error);
       alert('Ошибка соединения с сервером. Убедитесь, что бэкенд запущен на порту 8080.');
