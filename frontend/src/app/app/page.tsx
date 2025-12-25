@@ -1,11 +1,61 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/Button';
 import { Trash2 } from 'lucide-react';
+import { api } from '@/lib/api';
 
 export default function HomePage() {
   const router = useRouter();
+  const [checking, setChecking] = useState(true);
+
+  useEffect(() => {
+    const checkOnboarding = async () => {
+      // Check if user is new and redirect to onboarding
+      if (typeof window !== 'undefined' && (window as any).Telegram?.WebApp?.CloudStorage) {
+        const cloudStorage = (window as any).Telegram.WebApp.CloudStorage;
+        
+        cloudStorage.getItem('onboarding_completed', async (err: any, value: string) => {
+          if (err || value === 'true') {
+            // Already seen or error - show main page
+            setChecking(false);
+            return;
+          }
+          
+          // Check if user is new via API
+          try {
+            await new Promise(resolve => setTimeout(resolve, 800));
+            const user = await api.getMe();
+            
+            if (user && user.is_new_user === true) {
+              // Redirect to onboarding
+              router.push('/onboarding');
+            } else {
+              // Mark as seen
+              cloudStorage.setItem('onboarding_completed', 'true');
+              setChecking(false);
+            }
+          } catch (error) {
+            console.error('[ONBOARDING CHECK]', error);
+            setChecking(false);
+          }
+        });
+      } else {
+        setChecking(false);
+      }
+    };
+    
+    checkOnboarding();
+  }, [router]);
+
+  if (checking) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="text-teal-600">Загрузка...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-white flex flex-col items-center justify-center px-6 pb-32">
