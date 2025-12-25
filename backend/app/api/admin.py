@@ -50,9 +50,22 @@ async def get_public_tariffs(db: AsyncSession = Depends(get_db)):
     """
     PUBLIC endpoint - get all tariffs for client app
     """
-    result = await db.execute(select(TariffPrice))
+    result = await db.execute(select(TariffPrice).where(TariffPrice.is_active == True))
     tariffs = result.scalars().all()
-    return tariffs
+    
+    # Convert to response format
+    return [
+        TariffResponse(
+            id=t.id,
+            tariff_type=t.tariff_id,  # tariff_id -> tariff_type
+            name=t.name,
+            price=str(t.price),  # int -> str
+            old_price=str(t.old_price) if t.old_price else None,  # int -> str
+            period=t.period,
+            description=t.description
+        )
+        for t in tariffs
+    ]
 
 
 @router.get("/stats", response_model=StatsResponse)
