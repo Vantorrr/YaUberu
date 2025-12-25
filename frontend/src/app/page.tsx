@@ -74,7 +74,6 @@ export default function WelcomePage() {
       <div className="pt-12 pb-4 text-center z-10">
         <h1 className="text-4xl font-bold tracking-tight mb-2">
           <span className="text-gray-900">Я</span>
-          <span className="text-teal-500">.</span>
           <span className="text-teal-500">УБЕРУ</span>
         </h1>
       </div>
