@@ -62,6 +62,18 @@ async def notify_all_couriers_new_order(courier_telegram_ids: list, order_id: in
 
 # ============ NOTIFICATIONS FOR CLIENTS ============
 
+async def notify_client_order_created(client_telegram_id: int, order_id: int, address: str, time_slot: str):
+    """Notify client that their order was created successfully"""
+    text = (
+        f"✅ **Заказ #{order_id} создан!**\n\n"
+        f"📍 Адрес: {address}\n"
+        f"🕐 Время: {time_slot}\n\n"
+        f"⏳ Ожидаем курьера...\n"
+        f"_Мы сообщим, когда курьер возьмет заказ_"
+    )
+    await send_telegram_notification(client_telegram_id, text)
+
+
 async def notify_client_courier_took_order(client_telegram_id: int, courier_name: str, time_slot: str):
     """Notify client that a courier took their order"""
     print(f"[NOTIFY] Sending 'courier took order' to client {client_telegram_id}")

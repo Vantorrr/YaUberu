@@ -7,7 +7,7 @@ from datetime import date, timedelta
 
 from app.models import get_db, Order, OrderStatus, TimeSlot, Address, Balance, BalanceTransaction, User, UserRole, ResidentialComplex
 from app.api.deps import get_current_user
-from app.services.notifications import notify_all_couriers_new_order, notify_admins_new_order
+from app.services.notifications import notify_all_couriers_new_order, notify_admins_new_order, notify_client_order_created
 from app.config import settings
 
 router = APIRouter()
@@ -157,6 +157,15 @@ async def create_order(
             comment=request.comment
         )
         
+        # Notify client about order creation
+        if current_user.telegram_id:
+            await notify_client_order_created(
+                client_telegram_id=current_user.telegram_id,
+                order_id=order.id,
+                address=address_str,
+                time_slot=time_slot_str
+            )
+        
         # Notify admins about new order
         client_name = current_user.first_name or current_user.username or "Клиент"
         await notify_admins_new_order(
@@ -167,7 +176,7 @@ async def create_order(
             client_name=client_name
         )
     except Exception as e:
-        print(f"[NOTIFY ERROR] Failed to notify couriers/admins: {e}")
+        print(f"[NOTIFY ERROR] Failed to notify couriers/admins/client: {e}")
     
     return order
 
