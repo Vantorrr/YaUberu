@@ -147,6 +147,36 @@ export default function AdminPage() {
     }
   };
 
+  const openEditTariffModal = (tariff: any) => {
+    setSelectedTariff(tariff);
+    setTariffForm({
+      name: tariff.name,
+      price: tariff.price,
+      old_price: tariff.old_price || '',
+      period: tariff.period || '',
+      description: tariff.description,
+    });
+    setShowEditTariffModal(true);
+  };
+
+  const handleUpdateTariff = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedTariff) return;
+    try {
+      await api.updateTariff(selectedTariff.tariff_id, {
+        name: tariffForm.name,
+        price: parseInt(tariffForm.price, 10),
+        old_price: tariffForm.old_price ? parseInt(tariffForm.old_price, 10) : null,
+        period: tariffForm.period || null,
+        description: tariffForm.description,
+      });
+      setShowEditTariffModal(false);
+      loadData();
+    } catch (error) {
+      alert('Ошибка обновления тарифа');
+    }
+  };
+
   if (loading && !stats) {
     return (
       <div className="min-h-screen bg-gray-900 flex items-center justify-center text-white">
@@ -211,6 +241,13 @@ export default function AdminPage() {
         >
             <Building className="w-4 h-4" />
             ЖК и Адреса
+        </button>
+        <button 
+            onClick={() => setActiveTab('tariffs')}
+            className={`px-4 py-2 rounded-xl text-sm font-medium transition-colors whitespace-nowrap flex items-center gap-2 ${activeTab === 'tariffs' ? 'bg-teal-600 text-white' : 'bg-gray-800 text-gray-400'}`}
+        >
+            <DollarSign className="w-4 h-4" />
+            Тарифы
         </button>
       </div>
 
@@ -428,6 +465,56 @@ export default function AdminPage() {
           </div>
         )}
 
+        {/* TARIFFS TAB */}
+        {activeTab === 'tariffs' && (
+          <div className="space-y-4">
+            <h3 className="font-bold text-gray-300 mb-4 flex items-center gap-2">
+              <DollarSign className="w-5 h-5 text-teal-500" />
+              Управление тарифами
+            </h3>
+            
+            <div className="space-y-3">
+              {tariffs.map((tariff) => (
+                <div key={tariff.id} className="bg-gray-800/30 p-4 rounded-xl border border-gray-800">
+                  <div className="flex justify-between items-start mb-3">
+                    <div>
+                      <h4 className="text-white font-bold text-lg">{tariff.name}</h4>
+                      <p className="text-gray-400 text-sm mt-1">{tariff.description}</p>
+                    </div>
+                    <button
+                      onClick={() => {
+                        openEditTariffModal(tariff);
+                      }}
+                      className="p-2 bg-gray-700 rounded-lg hover:bg-gray-600 transition"
+                    >
+                      <Edit className="w-4 h-4" />
+                    </button>
+                  </div>
+
+                  <div className="flex items-center gap-4 text-sm">
+                    <div className="flex items-center gap-2">
+                      <DollarSign className="w-4 h-4 text-teal-500" />
+                      <span className="text-white font-bold text-xl">{tariff.price} ₽</span>
+                      {tariff.old_price && (
+                        <span className="text-gray-500 line-through">{tariff.old_price} ₽</span>
+                      )}
+                    </div>
+                    {tariff.period && (
+                      <span className="text-gray-400">• {tariff.period}</span>
+                    )}
+                  </div>
+                </div>
+              ))}
+              
+              {tariffs.length === 0 && (
+                <div className="text-center py-10 text-gray-500 bg-gray-800/20 rounded-2xl border border-gray-800/50 border-dashed">
+                  <p>Тарифы не загружены</p>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
       </div>
 
       {/* Assign Modal */}
@@ -500,6 +587,93 @@ export default function AdminPage() {
                 Добавить
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Tariff Modal */}
+      {showEditTariffModal && selectedTariff && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+          <div className="w-full max-w-lg bg-gray-900 rounded-2xl border border-gray-800 p-5 max-h-[80vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-bold text-white">Редактировать тариф</h3>
+              <button onClick={() => setShowEditTariffModal(false)}><X className="w-5 h-5 text-gray-500" /></button>
+            </div>
+            
+            <form onSubmit={handleUpdateTariff} className="space-y-4">
+              <div>
+                <label className="block text-gray-400 text-sm mb-2">Название</label>
+                <input
+                  type="text"
+                  value={tariffForm.name}
+                  onChange={(e) => setTariffForm({ ...tariffForm, name: e.target.value })}
+                  className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg p-3 focus:border-teal-500 outline-none"
+                  required
+                />
+              </div>
+              
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-gray-400 text-sm mb-2">Цена (₽)</label>
+                  <input
+                    type="number"
+                    value={tariffForm.price}
+                    onChange={(e) => setTariffForm({ ...tariffForm, price: e.target.value })}
+                    className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg p-3 focus:border-teal-500 outline-none"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-gray-400 text-sm mb-2">Старая цена (₽)</label>
+                  <input
+                    type="number"
+                    value={tariffForm.old_price}
+                    onChange={(e) => setTariffForm({ ...tariffForm, old_price: e.target.value })}
+                    className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg p-3 focus:border-teal-500 outline-none"
+                    placeholder="Необязательно"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-gray-400 text-sm mb-2">Период</label>
+                <input
+                  type="text"
+                  value={tariffForm.period}
+                  onChange={(e) => setTariffForm({ ...tariffForm, period: e.target.value })}
+                  className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg p-3 focus:border-teal-500 outline-none"
+                  placeholder="Например: 2 недели"
+                />
+              </div>
+
+              <div>
+                <label className="block text-gray-400 text-sm mb-2">Описание</label>
+                <textarea
+                  value={tariffForm.description}
+                  onChange={(e) => setTariffForm({ ...tariffForm, description: e.target.value })}
+                  className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg p-3 focus:border-teal-500 outline-none resize-none"
+                  rows={3}
+                  required
+                />
+              </div>
+
+              <div className="flex gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowEditTariffModal(false)}
+                  className="flex-1 py-3 bg-gray-800 text-gray-400 rounded-lg font-medium hover:bg-gray-700"
+                >
+                  Отмена
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 py-3 bg-teal-600 text-white rounded-lg font-medium hover:bg-teal-500 flex items-center justify-center gap-2"
+                >
+                  <Edit className="w-4 h-4" />
+                  Сохранить
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
