@@ -25,35 +25,55 @@ export default function HomePage() {
       if (typeof window !== 'undefined' && (window as any).Telegram?.WebApp?.CloudStorage) {
         const cloudStorage = (window as any).Telegram.WebApp.CloudStorage;
         
-        // Check if user has seen onboarding using Telegram Cloud Storage
-        cloudStorage.getItem('onboarding_seen', (err: any, value: string) => {
+        // Step 1: Check CloudStorage
+        cloudStorage.getItem('onboarding_seen', async (err: any, value: string) => {
           if (err) {
             console.error('[ONBOARDING] CloudStorage error:', err);
-            // On error, skip onboarding
             setShowOnboarding(false);
             return;
           }
           
+          // If flag exists in CloudStorage - skip
           if (value === 'true') {
-            console.log('[ONBOARDING] CloudStorage: already seen - SKIP');
+            console.log('[ONBOARDING] CloudStorage flag found - SKIP');
             setShowOnboarding(false);
-          } else {
-            console.log('[ONBOARDING] CloudStorage: not seen - SHOW');
-            setShowOnboarding(true);
-            // Mark as seen in Cloud Storage
+            return;
+          }
+          
+          // Step 2: No flag in CloudStorage - check via API if user is new
+          console.log('[ONBOARDING] No CloudStorage flag - checking API...');
+          try {
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            const user = await api.getMe();
+            console.log('[ONBOARDING] API response:', user);
+            
+            if (user && user.is_new_user === true) {
+              // NEW USER - show onboarding
+              console.log('[ONBOARDING] NEW USER (0 orders) - SHOW SLIDER');
+              setShowOnboarding(true);
+            } else {
+              // EXISTING USER - skip onboarding
+              console.log('[ONBOARDING] EXISTING USER (has orders) - SKIP');
+              setShowOnboarding(false);
+            }
+            
+            // Mark as seen in CloudStorage for future
             cloudStorage.setItem('onboarding_seen', 'true', (err: any) => {
               if (err) console.error('[ONBOARDING] Failed to save flag:', err);
+              else console.log('[ONBOARDING] Flag saved to CloudStorage');
             });
+          } catch (error) {
+            console.error('[ONBOARDING] API error:', error);
+            // On API error, skip onboarding to avoid annoyance
+            setShowOnboarding(false);
           }
         });
       } else {
-        // Fallback for non-Telegram environments
-        console.log('[ONBOARDING] Not in Telegram - skip onboarding');
+        console.log('[ONBOARDING] Not in Telegram - skip');
         setShowOnboarding(false);
       }
     };
     
-    // Wait for Telegram WebApp to initialize
     setTimeout(checkOnboarding, 500);
   }, []);
 
