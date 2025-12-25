@@ -53,8 +53,9 @@ export default function HomePage() {
         }
       } catch (error) {
         console.error('[ONBOARDING] Error checking orders:', error);
-        // On error, show onboarding (better to show it once to old user than never to new user)
-        setShowOnboarding(true);
+        // CRITICAL FIX: On error, assume returning user to avoid annoyance
+        // Better to skip onboarding for a new user than force it on an existing one
+        setShowOnboarding(false);
       }
     };
 
