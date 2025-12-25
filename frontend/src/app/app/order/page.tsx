@@ -4,7 +4,7 @@ import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
-import { ArrowLeft, MapPin, Clock, Check, Building, Home, DoorOpen, Hash, Zap, AlertCircle, User } from 'lucide-react';
+import { ArrowLeft, MapPin, Clock, Check, Building, Home, DoorOpen, Hash, Zap, AlertCircle, User, Package, MessageSquare } from 'lucide-react';
 import { api } from '@/lib/api';
 
 const steps = ['address', 'volume', 'time', 'confirm'] as const;
@@ -20,12 +20,18 @@ const timeSlots = [
 function OrderContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const tariffId = searchParams.get('tariff') || 'single';
 
   const [step, setStep] = useState<Step>('address');
   const [slot, setSlot] = useState<number | 'urgent' | null>(null);
   const [address, setAddress] = useState({ complexId: '0', building: '', entrance: '', floor: '', apartment: '', intercom: '' });
   const [pickupMethod, setPickupMethod] = useState<'door' | 'hand'>('door');
   const [loading, setLoading] = useState(false);
+  const [comment, setComment] = useState('');
+  
+  // Volume/Duration for dynamic pricing
+  const [bagsCount, setBagsCount] = useState(1);
+  const [duration, setDuration] = useState<14 | 30>(14);
   
   // Dynamic Complexes
   const [complexes, setComplexes] = useState<any[]>([]);
@@ -69,6 +75,11 @@ function OrderContent() {
         alert('⚠️ Укажите квартиру');
         return;
       }
+    }
+    
+    // Validation for volume step (always passes - defaults are set)
+    if (step === 'volume') {
+      // Volume step has defaults, so always valid
     }
     
     // Validation for time step
@@ -127,7 +138,8 @@ function OrderContent() {
         tomorrow.setDate(tomorrow.getDate() + 1);
         const dateStr = tomorrow.toISOString().split('T')[0];
 
-        const comment = pickupMethod === 'hand' ? 'Передать лично в руки, позвонить в дверь/телефон' : 'Оставить у двери';
+        const pickupComment = pickupMethod === 'hand' ? 'Передать лично в руки, позвонить в дверь/телефон' : 'Оставить у двери';
+        const finalComment = comment ? `${comment}. ${pickupComment}` : pickupComment;
 
         // 3. Create Order
         await api.createOrder({
@@ -135,7 +147,7 @@ function OrderContent() {
           date: dateStr,
           time_slot: timeSlotStr,
           is_urgent: isUrgent,
-          comment
+          comment: finalComment
         });
 
         router.push('/app/order/success');
@@ -232,7 +244,7 @@ function OrderContent() {
                     <Home className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-teal-500" />
                     <input
                       type="text"
-                      placeholder="2к4"
+                      placeholder=""
                       value={address.building}
                       onChange={(e) => setAddress({ ...address, building: e.target.value })}
                       className="w-full pl-12 pr-4 py-4 rounded-xl bg-white border border-gray-300 text-gray-900 placeholder-gray-600 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 outline-none transition-all"
@@ -246,7 +258,7 @@ function OrderContent() {
                     <DoorOpen className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-teal-500" />
                     <input
                       type="text"
-                      placeholder="5"
+                      placeholder=""
                       value={address.entrance}
                       onChange={(e) => setAddress({ ...address, entrance: e.target.value })}
                       className="w-full pl-12 pr-4 py-4 rounded-xl bg-white border border-gray-300 text-gray-900 placeholder-gray-600 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 outline-none transition-all"
@@ -261,7 +273,7 @@ function OrderContent() {
                   <input
                     type="number"
                     inputMode="numeric"
-                    placeholder="9"
+                    placeholder=""
                     value={address.floor}
                     onChange={(e) => setAddress({ ...address, floor: e.target.value })}
                     className="w-full px-4 py-4 rounded-xl bg-white border border-gray-300 text-gray-900 placeholder-gray-600 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 outline-none transition-all"
@@ -275,7 +287,7 @@ function OrderContent() {
                     <Hash className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-teal-500" />
                     <input
                       type="text"
-                      placeholder="45"
+                      placeholder=""
                       value={address.apartment}
                       onChange={(e) => setAddress({ ...address, apartment: e.target.value })}
                       className="w-full pl-12 pr-4 py-4 rounded-xl bg-white border border-gray-300 text-gray-900 placeholder-gray-600 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 outline-none transition-all"
@@ -293,7 +305,7 @@ function OrderContent() {
                 <input
                   type="text"
                   inputMode="numeric"
-                  placeholder="1234 или КБ123"
+                  placeholder=""
                   value={address.intercom}
                   onChange={(e) => setAddress({ ...address, intercom: e.target.value })}
                   className="w-full px-4 py-4 rounded-xl bg-white border border-gray-300 text-gray-900 placeholder-gray-600 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 outline-none transition-all"
@@ -307,7 +319,95 @@ function OrderContent() {
                </>
              )}
 
-             {/* Step 2: Time */}
+        {/* Step 2: Volume/Duration */}
+        {step === 'volume' && (
+          <>
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-12 h-12 bg-purple-500 rounded-xl flex items-center justify-center">
+                <Package className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <h2 className="text-xl font-bold text-gray-900">Объём и срок</h2>
+                <p className="text-gray-500 text-sm">Настройте детали</p>
+              </div>
+            </div>
+
+            {tariffId === 'single' && (
+              <div className="space-y-4">
+                <p className="text-gray-700 font-semibold">Сколько мешков?</p>
+                <div className="grid grid-cols-5 gap-2">
+                  {[1, 2, 3, 4, 5].map((count) => (
+                    <div
+                      key={count}
+                      onClick={() => setBagsCount(count)}
+                      className={`
+                        p-4 rounded-xl border-2 cursor-pointer text-center transition-all
+                        ${bagsCount === count
+                          ? 'bg-teal-600 border-teal-600 text-white'
+                          : 'bg-white border-gray-200 text-gray-900 hover:border-teal-300'
+                        }
+                      `}
+                    >
+                      <p className="text-2xl font-bold">{count}</p>
+                    </div>
+                  ))}
+                </div>
+                <div className="bg-teal-50 border border-teal-200 rounded-xl p-4">
+                  <p className="text-teal-900 font-bold text-lg">
+                    Итого: {150 * bagsCount} ₽
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {(tariffId === 'trial' || tariffId === 'monthly') && (
+              <div className="space-y-4">
+                <p className="text-gray-700 font-semibold">Выберите срок</p>
+                <div className="space-y-3">
+                  <div
+                    onClick={() => setDuration(14)}
+                    className={`
+                      p-5 rounded-2xl border-2 cursor-pointer transition-all
+                      ${duration === 14
+                        ? 'bg-teal-50 border-teal-600 ring-2 ring-teal-600/30'
+                        : 'bg-white border-gray-200 hover:border-gray-300'
+                      }
+                    `}
+                  >
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <p className="text-gray-900 font-bold text-lg">2 недели</p>
+                        <p className="text-gray-600 text-sm">Вынос через день</p>
+                      </div>
+                      <p className="text-teal-600 font-bold text-2xl">199 ₽</p>
+                    </div>
+                  </div>
+
+                  <div
+                    onClick={() => setDuration(30)}
+                    className={`
+                      p-5 rounded-2xl border-2 cursor-pointer transition-all
+                      ${duration === 30
+                        ? 'bg-teal-50 border-teal-600 ring-2 ring-teal-600/30'
+                        : 'bg-white border-gray-200 hover:border-gray-300'
+                      }
+                    `}
+                  >
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <p className="text-gray-900 font-bold text-lg">30 дней</p>
+                        <p className="text-gray-600 text-sm">Регулярный вынос по расписанию</p>
+                      </div>
+                      <p className="text-teal-600 font-bold text-2xl">1 350 ₽</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </>
+        )}
+
+             {/* Step 3: Time */}
         {step === 'time' && (
           <>
             <div className="flex items-center gap-3 mb-2">
@@ -321,45 +421,49 @@ function OrderContent() {
             </div>
 
             <div className="space-y-4">
-              {/* URGENT OPTION */}
-              <div 
-                onClick={() => setSlot('urgent')}
-                className={`
-                  relative overflow-hidden rounded-2xl p-5 border transition-all cursor-pointer
-                  ${slot === 'urgent' 
-                    ? 'bg-orange-500/20 border-orange-500 ring-2 ring-orange-500/30' 
-                    : 'bg-gradient-to-br from-orange-900/40 to-red-900/40 border-orange-500/30 hover:border-orange-500/60'
-                  }
-                `}
-              >
-                <div className="flex items-center justify-between relative z-10">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-orange-500 rounded-full flex items-center justify-center animate-pulse">
-                      <Zap className="w-6 h-6 text-gray-900 fill-white" />
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <p className="text-gray-900 font-bold text-lg">СРОЧНО</p>
-                        <span className="bg-orange-500 text-gray-900 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase">
-                          Hot
-                        </span>
+              {/* URGENT OPTION - Only for single */}
+              {tariffId === 'single' && (
+                <>
+                  <div 
+                    onClick={() => setSlot('urgent')}
+                    className={`
+                      relative overflow-hidden rounded-2xl p-5 border transition-all cursor-pointer
+                      ${slot === 'urgent' 
+                        ? 'bg-orange-500/20 border-orange-500 ring-2 ring-orange-500/30' 
+                        : 'bg-gradient-to-br from-orange-900/40 to-red-900/40 border-orange-500/30 hover:border-orange-500/60'
+                      }
+                    `}
+                  >
+                    <div className="flex items-center justify-between relative z-10">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-orange-500 rounded-full flex items-center justify-center animate-pulse">
+                          <Zap className="w-6 h-6 text-gray-900 fill-white" />
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <p className="text-gray-900 font-bold text-lg">СРОЧНО</p>
+                            <span className="bg-orange-500 text-gray-900 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase">
+                              Hot
+                            </span>
+                          </div>
+                          <p className="text-orange-900 text-sm">Приедем в течение часа</p>
+                        </div>
                       </div>
-                      <p className="text-orange-900 text-sm">Приедем в течение часа</p>
+                      <div className="text-right">
+                        <p className="text-gray-900 font-bold text-xl">450 ₽</p>
+                      </div>
                     </div>
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-orange-500/20 rounded-full blur-[40px] -mr-10 -mt-10" />
                   </div>
-                  <div className="text-right">
-                    <p className="text-gray-900 font-bold text-xl">450 ₽</p>
-                  </div>
-                </div>
-                <div className="absolute top-0 right-0 w-32 h-32 bg-orange-500/20 rounded-full blur-[40px] -mr-10 -mt-10" />
-              </div>
 
-              {/* Divider */}
-              <div className="flex items-center gap-3 py-2">
-                <div className="h-px bg-teal-900/30 flex-1" />
-                <span className="text-gray-500 text-xs font-medium uppercase tracking-wider">Или по расписанию</span>
-                <div className="h-px bg-teal-900/30 flex-1" />
-              </div>
+                  {/* Divider */}
+                  <div className="flex items-center gap-3 py-2">
+                    <div className="h-px bg-teal-900/30 flex-1" />
+                    <span className="text-gray-500 text-xs font-medium uppercase tracking-wider">Или по расписанию</span>
+                    <div className="h-px bg-teal-900/30 flex-1" />
+                  </div>
+                </>
+              )}
 
               {/* STANDARD SLOTS */}
               <div className="space-y-3">
@@ -440,10 +544,33 @@ function OrderContent() {
                 
                 <div className="flex items-center justify-between bg-teal-50 p-4 rounded-xl border border-teal-200">
                   <span className="text-gray-700 font-semibold">Итого к оплате</span>
-                  <span className="text-teal-600 font-bold text-3xl">{slot === 'urgent' ? '450' : '300'} ₽</span>
+                  <span className="text-teal-600 font-bold text-3xl">
+                    {(() => {
+                      if (slot === 'urgent') return '450';
+                      if (tariffId === 'single') return String(150 * bagsCount);
+                      if (tariffId === 'trial') return duration === 14 ? '199' : '1350';
+                      if (tariffId === 'monthly') return duration === 14 ? '199' : '1350';
+                      return '150';
+                    })()} ₽
+                  </span>
                 </div>
               </div>
             </Card>
+
+            {/* COMMENT FIELD */}
+            <div className="space-y-2">
+              <label className="text-gray-700 text-sm font-semibold ml-1 flex items-center gap-2">
+                <MessageSquare className="w-4 h-4 text-teal-600" />
+                Комментарий курьеру
+              </label>
+              <textarea
+                value={comment}
+                onChange={(e) => setComment(e.target.value)}
+                placeholder="Например: позвонить перед приездом, оставить у консьержа..."
+                className="w-full px-4 py-3 rounded-xl bg-white border-2 border-gray-200 text-gray-900 placeholder-gray-400 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 outline-none transition-all resize-none"
+                rows={3}
+              />
+            </div>
 
             {/* PICKUP METHOD TOGGLE */}
             <div className="space-y-2">

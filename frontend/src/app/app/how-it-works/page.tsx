@@ -5,22 +5,19 @@ import { ArrowLeft, MapPin, Clock, CheckCircle } from 'lucide-react';
 
 const steps = [
   {
-    icon: MapPin,
-    title: 'Укажите адрес',
-    description: 'Выберите точку на карте или введите адрес вручную. Мы приедем именно туда, где вам удобно.',
-    color: 'from-blue-500 to-blue-600'
+    image: '/11111111.jpg',
+    title: 'Оформите заказ',
+    description: 'Укажите адрес, выберите удобное время и количество мешков. Оформление занимает 2 минуты.'
   },
   {
-    icon: Clock,
-    title: 'Выберите время',
-    description: 'Выберите удобный временной слот: утро, день, вечер или ночь. Или закажите срочный вывоз — приедем в течение часа!',
-    color: 'from-teal-500 to-teal-600'
+    image: '/22222222.jpg',
+    title: 'Курьер получит заказ',
+    description: 'Ближайший курьер получит уведомление и поедет к вам в выбранное время.'
   },
   {
-    icon: CheckCircle,
-    title: 'Мы заберём мусор',
-    description: 'Выставьте пакет у двери или передайте курьеру лично. После вывоза получите уведомление — готово!',
-    color: 'from-green-500 to-green-600'
+    image: '/333333333.jpg',
+    title: 'Заберём мусор',
+    description: 'Курьер заберёт мусор у двери или из рук — как вам удобно. Готово!'
   }
 ];
 
@@ -66,18 +63,18 @@ export default function HowItWorksPage() {
             <div key={index} className="relative">
               {/* Connecting line */}
               {index < steps.length - 1 && (
-                <div className="absolute left-[52px] top-[100px] w-0.5 h-12 bg-gradient-to-b from-gray-300 to-transparent" />
+                <div className="absolute left-1/2 -translate-x-1/2 top-[280px] w-0.5 h-12 bg-gradient-to-b from-gray-300 to-transparent" />
               )}
               
               <div className="bg-white border-2 border-gray-200 rounded-3xl p-6 shadow-sm hover:shadow-md transition-shadow">
-                {/* Icon */}
-                <div className={`w-24 h-24 rounded-3xl bg-gradient-to-br ${step.color} flex items-center justify-center mb-5 shadow-lg`}>
-                  <step.icon className="w-12 h-12 text-white" strokeWidth={2} />
+                {/* Image */}
+                <div className="w-full h-48 mb-5 rounded-2xl overflow-hidden bg-gray-100 flex items-center justify-center">
+                  <img src={step.image} alt={step.title} className="w-full h-full object-contain" />
                 </div>
 
                 {/* Step number */}
-                <div className="inline-flex items-center gap-2 bg-gray-100 px-3 py-1 rounded-full mb-3">
-                  <span className="text-gray-900 font-bold text-sm">Шаг {index + 1}</span>
+                <div className="inline-flex items-center gap-2 bg-teal-100 px-3 py-1 rounded-full mb-3">
+                  <span className="text-teal-900 font-bold text-sm">Шаг {index + 1}</span>
                 </div>
 
                 {/* Content */}
