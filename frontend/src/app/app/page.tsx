@@ -21,20 +21,40 @@ export default function HomePage() {
   const [showOnboarding, setShowOnboarding] = useState<boolean | null>(null);
 
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const token = localStorage.getItem('token');
-      
-      // Simple logic: NO TOKEN = NEW USER = show onboarding
-      if (!token) {
-        console.log('[ONBOARDING] No token - NEW USER - showing onboarding');
-        setShowOnboarding(true);
+    const checkOnboarding = async () => {
+      if (typeof window !== 'undefined' && (window as any).Telegram?.WebApp?.CloudStorage) {
+        const cloudStorage = (window as any).Telegram.WebApp.CloudStorage;
+        
+        // Check if user has seen onboarding using Telegram Cloud Storage
+        cloudStorage.getItem('onboarding_seen', (err: any, value: string) => {
+          if (err) {
+            console.error('[ONBOARDING] CloudStorage error:', err);
+            // On error, skip onboarding
+            setShowOnboarding(false);
+            return;
+          }
+          
+          if (value === 'true') {
+            console.log('[ONBOARDING] CloudStorage: already seen - SKIP');
+            setShowOnboarding(false);
+          } else {
+            console.log('[ONBOARDING] CloudStorage: not seen - SHOW');
+            setShowOnboarding(true);
+            // Mark as seen in Cloud Storage
+            cloudStorage.setItem('onboarding_seen', 'true', (err: any) => {
+              if (err) console.error('[ONBOARDING] Failed to save flag:', err);
+            });
+          }
+        });
       } else {
-        console.log('[ONBOARDING] Token exists - EXISTING USER - skip onboarding');
+        // Fallback for non-Telegram environments
+        console.log('[ONBOARDING] Not in Telegram - skip onboarding');
         setShowOnboarding(false);
       }
-    } else {
-      setShowOnboarding(false);
-    }
+    };
+    
+    // Wait for Telegram WebApp to initialize
+    setTimeout(checkOnboarding, 500);
   }, []);
 
   const handleSkipOnboarding = () => {
