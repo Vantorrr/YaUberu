@@ -6,7 +6,8 @@ from datetime import date, datetime, timedelta
 from pydantic import BaseModel
 
 from app.models import get_db, Order, OrderStatus, User, ResidentialComplex, Address, UserRole
-from app.services.notifications import notify_client_courier_took_order, notify_client_order_completed
+from app.services.notifications import notify_client_courier_took_order, notify_client_order_completed, notify_admins_courier_took_order, notify_admins_order_completed
+from app.config import settings
 
 
 class TakeOrderRequest(BaseModel):
@@ -235,6 +236,21 @@ async def take_order(order_id: int, request: TakeOrderRequest, db: AsyncSession 
     order.status = OrderStatus.IN_PROGRESS
     await db.commit()
     
+    # Get address for notification
+    result = await db.execute(select(Address).where(Address.id == order.address_id))
+    addr = result.scalar_one_or_none()
+    address_str = ""
+    if addr:
+        if addr.complex_id:
+            result = await db.execute(select(ResidentialComplex).where(ResidentialComplex.id == addr.complex_id))
+            complex = result.scalar_one_or_none()
+            if complex:
+                address_str = f"{complex.name}, д. {addr.building}, кв. {addr.apartment}"
+            else:
+                address_str = f"д. {addr.building}, кв. {addr.apartment}"
+        else:
+            address_str = f"{addr.street}, д. {addr.building}, кв. {addr.apartment}"
+    
     # === NOTIFY CLIENT ===
     try:
         # Get client
@@ -251,6 +267,17 @@ async def take_order(order_id: int, request: TakeOrderRequest, db: AsyncSession 
     except Exception as e:
         print(f"[NOTIFY ERROR] Failed to notify client: {e}")
     
+    # === NOTIFY ADMINS ===
+    try:
+        await notify_admins_courier_took_order(
+            admin_telegram_ids=settings.admin_ids,
+            order_id=order.id,
+            courier_name=courier.name,
+            address=address_str
+        )
+    except Exception as e:
+        print(f"[NOTIFY ERROR] Failed to notify admins: {e}")
+    
     return {"status": "ok", "message": f"Заказ взят курьером {courier.name}"}
 
 @router.post("/orders/{order_id}/complete")
@@ -259,6 +286,14 @@ async def complete_order(order_id: int, bags_count: int, db: AsyncSession = Depe
     order = result.scalar_one_or_none()
     if not order:
         raise HTTPException(status_code=404, detail="Order not found")
+    
+    # Get courier name for notifications
+    courier_name = "Курьер"
+    if order.courier_id:
+        result = await db.execute(select(User).where(User.id == order.courier_id))
+        courier = result.scalar_one_or_none()
+        if courier:
+            courier_name = courier.name
         
     order.status = OrderStatus.COMPLETED
     order.bags_count = bags_count
@@ -276,6 +311,17 @@ async def complete_order(order_id: int, bags_count: int, db: AsyncSession = Depe
             )
     except Exception as e:
         print(f"[NOTIFY ERROR] Failed to notify client on completion: {e}")
+    
+    # === NOTIFY ADMINS ===
+    try:
+        await notify_admins_order_completed(
+            admin_telegram_ids=settings.admin_ids,
+            order_id=order.id,
+            courier_name=courier_name,
+            bags_count=bags_count
+        )
+    except Exception as e:
+        print(f"[NOTIFY ERROR] Failed to notify admins on completion: {e}")
     
     return {"status": "ok"}
 

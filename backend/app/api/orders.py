@@ -151,6 +151,7 @@ async def create_order(
         
         await notify_all_couriers_new_order(
             courier_telegram_ids=courier_tg_ids,
+            order_id=order.id,
             address=address_str,
             time_slot=time_slot_str,
             comment=request.comment

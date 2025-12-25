@@ -5,8 +5,8 @@ import httpx
 from app.config import settings
 
 
-async def send_telegram_notification(chat_id: int, text: str):
-    """Send a notification message to a Telegram user"""
+async def send_telegram_notification(chat_id: int, text: str, reply_markup: dict = None):
+    """Send a notification message to a Telegram user with optional inline keyboard"""
     if not settings.TELEGRAM_BOT_TOKEN or not chat_id:
         print(f"[NOTIFY] Skipping notification: token={bool(settings.TELEGRAM_BOT_TOKEN)}, chat_id={chat_id}")
         return False
@@ -19,6 +19,9 @@ async def send_telegram_notification(chat_id: int, text: str):
                 "text": text,
                 "parse_mode": "Markdown",
             }
+            if reply_markup:
+                payload["reply_markup"] = reply_markup
+            
             response = await client.post(url, json=payload)
             print(f"[NOTIFY] Sent to {chat_id}: {response.status_code}")
             return response.status_code == 200
@@ -29,10 +32,10 @@ async def send_telegram_notification(chat_id: int, text: str):
 
 # ============ NOTIFICATIONS FOR COURIERS ============
 
-async def notify_all_couriers_new_order(courier_telegram_ids: list, address: str, time_slot: str, comment: str = None):
-    """Notify ALL couriers about a new order available for pickup"""
+async def notify_all_couriers_new_order(courier_telegram_ids: list, order_id: int, address: str, time_slot: str, comment: str = None):
+    """Notify ALL couriers about a new order available for pickup with button to take it"""
     text = (
-        f"🆕 **Новый заказ!**\n\n"
+        f"🆕 **Новый заказ #{order_id}!**\n\n"
         f"📍 {address}\n"
         f"🕐 {time_slot}\n"
     )
@@ -41,8 +44,20 @@ async def notify_all_couriers_new_order(courier_telegram_ids: list, address: str
     
     text += "\n⚡️ Кто первый возьмет — того и заказ!"
     
+    # Add inline keyboard with "Take Order" button
+    keyboard = {
+        "inline_keyboard": [
+            [
+                {
+                    "text": "📋 Открыть задачи",
+                    "callback_data": "my_tasks"
+                }
+            ]
+        ]
+    }
+    
     for tg_id in courier_telegram_ids:
-        await send_telegram_notification(tg_id, text)
+        await send_telegram_notification(tg_id, text, reply_markup=keyboard)
 
 
 # ============ NOTIFICATIONS FOR CLIENTS ============
@@ -94,6 +109,39 @@ async def notify_admins_new_order(admin_telegram_ids: list, order_id: int, addre
         f"📍 Адрес: {address}\n"
         f"🕐 Время: {time_slot}\n\n"
         f"_Курьеры получили уведомление_"
+    )
+    
+    for tg_id in admin_telegram_ids:
+        await send_telegram_notification(tg_id, text)
+
+
+async def notify_admins_courier_took_order(admin_telegram_ids: list, order_id: int, courier_name: str, address: str):
+    """Notify all admins that a courier took an order"""
+    text = (
+        f"🚀 **Заказ #{order_id} взят!**\n\n"
+        f"👤 Курьер: **{courier_name}**\n"
+        f"📍 Адрес: {address}\n\n"
+        f"_Клиент получил уведомление_"
+    )
+    
+    for tg_id in admin_telegram_ids:
+        await send_telegram_notification(tg_id, text)
+
+
+async def notify_admins_order_completed(admin_telegram_ids: list, order_id: int, courier_name: str, bags_count: int):
+    """Notify all admins that an order was completed"""
+    if bags_count == 1:
+        bags_text = "1 пакет"
+    elif bags_count < 5:
+        bags_text = f"{bags_count} пакета"
+    else:
+        bags_text = f"{bags_count} пакетов"
+    
+    text = (
+        f"✅ **Заказ #{order_id} выполнен!**\n\n"
+        f"👤 Курьер: **{courier_name}**\n"
+        f"📦 Забрали: {bags_text}\n\n"
+        f"_Клиент получил уведомление_"
     )
     
     for tg_id in admin_telegram_ids:
