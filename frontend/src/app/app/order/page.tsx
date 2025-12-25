@@ -406,40 +406,40 @@ function OrderContent() {
               </div>
             </div>
 
-            <Card className="bg-gradient-to-br from-emerald-950/70 to-emerald-900/30 border-teal-700/50">
+            <Card className="bg-white border-2 border-gray-200">
               <div className="space-y-4">
                 <div className="flex items-start gap-3">
-                  <MapPin className="w-5 h-5 text-teal-500 mt-1 flex-shrink-0" />
+                  <MapPin className="w-5 h-5 text-teal-600 mt-1 flex-shrink-0" />
                   <div className="flex-1">
-                    <p className="text-gray-400 text-sm mb-1">Адрес</p>
-                    <p className="text-gray-900 font-medium">
+                    <p className="text-gray-500 text-xs mb-1 font-medium uppercase tracking-wide">Адрес</p>
+                    <p className="text-gray-900 font-semibold text-base leading-snug">
                       {complexes.find(c => c.id === Number(address.complexId))?.name || 'ЖК'}, д. {address.building}
                       {address.entrance && `, подъезд ${address.entrance}`}
                       {address.floor && `, эт. ${address.floor}`}
                       , кв. {address.apartment}
                     </p>
                     {address.intercom && (
-                      <p className="text-gray-500 text-sm mt-1">Домофон: {address.intercom}</p>
+                      <p className="text-gray-600 text-sm mt-1">Домофон: {address.intercom}</p>
                     )}
                   </div>
                 </div>
                 
-                <div className="h-px bg-teal-900/30" />
+                <div className="h-px bg-gray-200" />
                 
                 <div className="flex items-start gap-3">
-                  <Clock className="w-5 h-5 text-teal-500 mt-1 flex-shrink-0" />
+                  <Clock className="w-5 h-5 text-teal-600 mt-1 flex-shrink-0" />
                   <div className="flex-1">
-                    <p className="text-gray-400 text-sm mb-1">Время</p>
-                    <p className={`font-medium ${slot === 'urgent' ? 'text-orange-500' : 'text-gray-900'}`}>
-                      {slot === 'urgent' ? '⚡️ СРОЧНО (в течение часа)' : timeSlots.find((s) => s.id === slot)?.time}
+                    <p className="text-gray-500 text-xs mb-1 font-medium uppercase tracking-wide">Время</p>
+                    <p className={`font-bold text-base ${slot === 'urgent' ? 'text-orange-600' : 'text-gray-900'}`}>
+                      {slot === 'urgent' ? '⚡ СРОЧНО (в течение часа!)' : timeSlots.find((s) => s.id === slot)?.time}
                     </p>
                   </div>
                 </div>
                 
-                <div className="h-px bg-teal-900/30" />
+                <div className="h-px bg-gray-200" />
                 
-                <div className="flex items-center justify-between bg-teal-100 p-4 rounded-xl">
-                  <span className="text-gray-700 font-medium">Итого к оплате</span>
+                <div className="flex items-center justify-between bg-teal-50 p-4 rounded-xl border border-teal-200">
+                  <span className="text-gray-700 font-semibold">Итого к оплате</span>
                   <span className="text-teal-600 font-bold text-3xl">{slot === 'urgent' ? '450' : '300'} ₽</span>
                 </div>
               </div>
@@ -447,38 +447,38 @@ function OrderContent() {
 
             {/* PICKUP METHOD TOGGLE */}
             <div className="space-y-2">
-              <p className="text-gray-400 text-sm font-medium ml-1">Как забрать мусор?</p>
+              <p className="text-gray-700 text-sm font-semibold ml-1">Как забрать мусор?</p>
               <div className="grid grid-cols-2 gap-3">
                 <div 
                   onClick={() => setPickupMethod('door')}
                   className={`
-                    flex flex-col items-center justify-center gap-2 p-4 rounded-2xl border cursor-pointer transition-all
+                    flex flex-col items-center justify-center gap-2 p-4 rounded-2xl border-2 cursor-pointer transition-all
                     ${pickupMethod === 'door' 
-                      ? 'bg-teal-900/60 border-teal-500/50 shadow-lg shadow-emerald-900/20' 
-                      : 'bg-teal-950/30 border-gray-300 opacity-60 hover:opacity-100'}
+                      ? 'bg-teal-50 border-teal-500 shadow-lg' 
+                      : 'bg-white border-gray-200 hover:border-gray-300'}
                   `}
                 >
-                  <DoorOpen className={`w-6 h-6 ${pickupMethod === 'door' ? 'text-teal-600' : 'text-gray-500'}`} />
-                  <span className={`text-sm font-medium ${pickupMethod === 'door' ? 'text-gray-900' : 'text-gray-400'}`}>У двери</span>
+                  <DoorOpen className={`w-6 h-6 ${pickupMethod === 'door' ? 'text-teal-600' : 'text-gray-400'}`} />
+                  <span className={`text-sm font-semibold ${pickupMethod === 'door' ? 'text-teal-600' : 'text-gray-600'}`}>У двери</span>
                 </div>
 
                 <div 
                   onClick={() => setPickupMethod('hand')}
                   className={`
-                    flex flex-col items-center justify-center gap-2 p-4 rounded-2xl border cursor-pointer transition-all
+                    flex flex-col items-center justify-center gap-2 p-4 rounded-2xl border-2 cursor-pointer transition-all
                     ${pickupMethod === 'hand' 
-                      ? 'bg-orange-900/40 border-orange-500/50 shadow-lg shadow-orange-900/20' 
-                      : 'bg-teal-950/30 border-gray-300 opacity-60 hover:opacity-100'}
+                      ? 'bg-orange-50 border-orange-500 shadow-lg' 
+                      : 'bg-white border-gray-200 hover:border-gray-300'}
                   `}
                 >
-                  <User className={`w-6 h-6 ${pickupMethod === 'hand' ? 'text-orange-400' : 'text-gray-500'}`} />
-                  <span className={`text-sm font-medium ${pickupMethod === 'hand' ? 'text-gray-900' : 'text-gray-400'}`}>В руки</span>
+                  <User className={`w-6 h-6 ${pickupMethod === 'hand' ? 'text-orange-600' : 'text-gray-400'}`} />
+                  <span className={`text-sm font-semibold ${pickupMethod === 'hand' ? 'text-orange-600' : 'text-gray-600'}`}>В руки</span>
                 </div>
               </div>
               
               {pickupMethod === 'hand' && (
-                <p className="text-orange-400 text-xs text-center animate-in fade-in slide-in-from-top-1">
-                  Курьер позвонит вам перед тем, как подойти к двери.
+                <p className="text-orange-600 text-xs text-center font-medium animate-in fade-in slide-in-from-top-1 bg-orange-50 py-2 px-3 rounded-lg border border-orange-200">
+                  ⚠️ Курьер будет назначен мгновенно.
                 </p>
               )}
             </div>
