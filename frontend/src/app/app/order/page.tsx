@@ -7,7 +7,7 @@ import { Card } from '@/components/ui/Card';
 import { ArrowLeft, MapPin, Clock, Check, Building, Home, DoorOpen, Hash, Zap, AlertCircle, User } from 'lucide-react';
 import { api } from '@/lib/api';
 
-const steps = ['address', 'time', 'confirm'] as const;
+const steps = ['address', 'volume', 'time', 'confirm'] as const;
 type Step = typeof steps[number];
 
 const timeSlots = [

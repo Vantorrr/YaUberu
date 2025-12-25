@@ -7,28 +7,28 @@ import { Button } from '@/components/ui/Button';
 const tariffs = [
   {
     id: 'single',
-    name: 'Разовый визит',
-    price: '150 ₽',
-    period: 'за вынос',
-    desc: 'Идеально для теста',
-    features: ['Заберем сегодня', 'В любое время']
+    name: 'Разовый вынос',
+    price: '150',
+    oldPrice: null,
+    period: null,
+    urgent: true,
+    features: ['Заберу мусор в удобное для вас время']
   },
   {
     id: 'trial',
     name: 'Пробный старт',
-    price: '199 ₽',
-    period: 'на неделю',
-    desc: 'Попробуйте сервис',
-    popular: true,
-    features: ['3 выноса включено', 'Приоритет']
+    price: '199',
+    oldPrice: '756',
+    period: '2 недели',
+    features: ['2 недели будем выносить ваш мусор через день']
   },
   {
     id: 'monthly',
     name: 'Комфорт Месяц',
-    price: '1 350 ₽',
-    period: 'в месяц',
-    desc: 'Полная свобода',
-    features: ['Регулярный вывоз', 'До 15 пакетов', 'Личный курьер']
+    price: '1 350',
+    oldPrice: null,
+    period: null,
+    features: ['Регулярный вынос мусора по выбранному расписанию']
   },
 ];
 
@@ -59,28 +59,26 @@ export default function TariffsPage() {
           <div
             key={t.id}
             onClick={() => router.push(`/app/order?tariff=${t.id}`)}
-            className={`
-              relative p-6 rounded-2xl border-2 transition-all cursor-pointer overflow-hidden hover:shadow-lg
-              ${t.popular
-                ? 'bg-gradient-to-br from-teal-50 to-teal-100 border-teal-500 shadow-md'
-                : 'bg-white border-gray-200 hover:border-gray-300'
-              }
-            `}
+            className="relative p-6 rounded-2xl border-2 bg-white border-gray-200 hover:border-gray-300 transition-all cursor-pointer hover:shadow-lg"
           >
-            {t.popular && (
-              <div className="absolute top-0 right-0 bg-teal-600 text-white text-[10px] font-bold px-3 py-1 rounded-bl-xl">
-                ⭐ ПОПУЛЯРНО
-              </div>
-            )}
-
             <div className="flex justify-between items-start mb-4">
               <div>
                 <h3 className="text-gray-900 font-bold text-xl">{t.name}</h3>
-                <p className="text-gray-600 text-sm mt-1">{t.desc}</p>
+                {t.urgent && (
+                  <div className="inline-flex items-center gap-1 mt-2 text-orange-600 text-xs font-semibold">
+                    <Zap className="w-4 h-4" />
+                    Срочный вынос
+                  </div>
+                )}
               </div>
               <div className="text-right">
-                <p className="text-gray-900 font-bold text-2xl">{t.price}</p>
-                <p className="text-gray-500 text-xs">{t.period}</p>
+                {t.oldPrice && (
+                  <p className="text-gray-400 line-through text-sm">{t.oldPrice} ₽</p>
+                )}
+                <p className="text-gray-900 text-2xl">{t.price} ₽</p>
+                {t.period && (
+                  <p className="text-gray-500 text-xs mt-1">{t.period}</p>
+                )}
               </div>
             </div>
 
@@ -98,13 +96,7 @@ export default function TariffsPage() {
 
             {/* CTA Arrow */}
             <div className="mt-4 flex justify-end">
-              <div className={`
-                px-4 py-2 rounded-xl text-sm font-medium
-                ${t.popular
-                  ? 'bg-teal-600 text-white'
-                  : 'bg-gray-100 text-gray-900'
-                }
-              `}>
+              <div className="px-4 py-2 rounded-xl text-sm font-medium bg-gray-100 text-gray-900">
                 Выбрать →
               </div>
             </div>
