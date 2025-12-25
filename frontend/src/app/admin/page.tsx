@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { api } from '@/lib/api';
-import { RefreshCw, Package, CheckCircle, TrendingUp, XCircle, Truck, X, Users, Building, Plus, Trash2, DollarSign, Edit } from 'lucide-react';
+import { RefreshCw, Package, CheckCircle, TrendingUp, XCircle, Truck, X, Users, Building, Plus, Trash2, Coins, Edit } from 'lucide-react';
 
 export default function AdminPage() {
   const [activeTab, setActiveTab] = useState<'orders' | 'couriers' | 'complexes' | 'clients' | 'tariffs'>('orders');
@@ -246,7 +246,7 @@ export default function AdminPage() {
             onClick={() => setActiveTab('tariffs')}
             className={`px-4 py-2 rounded-xl text-sm font-medium transition-colors whitespace-nowrap flex items-center gap-2 ${activeTab === 'tariffs' ? 'bg-teal-600 text-white' : 'bg-gray-800 text-gray-400'}`}
         >
-            <DollarSign className="w-4 h-4" />
+            <Coins className="w-4 h-4" />
             Тарифы
         </button>
       </div>
@@ -469,7 +469,7 @@ export default function AdminPage() {
         {activeTab === 'tariffs' && (
           <div className="space-y-4">
             <h3 className="font-bold text-gray-300 mb-4 flex items-center gap-2">
-              <DollarSign className="w-5 h-5 text-teal-500" />
+              <Coins className="w-5 h-5 text-teal-500" />
               Управление тарифами
             </h3>
             
@@ -493,7 +493,7 @@ export default function AdminPage() {
 
                   <div className="flex items-center gap-4 text-sm">
                     <div className="flex items-center gap-2">
-                      <DollarSign className="w-4 h-4 text-teal-500" />
+                      <span className="text-teal-500 font-bold text-2xl">₽</span>
                       <span className="text-white font-bold text-xl">{tariff.price} ₽</span>
                       {tariff.old_price && (
                         <span className="text-gray-500 line-through">{tariff.old_price} ₽</span>
