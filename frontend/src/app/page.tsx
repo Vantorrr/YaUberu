@@ -11,21 +11,17 @@ export default function WelcomePage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Auto-redirect if already logged in
-    const checkAuth = async () => {
-      try {
-        const user = await api.getMe();
-        if (user) {
-          router.push('/app');
-          return;
-        }
-      } catch {
-        // Not logged in
+    // FAST CHECK: if token exists in localStorage = OLD USER = redirect immediately
+    if (typeof window !== 'undefined') {
+      const token = localStorage.getItem('token');
+      if (token) {
+        router.push('/app');
+        return;
       }
-      setLoading(false);
-    };
+    }
     
-    checkAuth();
+    // No token = NEW USER = show welcome screen
+    setLoading(false);
   }, [router]);
 
   const handleStart = async () => {
