@@ -1,6 +1,6 @@
 from app.models.base import Base, engine, async_session, get_db
 from app.models.user import User, UserRole, Address, ResidentialComplex, Balance, BalanceTransaction
-from app.models.order import Order, OrderStatus, TimeSlot, Tariff, Subscription, TrialUsage
+from app.models.order import Order, OrderStatus, TimeSlot, Tariff, Subscription, TrialUsage, TariffPrice
 
 __all__ = [
     "Base",
@@ -19,5 +19,6 @@ __all__ = [
     "Tariff",
     "Subscription",
     "TrialUsage",
+    "TariffPrice",
 ]
 

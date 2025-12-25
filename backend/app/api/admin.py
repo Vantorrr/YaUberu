@@ -7,7 +7,7 @@ from datetime import date
 
 from app.models import (
     get_db, User, UserRole, Order, OrderStatus,
-    ResidentialComplex, Subscription, Balance, BalanceTransaction
+    ResidentialComplex, Subscription, Balance, BalanceTransaction, TariffPrice
 )
 from app.services.scheduler import generate_orders_for_today
 
@@ -316,6 +316,16 @@ class AddCreditsRequest(BaseModel):
     description: Optional[str] = None
 
 
+class TariffPriceUpdate(BaseModel):
+    name: Optional[str] = None
+    price: Optional[int] = None
+    old_price: Optional[int] = None
+    period: Optional[str] = None
+    description: Optional[str] = None
+    is_active: Optional[bool] = None
+    is_urgent: Optional[bool] = None
+
+
 @router.post("/clients/add-credits")
 async def add_credits_to_client(
     request: AddCreditsRequest,
@@ -390,3 +400,74 @@ async def run_scheduler():
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Scheduler error: {str(e)}"
         )
+
+
+# ============ TARIFF PRICES MANAGEMENT ============
+
+@router.get("/tariffs")
+async def get_tariffs(db: AsyncSession = Depends(get_db)):
+    """Get all tariff prices"""
+    result = await db.execute(select(TariffPrice).order_by(TariffPrice.id))
+    tariffs = result.scalars().all()
+    
+    return [{
+        "id": t.id,
+        "tariff_id": t.tariff_id,
+        "name": t.name,
+        "price": t.price,
+        "old_price": t.old_price,
+        "period": t.period,
+        "description": t.description,
+        "is_active": t.is_active,
+        "is_urgent": t.is_urgent,
+    } for t in tariffs]
+
+
+@router.put("/tariffs/{tariff_id}")
+async def update_tariff(
+    tariff_id: str,
+    request: TariffPriceUpdate,
+    db: AsyncSession = Depends(get_db)
+):
+    """Update tariff price and details"""
+    result = await db.execute(
+        select(TariffPrice).where(TariffPrice.tariff_id == tariff_id)
+    )
+    tariff = result.scalar_one_or_none()
+    
+    if not tariff:
+        raise HTTPException(status_code=404, detail="Tariff not found")
+    
+    # Update fields
+    if request.name is not None:
+        tariff.name = request.name
+    if request.price is not None:
+        tariff.price = request.price
+    if request.old_price is not None:
+        tariff.old_price = request.old_price
+    if request.period is not None:
+        tariff.period = request.period
+    if request.description is not None:
+        tariff.description = request.description
+    if request.is_active is not None:
+        tariff.is_active = request.is_active
+    if request.is_urgent is not None:
+        tariff.is_urgent = request.is_urgent
+    
+    await db.commit()
+    await db.refresh(tariff)
+    
+    return {
+        "status": "ok",
+        "tariff": {
+            "id": tariff.id,
+            "tariff_id": tariff.tariff_id,
+            "name": tariff.name,
+            "price": tariff.price,
+            "old_price": tariff.old_price,
+            "period": tariff.period,
+            "description": tariff.description,
+            "is_active": tariff.is_active,
+            "is_urgent": tariff.is_urgent,
+        }
+    }

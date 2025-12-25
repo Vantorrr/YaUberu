@@ -26,6 +26,21 @@ class Tariff(str, enum.Enum):
     MONTHLY = "monthly"       # Monthly subscription
 
 
+class TariffPrice(Base):
+    """Store tariff prices that admins can edit"""
+    __tablename__ = "tariff_prices"
+
+    id = Column(Integer, primary_key=True, index=True)
+    tariff_id = Column(String(50), unique=True, nullable=False)  # 'single', 'trial', 'monthly'
+    name = Column(String(100), nullable=False)
+    price = Column(Integer, nullable=False)  # Price in rubles
+    old_price = Column(Integer, nullable=True)  # For strikethrough display
+    period = Column(String(50), nullable=True)  # '2 недели', etc
+    description = Column(String(500), nullable=False)
+    is_active = Column(Boolean, default=True)
+    is_urgent = Column(Boolean, default=False)  # For "Срочный вынос" badge
+
+
 class Order(Base):
     __tablename__ = "orders"
 
