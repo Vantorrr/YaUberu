@@ -21,57 +21,27 @@ export default function HomePage() {
   const [showOnboarding, setShowOnboarding] = useState<boolean | null>(null); // null = loading
 
   useEffect(() => {
-    const checkIfNewUser = async () => {
-      // First, check localStorage (most reliable)
-      if (typeof window !== 'undefined') {
-        const hasSeenOnboarding = localStorage.getItem('onboarding_completed');
-        if (hasSeenOnboarding === 'true') {
-          console.log('[ONBOARDING] localStorage flag found - returning user');
-          setShowOnboarding(false);
-          return;
-        }
-      }
-      
-      // Wait for Telegram WebApp to initialize
-      await new Promise(resolve => setTimeout(resolve, 800));
-      
-      try {
-        const orders = await api.getOrders();
-        console.log('[ONBOARDING] User orders count:', orders.length);
-        
-        // If user has orders, they've seen onboarding before
-        if (orders.length > 0) {
-          console.log('[ONBOARDING] User has orders - returning user');
-          setShowOnboarding(false);
-          // Save flag to localStorage
-          if (typeof window !== 'undefined') {
-            localStorage.setItem('onboarding_completed', 'true');
-          }
-        } else {
-          console.log('[ONBOARDING] New user - showing onboarding');
-          setShowOnboarding(true);
-        }
-      } catch (error) {
-        console.error('[ONBOARDING] Error checking orders:', error);
-        // CRITICAL FIX: On error, assume returning user to avoid annoyance
-        // Better to skip onboarding for a new user than force it on an existing one
+    // Check localStorage only - simpler and more reliable
+    // Show onboarding ONCE per device
+    if (typeof window !== 'undefined') {
+      const hasSeen = localStorage.getItem('onboarding_shown_v2');
+      if (hasSeen) {
         setShowOnboarding(false);
+      } else {
+        setShowOnboarding(true);
+        // Mark as seen immediately so it doesn't show again on reload
+        localStorage.setItem('onboarding_shown_v2', 'true');
       }
-    };
-
-    checkIfNewUser();
+    }
+    setLoading(false);
   }, []);
 
   const handleSkipOnboarding = () => {
-    // Save flag to localStorage
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('onboarding_completed', 'true');
-    }
     setShowOnboarding(false);
   };
 
   // Loading state
-  if (showOnboarding === null) {
+  if (loading) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="text-teal-600 text-lg">Загрузка...</div>
@@ -79,8 +49,8 @@ export default function HomePage() {
     );
   }
 
-  // Show onboarding for NEW users (0 orders)
-  if (showOnboarding === true) {
+  // Show onboarding
+  if (showOnboarding) {
     return (
       <div className="min-h-screen bg-white flex flex-col items-center justify-center">
         <div className="w-full max-w-md mx-auto">
