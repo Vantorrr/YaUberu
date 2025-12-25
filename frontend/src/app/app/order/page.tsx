@@ -41,6 +41,7 @@ function OrderContent() {
   const [pickupMethod, setPickupMethod] = useState<'door' | 'hand'>('door');
   const [loading, setLoading] = useState(false);
   const [comment, setComment] = useState('');
+  const [saveAddress, setSaveAddress] = useState(true); // Save address by default
   
   // Volume/Duration for dynamic pricing
   const [bagsCount, setBagsCount] = useState(1);
@@ -58,15 +59,33 @@ function OrderContent() {
       console.log('[TG] WebApp expanded to full screen');
     }
     
-    // Load complexes
-    api.getResidentialComplexes()
-      .then(data => {
-        console.log('[ORDER] Loaded complexes:', data);
-        setComplexes(data);
+    // Load complexes and saved addresses
+    Promise.all([
+      api.getResidentialComplexes(),
+      api.getAddresses()
+    ])
+      .then(([complexesData, addressesData]) => {
+        console.log('[ORDER] Loaded complexes:', complexesData);
+        console.log('[ORDER] Loaded addresses:', addressesData);
+        setComplexes(complexesData);
+        
+        // Auto-fill if user has a default address
+        const defaultAddr = addressesData.find((a: any) => a.is_default);
+        if (defaultAddr) {
+          console.log('[ORDER] Auto-filling default address:', defaultAddr);
+          setAddress({
+            complexId: String(defaultAddr.complex_id || '0'),
+            building: defaultAddr.building || '',
+            entrance: defaultAddr.entrance || '',
+            floor: defaultAddr.floor || '',
+            apartment: defaultAddr.apartment || '',
+            intercom: defaultAddr.intercom || '',
+          });
+        }
       })
       .catch(err => {
-        console.error('[ORDER] Failed to load complexes:', err);
-        alert('Ошибка загрузки ЖК. Проверьте соединение.');
+        console.error('[ORDER] Failed to load data:', err);
+        alert('Ошибка загрузки данных. Проверьте соединение.');
       });
   }, []);
 
@@ -123,7 +142,7 @@ function OrderContent() {
           floor: address.floor || '1',
           apartment: address.apartment,
           intercom: address.intercom || '0',
-          is_default: true,
+          is_default: saveAddress, // Save as default if checkbox is checked
         });
         
         console.log('[ORDER] Address created:', addressRes);
@@ -331,14 +350,47 @@ function OrderContent() {
                   onChange={(e) => setAddress({ ...address, intercom: e.target.value })}
                   className="w-full px-4 py-4 rounded-xl bg-white border border-gray-300 text-gray-900 placeholder-gray-600 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 outline-none transition-all"
                 />
-                     <p className="text-xs text-gray-500 mt-2">
-                       💡 Если домофона нет, оставьте пустым
-                     </p>
-                   </div>
-                 </div>
+                <p className="text-xs text-gray-500 mt-2">
+                  💡 Если домофона нет, оставьте пустым
+                </p>
+              </div>
 
-               </>
-             )}
+              {/* SAVE ADDRESS CHECKBOX */}
+              <div 
+                onClick={() => setSaveAddress(!saveAddress)}
+                className="flex items-center gap-3 p-4 rounded-xl bg-teal-50 border-2 border-teal-200 cursor-pointer hover:border-teal-400 transition-all"
+              >
+                <div className={`
+                  w-6 h-6 rounded-md border-2 flex items-center justify-center transition-all
+                  ${saveAddress 
+                    ? 'bg-teal-600 border-teal-600' 
+                    : 'bg-white border-gray-300'
+                  }
+                `}>
+                  {saveAddress && (
+                    <Check className="w-4 h-4 text-white" />
+                  )}
+                </div>
+                <div className="flex-1">
+                  <p className="text-gray-900 font-semibold text-sm">Сохранить адрес</p>
+                  <p className="text-gray-600 text-xs mt-0.5">Использовать для следующих заказов</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Validation warning - MOVED HERE */}
+            {(address.complexId === '0' || !address.building || !address.apartment) && (
+              <div className="bg-orange-50 border-2 border-orange-300 rounded-xl p-3">
+                <p className="text-orange-900 text-sm font-semibold text-center">
+                  ⚠️ Заполните обязательные поля:{' '}
+                  {address.complexId === '0' && 'ЖК'}{address.complexId === '0' && (!address.building || !address.apartment) && ', '}
+                  {!address.building && 'Дом'}{!address.building && !address.apartment && ', '}
+                  {!address.apartment && 'Квартира'}
+                </p>
+              </div>
+            )}
+          </>
+        )}
 
         {/* Step 2: Volume/Duration - ONLY FOR MONTHLY */}
         {step === 'volume' && tariffId === 'monthly' && (
@@ -639,21 +691,10 @@ function OrderContent() {
 
       {/* Bottom */}
       <div className="fixed bottom-0 left-0 right-0 p-5 pb-24 bg-gradient-to-t from-white via-white/95 to-transparent z-50 border-t border-gray-200">
-        {/* Validation hints */}
-        {step === 'address' && (address.complexId === '0' || !address.building || !address.apartment) && (
+        {/* Validation hint for TIME step only */}
+        {step === 'time' && !slot && (
           <div className="mb-3 bg-orange-50 border-2 border-orange-300 rounded-xl p-3">
             <p className="text-orange-900 text-sm font-semibold text-center">
-              ⚠️ Заполните обязательные поля:{' '}
-              {address.complexId === '0' && 'ЖК'}{address.complexId === '0' && (!address.building || !address.apartment) && ', '}
-              {!address.building && 'Дом'}{!address.building && !address.apartment && ', '}
-              {!address.apartment && 'Квартира'}
-            </p>
-          </div>
-        )}
-        
-        {step === 'time' && !slot && (
-          <div className="mb-3 bg-orange-900/30 border border-orange-500/50 rounded-xl p-3 animate-pulse">
-            <p className="text-orange-300 text-sm font-medium text-center">
               ⚠️ Выберите время вывоза
             </p>
           </div>
