@@ -43,7 +43,7 @@ async def send_telegram_notification(chat_id: int, text: str, reply_markup: dict
 # ============ NOTIFICATIONS FOR COURIERS ============
 
 async def notify_all_couriers_new_order(courier_telegram_ids: list, order_id: int, address: str, time_slot: str, comment: str = None):
-    """Notify ALL couriers about a new order available for pickup - sent via COURIER BOT"""
+    """Notify ALL couriers about a new order - sent via CLIENT BOT (courier bot is busy handling commands)"""
     text = (
         f"🆕 **Новый заказ #{order_id}!**\n\n"
         f"📍 {address}\n"
@@ -53,12 +53,12 @@ async def notify_all_couriers_new_order(courier_telegram_ids: list, order_id: in
         text += f"💬 {comment}\n"
     
     text += "\n⚡️ Кто первый возьмет — того и заказ!\n\n"
-    text += "👉 Откройте бот курьеров → Мои задачи"
+    text += "👉 Откройте бот курьеров @YaUberu_TeamBot → Мои задачи"
     
-    print(f"[NOTIFY] Sending order #{order_id} to {len(courier_telegram_ids)} couriers via COURIER BOT")
+    print(f"[NOTIFY] Sending order #{order_id} to {len(courier_telegram_ids)} couriers via CLIENT BOT")
     
     for tg_id in courier_telegram_ids:
-        result = await send_telegram_notification(tg_id, text, use_courier_bot=True)
+        result = await send_telegram_notification(tg_id, text, use_courier_bot=False)
         if result:
             print(f"[NOTIFY] ✅ Courier {tg_id} notified")
         else:
@@ -119,7 +119,7 @@ async def notify_client_order_completed(client_telegram_id: int, bags_count: int
 # ============ NOTIFICATIONS FOR ADMINS ============
 
 async def notify_admins_new_order(admin_telegram_ids: list, order_id: int, address: str, time_slot: str, client_name: str = "Клиент"):
-    """Notify all admins about a new order - sent via COURIER BOT"""
+    """Notify all admins about a new order - sent via CLIENT BOT (courier bot is busy handling commands)"""
     text = (
         f"📋 **Новый заказ #{order_id}**\n\n"
         f"👤 Клиент: {client_name}\n"
@@ -128,10 +128,10 @@ async def notify_admins_new_order(admin_telegram_ids: list, order_id: int, addre
         f"_Курьеры получили уведомление_"
     )
     
-    print(f"[NOTIFY] Sending order #{order_id} to {len(admin_telegram_ids)} admins via COURIER BOT")
+    print(f"[NOTIFY] Sending order #{order_id} to {len(admin_telegram_ids)} admins via CLIENT BOT")
     
     for tg_id in admin_telegram_ids:
-        result = await send_telegram_notification(tg_id, text, use_courier_bot=True)
+        result = await send_telegram_notification(tg_id, text, use_courier_bot=False)
         if result:
             print(f"[NOTIFY] ✅ Admin {tg_id} notified")
         else:
@@ -139,7 +139,7 @@ async def notify_admins_new_order(admin_telegram_ids: list, order_id: int, addre
 
 
 async def notify_admins_courier_took_order(admin_telegram_ids: list, order_id: int, courier_name: str, address: str):
-    """Notify all admins that a courier took an order - sent via COURIER BOT"""
+    """Notify all admins that a courier took an order - sent via CLIENT BOT"""
     text = (
         f"🚀 **Заказ #{order_id} взят!**\n\n"
         f"👤 Курьер: **{courier_name}**\n"
@@ -147,14 +147,14 @@ async def notify_admins_courier_took_order(admin_telegram_ids: list, order_id: i
         f"_Клиент получил уведомление_"
     )
     
-    print(f"[NOTIFY] Order #{order_id} taken by {courier_name}, notifying {len(admin_telegram_ids)} admins")
+    print(f"[NOTIFY] Order #{order_id} taken by {courier_name}, notifying {len(admin_telegram_ids)} admins via CLIENT BOT")
     
     for tg_id in admin_telegram_ids:
-        await send_telegram_notification(tg_id, text, use_courier_bot=True)
+        await send_telegram_notification(tg_id, text, use_courier_bot=False)
 
 
 async def notify_admins_order_completed(admin_telegram_ids: list, order_id: int, courier_name: str, bags_count: int):
-    """Notify all admins that an order was completed - sent via COURIER BOT"""
+    """Notify all admins that an order was completed - sent via CLIENT BOT"""
     if bags_count == 1:
         bags_text = "1 пакет"
     elif bags_count < 5:
@@ -169,8 +169,8 @@ async def notify_admins_order_completed(admin_telegram_ids: list, order_id: int,
         f"_Клиент получил уведомление_"
     )
     
-    print(f"[NOTIFY] Order #{order_id} completed by {courier_name}, notifying {len(admin_telegram_ids)} admins")
+    print(f"[NOTIFY] Order #{order_id} completed by {courier_name}, notifying {len(admin_telegram_ids)} admins via CLIENT BOT")
     
     for tg_id in admin_telegram_ids:
-        await send_telegram_notification(tg_id, text, use_courier_bot=True)
+        await send_telegram_notification(tg_id, text, use_courier_bot=False)
 
