@@ -50,6 +50,11 @@ def get_settings() -> Settings:
     # Auto-fix Railway DATABASE_URL for asyncpg
     if settings.DATABASE_URL and settings.DATABASE_URL.startswith("postgresql://"):
         settings.DATABASE_URL = settings.DATABASE_URL.replace("postgresql://", "postgresql+asyncpg://", 1)
+    
+    # DEBUG: Print bot tokens (first 20 chars only for security)
+    print(f"[CONFIG] TELEGRAM_BOT_TOKEN: {settings.TELEGRAM_BOT_TOKEN[:20] if settings.TELEGRAM_BOT_TOKEN else 'EMPTY'}...")
+    print(f"[CONFIG] TELEGRAM_COURIER_BOT_TOKEN: {settings.TELEGRAM_COURIER_BOT_TOKEN[:20] if settings.TELEGRAM_COURIER_BOT_TOKEN else 'EMPTY'}...")
+    print(f"[CONFIG] ADMIN_IDS: {settings.admin_ids}")
         
     return settings
 
