@@ -522,7 +522,8 @@ async def show_buildings(callback: CallbackQuery, state: FSMContext):
 
 @router.callback_query(F.data.startswith("building_"))
 async def show_orders_in_building(callback: CallbackQuery, state: FSMContext):
-    parts = callback.data.split("_")
+    # Use maxsplit=2 to handle buildings/streets with underscores
+    parts = callback.data.split("_", 2)
     complex_id = int(parts[1])
     building = parts[2]
     

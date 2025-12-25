@@ -143,6 +143,27 @@ async def get_complexes_with_orders(db: AsyncSession = Depends(get_db)):
             "name": comp.name,
             "orders_count": count
         })
+    
+    # NEW: Count orders with NO complex_id (Manual Addresses)
+    result = await db.execute(
+        select(func.count(Order.id))
+        .join(Address, Order.address_id == Address.id)
+        .where(
+            and_(
+                Address.complex_id.is_(None),
+                Order.date == today,
+                Order.status.in_([OrderStatus.SCHEDULED, OrderStatus.IN_PROGRESS])
+            )
+        )
+    )
+    other_count = result.scalar() or 0
+    
+    if other_count > 0:
+        response.append({
+            "id": 0,
+            "name": "📍 Другие адреса",
+            "orders_count": other_count
+        })
         
     return response
 
@@ -150,6 +171,25 @@ async def get_complexes_with_orders(db: AsyncSession = Depends(get_db)):
 async def get_buildings(complex_id: int, db: AsyncSession = Depends(get_db)):
     """Get buildings in complex with orders"""
     today = date.today()
+    
+    if complex_id == 0:
+        # Manual addresses: return "Street, Building"
+        result = await db.execute(
+            select(Address.street, Address.building)
+            .join(Order, Order.address_id == Address.id)
+            .where(
+                and_(
+                    Address.complex_id.is_(None),
+                    Order.date == today,
+                    Order.status.in_([OrderStatus.SCHEDULED, OrderStatus.IN_PROGRESS])
+                )
+            )
+            .distinct()
+        )
+        rows = result.all()
+        # Format: "Street, Building"
+        buildings = [f"{r.street or ''}, {r.building}" for r in rows]
+        return sorted(list(set(buildings)))
     
     result = await db.execute(
         select(Address.building)
@@ -172,11 +212,30 @@ async def get_orders(complex_id: int, building: str, db: AsyncSession = Depends(
     """Get orders for specific building"""
     today = date.today()
     
-    result = await db.execute(
-        select(Order, Address, ResidentialComplex)
-        .join(Address, Order.address_id == Address.id)
+    query = select(Order, Address, ResidentialComplex)\
+        .join(Address, Order.address_id == Address.id)\
         .outerjoin(ResidentialComplex, Address.complex_id == ResidentialComplex.id)
-        .where(
+        
+    if complex_id == 0:
+        # Manual address
+        # Parse "Street, Building"
+        if ", " in building:
+            street_val, building_val = building.rsplit(", ", 1)
+        else:
+            street_val = "" 
+            building_val = building
+            
+        query = query.where(
+            and_(
+                Address.complex_id.is_(None),
+                Address.street == street_val,
+                Address.building == building_val,
+                Order.date == today,
+                Order.status.in_([OrderStatus.SCHEDULED, OrderStatus.IN_PROGRESS])
+            )
+        )
+    else:
+        query = query.where(
             and_(
                 Address.complex_id == complex_id,
                 Address.building == building,
@@ -184,8 +243,8 @@ async def get_orders(complex_id: int, building: str, db: AsyncSession = Depends(
                 Order.status.in_([OrderStatus.SCHEDULED, OrderStatus.IN_PROGRESS])
             )
         )
-        .order_by(Order.time_slot)
-    )
+        
+    result = await db.execute(query.order_by(Order.time_slot))
     rows = result.all()
     
     response = []
