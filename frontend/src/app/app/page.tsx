@@ -21,48 +21,20 @@ export default function HomePage() {
   const [showOnboarding, setShowOnboarding] = useState<boolean | null>(null);
 
   useEffect(() => {
-    const checkNewUser = async () => {
-      // 1. Check if we already showed onboarding on this device
-      if (typeof window !== 'undefined') {
-        const hasSeen = localStorage.getItem('onboarding_shown_v3');
-        if (hasSeen) {
-          console.log('[ONBOARDING] Already seen - skip');
-          setShowOnboarding(false);
-          return;
-        }
-      }
-
-      // 2. Check via API if user is new (0 orders)
-      try {
-        // Wait for auth to complete
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
-        const user = await api.getMe();
-        console.log('[ONBOARDING] User data:', user);
-        
-        if (user && user.is_new_user === true) {
-          console.log('[ONBOARDING] NEW USER - show onboarding');
-          setShowOnboarding(true);
-          // Mark as seen so it doesn't show again
-          if (typeof window !== 'undefined') {
-            localStorage.setItem('onboarding_shown_v3', 'true');
-          }
-        } else {
-          console.log('[ONBOARDING] EXISTING USER - skip');
-          setShowOnboarding(false);
-          // Mark as seen
-          if (typeof window !== 'undefined') {
-            localStorage.setItem('onboarding_shown_v3', 'true');
-          }
-        }
-      } catch (error) {
-        console.error('[ONBOARDING] Error:', error);
-        // On error, skip onboarding
+    if (typeof window !== 'undefined') {
+      const token = localStorage.getItem('token');
+      
+      // Simple logic: NO TOKEN = NEW USER = show onboarding
+      if (!token) {
+        console.log('[ONBOARDING] No token - NEW USER - showing onboarding');
+        setShowOnboarding(true);
+      } else {
+        console.log('[ONBOARDING] Token exists - EXISTING USER - skip onboarding');
         setShowOnboarding(false);
       }
-    };
-
-    checkNewUser();
+    } else {
+      setShowOnboarding(false);
+    }
   }, []);
 
   const handleSkipOnboarding = () => {
