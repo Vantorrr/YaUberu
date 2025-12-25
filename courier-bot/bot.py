@@ -186,7 +186,24 @@ WELCOME_TEXT = """
 # ================== HANDLERS ==================
 @router.message(CommandStart())
 async def cmd_start(message: Message):
-    is_admin = message.from_user.id in ADMIN_IDS
+    telegram_id = message.from_user.id
+    is_admin = telegram_id in ADMIN_IDS
+    
+    # Check if user is a courier
+    courier_check = await fetch(f"/courier/check/{telegram_id}")
+    
+    if not courier_check or not courier_check.get("is_courier"):
+        # NOT A COURIER - show access denied
+        await message.answer(
+            "❌ **Доступ запрещён**\n\n"
+            "Этот бот предназначен только для курьеров сервиса «Я УБЕРУ».\n\n"
+            "Если вы хотите стать курьером, свяжитесь с администратором:\n"
+            f"{SUPPORT_USERNAME}",
+            parse_mode="Markdown"
+        )
+        return
+    
+    # IS A COURIER - show welcome
     await message.answer(
         WELCOME_TEXT,
         reply_markup=get_main_keyboard(is_admin),

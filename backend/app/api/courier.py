@@ -15,6 +15,28 @@ class TakeOrderRequest(BaseModel):
 router = APIRouter()
 
 
+# ================== COURIER CHECK ==================
+@router.get("/check/{telegram_id}")
+async def check_courier_status(telegram_id: int, db: AsyncSession = Depends(get_db)):
+    """Check if a telegram user is a registered courier"""
+    
+    result = await db.execute(
+        select(User).where(
+            and_(
+                User.telegram_id == telegram_id,
+                User.role == UserRole.COURIER
+            )
+        )
+    )
+    courier = result.scalar_one_or_none()
+    
+    return {
+        "is_courier": courier is not None,
+        "courier_id": courier.id if courier else None,
+        "name": courier.name if courier else None
+    }
+
+
 # ================== COURIER STATS ==================
 @router.get("/stats/{telegram_id}")
 async def get_courier_stats(telegram_id: int, db: AsyncSession = Depends(get_db)):
