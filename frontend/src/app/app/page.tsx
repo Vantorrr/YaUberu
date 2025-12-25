@@ -18,7 +18,7 @@ const slides = [
 
 export default function HomePage() {
   const router = useRouter();
-  const [showOnboarding, setShowOnboarding] = useState<boolean | null>(null); // null = loading
+  const [showOnboarding, setShowOnboarding] = useState<boolean | null>(null);
 
   useEffect(() => {
     // Check localStorage only - simpler and more reliable
@@ -32,16 +32,17 @@ export default function HomePage() {
         // Mark as seen immediately so it doesn't show again on reload
         localStorage.setItem('onboarding_shown_v2', 'true');
       }
+    } else {
+      setShowOnboarding(false);
     }
-    setLoading(false);
   }, []);
 
   const handleSkipOnboarding = () => {
     setShowOnboarding(false);
   };
 
-  // Loading state
-  if (loading) {
+  // Loading state (initial render)
+  if (showOnboarding === null) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="text-teal-600 text-lg">Загрузка...</div>
