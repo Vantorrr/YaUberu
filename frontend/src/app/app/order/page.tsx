@@ -411,8 +411,7 @@ function OrderContent() {
               <div className="bg-gradient-to-br from-teal-50 to-emerald-50 rounded-2xl p-6 border-2 border-teal-200">
                 <div className="flex items-center justify-between mb-4">
                   <div>
-                    <p className="text-gray-700 font-bold text-lg">Выбирайте объём под ваши нужды</p>
-                    <p className="text-gray-500 text-sm mt-1">От небольшого пакета до крупного мешка</p>
+                    <p className="text-gray-700 font-semibold text-base">От небольшого пакета до крупного мешка</p>
                   </div>
                   <div className="w-16 h-20 bg-teal-600 rounded-2xl flex flex-col items-center justify-center text-white relative shadow-lg">
                     <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-8 h-3 bg-teal-700 rounded-t-full"></div>
