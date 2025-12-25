@@ -28,7 +28,8 @@ async def send_telegram_notification(chat_id: int, text: str, reply_markup: dict
             response = await client.post(url, json=payload)
             print(f"[NOTIFY] Sent to {chat_id} (courier_bot={use_courier_bot}): {response.status_code}")
             if response.status_code != 200:
-                print(f"[NOTIFY ERROR] Response: {await response.text()}")
+                error_text = await response.aread()
+                print(f"[NOTIFY ERROR] Response: {error_text.decode('utf-8')}")
             return response.status_code == 200
     except Exception as e:
         print(f"[NOTIFY ERROR] {e}")

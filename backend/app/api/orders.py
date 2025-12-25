@@ -167,7 +167,7 @@ async def create_order(
             )
         
         # Notify admins about new order
-        client_name = current_user.first_name or current_user.username or "Клиент"
+        client_name = current_user.name or "Клиент"
         await notify_admins_new_order(
             admin_telegram_ids=settings.admin_ids,
             order_id=order.id,
