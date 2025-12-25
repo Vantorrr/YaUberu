@@ -7,8 +7,7 @@ import { Card } from '@/components/ui/Card';
 import { ArrowLeft, MapPin, Clock, Check, Building, Home, DoorOpen, Hash, Zap, AlertCircle, User, Package, MessageSquare } from 'lucide-react';
 import { api } from '@/lib/api';
 
-const steps = ['address', 'volume', 'time', 'confirm'] as const;
-type Step = typeof steps[number];
+type Step = 'address' | 'volume' | 'time' | 'confirm';
 
 const timeSlots = [
   { id: 1, time: '08:00 — 10:00', label: 'Утро', status: 'past' },
@@ -17,10 +16,24 @@ const timeSlots = [
   { id: 4, time: '20:00 — 22:00', label: 'Ночь', status: 'available' },
 ];
 
+// Dynamic steps based on tariff
+const getStepsForTariff = (tariffId: string): Step[] => {
+  if (tariffId === 'single') {
+    return ['address', 'time', 'confirm']; // Разовый: адрес → время → подтверждение
+  } else if (tariffId === 'trial') {
+    return ['address', 'confirm']; // Пробная: адрес → подтверждение (без времени, со след дня)
+  } else if (tariffId === 'monthly') {
+    return ['address', 'volume', 'confirm']; // Месячная: адрес → объём → подтверждение
+  }
+  return ['address', 'confirm'];
+};
+
 function OrderContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const tariffId = searchParams.get('tariff') || 'single';
+  
+  const steps = getStepsForTariff(tariffId);
 
   const [step, setStep] = useState<Step>('address');
   const [slot, setSlot] = useState<number | 'urgent' | null>(null);
@@ -119,18 +132,24 @@ function OrderContent() {
         let timeSlotStr = '';
         let isUrgent = false;
 
-        if (slot === 'urgent') {
-          isUrgent = true;
-          timeSlotStr = '12:00-14:00'; 
+        // For subscriptions, use default time slot (no user choice)
+        if (tariffId === 'trial' || tariffId === 'monthly') {
+          timeSlotStr = '12:00-14:00'; // Default time for subscriptions
         } else {
-          const mapping: Record<number, string> = {
-            1: '08:00-10:00',
-            2: '12:00-14:00',
-            3: '16:00-18:00',
-            4: '20:00-22:00',
-          };
-          if (typeof slot === 'number') {
-             timeSlotStr = mapping[slot];
+          // For single orders, user selects time
+          if (slot === 'urgent') {
+            isUrgent = true;
+            timeSlotStr = '12:00-14:00'; 
+          } else {
+            const mapping: Record<number, string> = {
+              1: '08:00-10:00',
+              2: '12:00-14:00',
+              3: '16:00-18:00',
+              4: '20:00-22:00',
+            };
+            if (typeof slot === 'number') {
+               timeSlotStr = mapping[slot];
+            }
           }
         }
 
@@ -138,7 +157,9 @@ function OrderContent() {
         tomorrow.setDate(tomorrow.getDate() + 1);
         const dateStr = tomorrow.toISOString().split('T')[0];
 
-        const pickupComment = pickupMethod === 'hand' ? 'Передать лично в руки, позвонить в дверь/телефон' : 'Оставить у двери';
+        // For subscriptions, always 'door' method
+        const effectivePickupMethod = (tariffId === 'trial' || tariffId === 'monthly') ? 'door' : pickupMethod;
+        const pickupComment = effectivePickupMethod === 'hand' ? 'Передать лично в руки, позвонить в дверь/телефон' : 'Оставить у двери';
         const finalComment = comment ? `${comment}. ${pickupComment}` : pickupComment;
 
         // 3. Create Order
@@ -319,8 +340,8 @@ function OrderContent() {
                </>
              )}
 
-        {/* Step 2: Volume/Duration */}
-        {step === 'volume' && (
+        {/* Step 2: Volume/Duration - ONLY FOR MONTHLY */}
+        {step === 'volume' && tariffId === 'monthly' && (
           <>
             <div className="flex items-center gap-3 mb-2">
               <div className="w-12 h-12 bg-purple-500 rounded-xl flex items-center justify-center">
@@ -332,78 +353,53 @@ function OrderContent() {
               </div>
             </div>
 
-            {tariffId === 'single' && (
-              <div className="space-y-4">
-                <p className="text-gray-700 font-semibold">Сколько мешков?</p>
-                <div className="grid grid-cols-5 gap-2">
-                  {[1, 2, 3, 4, 5].map((count) => (
-                    <div
-                      key={count}
-                      onClick={() => setBagsCount(count)}
-                      className={`
-                        p-4 rounded-xl border-2 cursor-pointer text-center transition-all
-                        ${bagsCount === count
-                          ? 'bg-teal-600 border-teal-600 text-white'
-                          : 'bg-white border-gray-200 text-gray-900 hover:border-teal-300'
-                        }
-                      `}
-                    >
-                      <p className="text-2xl font-bold">{count}</p>
+            <div className="space-y-4">
+              <p className="text-gray-700 font-semibold">Выберите срок</p>
+              <div className="space-y-3">
+                {/* 2 WEEKS OPTION */}
+                <div
+                  onClick={() => setDuration(14)}
+                  className={`
+                    p-5 rounded-2xl border-2 cursor-pointer transition-all
+                    ${duration === 14
+                      ? 'bg-teal-50 border-teal-600 ring-2 ring-teal-600/30'
+                      : 'bg-white border-gray-200 hover:border-gray-300'
+                    }
+                  `}
+                >
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <p className="text-gray-900 font-bold text-lg">2 недели</p>
+                      <p className="text-gray-600 text-sm">Вынос через день</p>
                     </div>
-                  ))}
-                </div>
-                <div className="bg-teal-50 border border-teal-200 rounded-xl p-4">
-                  <p className="text-teal-900 font-bold text-lg">
-                    Итого: {150 * bagsCount} ₽
-                  </p>
-                </div>
-              </div>
-            )}
-
-            {(tariffId === 'trial' || tariffId === 'monthly') && (
-              <div className="space-y-4">
-                <p className="text-gray-700 font-semibold">Выберите срок</p>
-                <div className="space-y-3">
-                  <div
-                    onClick={() => setDuration(14)}
-                    className={`
-                      p-5 rounded-2xl border-2 cursor-pointer transition-all
-                      ${duration === 14
-                        ? 'bg-teal-50 border-teal-600 ring-2 ring-teal-600/30'
-                        : 'bg-white border-gray-200 hover:border-gray-300'
-                      }
-                    `}
-                  >
-                    <div className="flex justify-between items-center">
-                      <div>
-                        <p className="text-gray-900 font-bold text-lg">2 недели</p>
-                        <p className="text-gray-600 text-sm">Вынос через день</p>
-                      </div>
+                    <div className="text-right">
+                      <p className="text-gray-400 line-through text-sm">756 ₽</p>
                       <p className="text-teal-600 font-bold text-2xl">199 ₽</p>
                     </div>
                   </div>
+                </div>
 
-                  <div
-                    onClick={() => setDuration(30)}
-                    className={`
-                      p-5 rounded-2xl border-2 cursor-pointer transition-all
-                      ${duration === 30
-                        ? 'bg-teal-50 border-teal-600 ring-2 ring-teal-600/30'
-                        : 'bg-white border-gray-200 hover:border-gray-300'
-                      }
-                    `}
-                  >
-                    <div className="flex justify-between items-center">
-                      <div>
-                        <p className="text-gray-900 font-bold text-lg">30 дней</p>
-                        <p className="text-gray-600 text-sm">Регулярный вынос по расписанию</p>
-                      </div>
-                      <p className="text-teal-600 font-bold text-2xl">1 350 ₽</p>
+                {/* 30 DAYS OPTION */}
+                <div
+                  onClick={() => setDuration(30)}
+                  className={`
+                    p-5 rounded-2xl border-2 cursor-pointer transition-all
+                    ${duration === 30
+                      ? 'bg-teal-50 border-teal-600 ring-2 ring-teal-600/30'
+                      : 'bg-white border-gray-200 hover:border-gray-300'
+                    }
+                  `}
+                >
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <p className="text-gray-900 font-bold text-lg">30 дней</p>
+                      <p className="text-gray-600 text-sm">Регулярный вынос по расписанию</p>
                     </div>
+                    <p className="text-teal-600 font-bold text-2xl">1 350 ₽</p>
                   </div>
                 </div>
               </div>
-            )}
+            </div>
           </>
         )}
 
@@ -528,19 +524,24 @@ function OrderContent() {
                   </div>
                 </div>
                 
-                <div className="h-px bg-gray-200" />
-                
-                <div className="flex items-start gap-3">
-                  <Clock className="w-5 h-5 text-teal-600 mt-1 flex-shrink-0" />
-                  <div className="flex-1">
-                    <p className="text-gray-500 text-xs mb-1 font-medium uppercase tracking-wide">Время</p>
-                    <p className={`font-bold text-base ${slot === 'urgent' ? 'text-orange-600' : 'text-gray-900'}`}>
-                      {slot === 'urgent' ? '⚡ СРОЧНО (в течение часа!)' : timeSlots.find((s) => s.id === slot)?.time}
-                    </p>
-                  </div>
-                </div>
-                
-                <div className="h-px bg-gray-200" />
+                {/* TIME - only for single orders */}
+                {tariffId === 'single' && (
+                  <>
+                    <div className="h-px bg-gray-200" />
+                    
+                    <div className="flex items-start gap-3">
+                      <Clock className="w-5 h-5 text-teal-600 mt-1 flex-shrink-0" />
+                      <div className="flex-1">
+                        <p className="text-gray-500 text-xs mb-1 font-medium uppercase tracking-wide">Время</p>
+                        <p className={`font-bold text-base ${slot === 'urgent' ? 'text-orange-600' : 'text-gray-900'}`}>
+                          {slot === 'urgent' ? '⚡ СРОЧНО (в течение часа!)' : timeSlots.find((s) => s.id === slot)?.time}
+                        </p>
+                      </div>
+                    </div>
+                    
+                    <div className="h-px bg-gray-200" />
+                  </>
+                )}
                 
                 <div className="flex items-center justify-between bg-teal-50 p-4 rounded-xl border border-teal-200">
                   <span className="text-gray-700 font-semibold">Итого к оплате</span>
@@ -572,49 +573,63 @@ function OrderContent() {
               />
             </div>
 
-            {/* PICKUP METHOD TOGGLE */}
-            <div className="space-y-2">
-              <p className="text-gray-700 text-sm font-semibold ml-1">Как забрать мусор?</p>
-              <div className="grid grid-cols-2 gap-3">
-                <div 
-                  onClick={() => setPickupMethod('door')}
-                  className={`
-                    flex flex-col items-center justify-center gap-2 p-4 rounded-2xl border-2 cursor-pointer transition-all
-                    ${pickupMethod === 'door' 
-                      ? 'bg-teal-50 border-teal-500 shadow-lg' 
-                      : 'bg-white border-gray-200 hover:border-gray-300'}
-                  `}
-                >
-                  <DoorOpen className={`w-6 h-6 ${pickupMethod === 'door' ? 'text-teal-600' : 'text-gray-400'}`} />
-                  <span className={`text-sm font-semibold ${pickupMethod === 'door' ? 'text-teal-600' : 'text-gray-600'}`}>У двери</span>
+            {/* PICKUP METHOD TOGGLE - only for single orders */}
+            {tariffId === 'single' && (
+              <>
+                <div className="space-y-2">
+                  <p className="text-gray-700 text-sm font-semibold ml-1">Как забрать мусор?</p>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div 
+                      onClick={() => setPickupMethod('door')}
+                      className={`
+                        flex flex-col items-center justify-center gap-2 p-4 rounded-2xl border-2 cursor-pointer transition-all
+                        ${pickupMethod === 'door' 
+                          ? 'bg-teal-50 border-teal-500 shadow-lg' 
+                          : 'bg-white border-gray-200 hover:border-gray-300'}
+                      `}
+                    >
+                      <DoorOpen className={`w-6 h-6 ${pickupMethod === 'door' ? 'text-teal-600' : 'text-gray-400'}`} />
+                      <span className={`text-sm font-semibold ${pickupMethod === 'door' ? 'text-teal-600' : 'text-gray-600'}`}>У двери</span>
+                    </div>
+
+                    <div 
+                      onClick={() => setPickupMethod('hand')}
+                      className={`
+                        flex flex-col items-center justify-center gap-2 p-4 rounded-2xl border-2 cursor-pointer transition-all
+                        ${pickupMethod === 'hand' 
+                          ? 'bg-orange-50 border-orange-500 shadow-lg' 
+                          : 'bg-white border-gray-200 hover:border-gray-300'}
+                      `}
+                    >
+                      <User className={`w-6 h-6 ${pickupMethod === 'hand' ? 'text-orange-600' : 'text-gray-400'}`} />
+                      <span className={`text-sm font-semibold ${pickupMethod === 'hand' ? 'text-orange-600' : 'text-gray-600'}`}>В руки</span>
+                    </div>
+                  </div>
+                  
+                  {pickupMethod === 'hand' && (
+                    <p className="text-orange-600 text-xs text-center font-medium animate-in fade-in slide-in-from-top-1 bg-orange-50 py-2 px-3 rounded-lg border border-orange-200">
+                      ⚠️ Курьер будет назначен мгновенно.
+                    </p>
+                  )}
                 </div>
 
-                <div 
-                  onClick={() => setPickupMethod('hand')}
-                  className={`
-                    flex flex-col items-center justify-center gap-2 p-4 rounded-2xl border-2 cursor-pointer transition-all
-                    ${pickupMethod === 'hand' 
-                      ? 'bg-orange-50 border-orange-500 shadow-lg' 
-                      : 'bg-white border-gray-200 hover:border-gray-300'}
-                  `}
-                >
-                  <User className={`w-6 h-6 ${pickupMethod === 'hand' ? 'text-orange-600' : 'text-gray-400'}`} />
-                  <span className={`text-sm font-semibold ${pickupMethod === 'hand' ? 'text-orange-600' : 'text-gray-600'}`}>В руки</span>
-                </div>
-              </div>
-              
-              {pickupMethod === 'hand' && (
-                <p className="text-orange-600 text-xs text-center font-medium animate-in fade-in slide-in-from-top-1 bg-orange-50 py-2 px-3 rounded-lg border border-orange-200">
-                  ⚠️ Курьер будет назначен мгновенно.
-                </p>
-              )}
-            </div>
-
-            {slot === 'urgent' && (
-              <div className="bg-orange-50 border border-orange-200 rounded-2xl p-4 flex gap-3">
-                <AlertCircle className="w-5 h-5 text-orange-500 shrink-0" />
-                <p className="text-orange-900 text-sm">
-                  Курьер будет назначен мгновенно.
+                {slot === 'urgent' && (
+                  <div className="bg-orange-50 border border-orange-200 rounded-2xl p-4 flex gap-3">
+                    <AlertCircle className="w-5 h-5 text-orange-500 shrink-0" />
+                    <p className="text-orange-900 text-sm">
+                      Курьер будет назначен мгновенно.
+                    </p>
+                  </div>
+                )}
+              </>
+            )}
+            
+            {/* For subscriptions, show info */}
+            {(tariffId === 'trial' || tariffId === 'monthly') && (
+              <div className="bg-teal-50 border border-teal-200 rounded-2xl p-4 flex gap-3">
+                <AlertCircle className="w-5 h-5 text-teal-600 shrink-0" />
+                <p className="text-teal-900 text-sm">
+                  📅 Вынос начнется со следующего дня по расписанию через день. Курьер заберет мусор у двери.
                 </p>
               </div>
             )}

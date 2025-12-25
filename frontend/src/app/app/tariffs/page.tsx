@@ -62,11 +62,16 @@ export default function TariffsPage() {
         ) : (
           tariffs.map((t) => {
             const isUrgent = t.tariff_type === 'single';
+            const isTrial = t.tariff_type === 'trial';
             return (
               <div
                 key={t.id}
                 onClick={() => router.push(`/app/order?tariff=${t.tariff_type}`)}
-                className="relative p-6 rounded-2xl border-2 bg-white border-gray-200 hover:border-gray-300 transition-all cursor-pointer hover:shadow-lg"
+                className={`relative p-6 rounded-2xl border-2 transition-all cursor-pointer hover:shadow-lg ${
+                  isTrial 
+                    ? 'bg-teal-50 border-teal-400 hover:border-teal-500' 
+                    : 'bg-white border-gray-200 hover:border-gray-300'
+                }`}
               >
                 <div className="flex justify-between items-start mb-4">
                   <div>
