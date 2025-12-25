@@ -22,7 +22,7 @@ TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 API_BASE = os.getenv("API_BASE_URL", "http://localhost:8080/api")
 
 # Admin IDs from environment
-ADMIN_IDS_STR = os.getenv("ADMIN_TELEGRAM_IDS", "8141463258,574160946,622899263")
+ADMIN_IDS_STR = os.getenv("ADMIN_TELEGRAM_IDS", "8141463258,574160946,622899263,353392922,443823398")
 ADMIN_IDS = [int(id.strip()) for id in ADMIN_IDS_STR.split(",") if id.strip()]
 
 # Support contacts

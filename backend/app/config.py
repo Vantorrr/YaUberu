@@ -20,7 +20,7 @@ class Settings(BaseSettings):
     FRONTEND_URL: str = "https://ya-uberu-frontend.up.railway.app"
     
     # Admin
-    ADMIN_TELEGRAM_IDS: str = "8141463258,574160946,622899263"  # Comma-separated admin Telegram IDs
+    ADMIN_TELEGRAM_IDS: str = "8141463258,574160946,622899263,353392922,443823398"  # Comma-separated admin Telegram IDs
     
     # Support
     SUPPORT_USERNAME: str = "@YaUberu_Support"
