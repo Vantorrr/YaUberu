@@ -547,7 +547,7 @@ function OrderContent() {
             <div className="space-y-4">
               {/* DATE PICKER - Only for trial */}
               {tariffId === 'trial' && (
-                <div className="w-full -mx-1 px-1">
+                <div className="-mx-5 px-5">
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Дата <span className="text-red-500">*</span>
                   </label>
@@ -556,7 +556,7 @@ function OrderContent() {
                     value={deliveryDate}
                     onChange={(e) => setDeliveryDate(e.target.value)}
                     min={new Date().toISOString().split('T')[0]}
-                    className="w-full px-2 py-4 rounded-xl bg-white border border-gray-300 text-gray-900 text-base focus:border-teal-500 outline-none transition-all"
+                    className="w-full px-4 py-4 rounded-xl bg-white border border-gray-300 text-gray-900 focus:border-teal-500 outline-none transition-all"
                     required
                   />
                 </div>
