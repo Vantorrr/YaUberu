@@ -143,27 +143,16 @@ async def telegram_webhook(request: Request, db: AsyncSession = Depends(get_db))
                         [
                             {
                                 "text": "🚀 Заказать вынос",
-                                "web_app": {"url": f"{frontend_url}/app/order"}
+                                "web_app": {"url": f"{frontend_url}/app"}
                             }
                         ],
                         [
                             {
                                 "text": "📦 Мои заказы",
                                 "web_app": {"url": f"{frontend_url}/app/orders"}
-                            },
-                            {
-                                "text": "👤 Профиль",
-                                "web_app": {"url": f"{frontend_url}/app/profile"}
                             }
                         ],
                         [
-                            {
-                                "text": "💰 Купить выносы",
-                                "web_app": {"url": f"{frontend_url}/app"}
-                            }
-                        ],
-                        [
-                            {"text": "❓ Помощь", "callback_data": "help"},
                             {"text": "💬 Поддержка", "callback_data": "support"}
                         ]
                     ]
@@ -272,27 +261,16 @@ async def telegram_webhook(request: Request, db: AsyncSession = Depends(get_db))
                         [
                             {
                                 "text": "🚀 Заказать вынос",
-                                "web_app": {"url": f"{frontend_url}/app/order"}
+                                "web_app": {"url": f"{frontend_url}/app"}
                             }
                         ],
                         [
                             {
                                 "text": "📦 Мои заказы",
                                 "web_app": {"url": f"{frontend_url}/app/orders"}
-                            },
-                            {
-                                "text": "👤 Профиль",
-                                "web_app": {"url": f"{frontend_url}/app/profile"}
                             }
                         ],
                         [
-                            {
-                                "text": "💰 Купить выносы",
-                                "web_app": {"url": f"{frontend_url}/app"}
-                            }
-                        ],
-                        [
-                            {"text": "❓ Помощь", "callback_data": "help"},
                             {"text": "💬 Поддержка", "callback_data": "support"}
                         ]
                     ]
@@ -349,27 +327,16 @@ async def telegram_webhook(request: Request, db: AsyncSession = Depends(get_db))
                         [
                             {
                                 "text": "🚀 Заказать вынос",
-                                "web_app": {"url": f"{frontend_url}/app/order"}
+                                "web_app": {"url": f"{frontend_url}/app"}
                             }
                         ],
                         [
                             {
                                 "text": "📦 Мои заказы",
                                 "web_app": {"url": f"{frontend_url}/app/orders"}
-                            },
-                            {
-                                "text": "👤 Профиль",
-                                "web_app": {"url": f"{frontend_url}/app/profile"}
                             }
                         ],
                         [
-                            {
-                                "text": "💰 Купить выносы",
-                                "web_app": {"url": f"{frontend_url}/app"}
-                            }
-                        ],
-                        [
-                            {"text": "❓ Помощь", "callback_data": "help"},
                             {"text": "💬 Поддержка", "callback_data": "support"}
                         ]
                     ]
