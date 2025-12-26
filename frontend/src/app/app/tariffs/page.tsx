@@ -97,9 +97,9 @@ export default function TariffsPage() {
                 {/* Description */}
                 {t.description && (
                   <div className="space-y-2">
-                    <div className="flex items-center gap-2 text-sm text-gray-700">
-                      <div className="w-5 h-5 bg-teal-500 rounded-full flex items-center justify-center flex-shrink-0">
-                        <Check className="w-3 h-3 text-white" />
+                    <div className="flex items-center gap-2 text-base text-gray-700">
+                      <div className="w-6 h-6 bg-teal-500 rounded-full flex items-center justify-center flex-shrink-0">
+                        <Check className="w-4 h-4 text-white" />
                       </div>
                       <span>{t.description}</span>
                     </div>
