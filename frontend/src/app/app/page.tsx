@@ -11,18 +11,29 @@ export default function HomePage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Check if this is user's first visit (via localStorage)
-    const hasSeenOnboarding = localStorage.getItem('hasSeenOnboarding');
-    
-    if (!hasSeenOnboarding) {
-      // First time - show onboarding
-      console.log('[HOME] First visit, redirecting to onboarding');
-      router.push('/app/how-it-works');
-    } else {
-      // Returning user - show main page
-      console.log('[HOME] Returning user, showing main page');
-      setLoading(false);
-    }
+    // Check if user is new
+    const checkUserStatus = async () => {
+      try {
+        const user = await api.getMe();
+        console.log('[HOME] User:', user);
+        
+        // If user is new (0 orders), redirect to onboarding
+        if (user.is_new_user) {
+          console.log('[HOME] New user detected, redirecting to how-it-works');
+          router.push('/app/how-it-works');
+        } else {
+          // Existing user, show main page
+          console.log('[HOME] Existing user, showing main page');
+          setLoading(false);
+        }
+      } catch (error) {
+        console.error('[HOME] Error checking user status:', error);
+        // On error, show main page
+        setLoading(false);
+      }
+    };
+
+    checkUserStatus();
   }, [router]);
 
   if (loading) {
