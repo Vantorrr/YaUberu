@@ -23,7 +23,7 @@ const getStepsForTariff = (tariffId: string): Step[] => {
   } else if (tariffId === 'trial') {
     return ['address', 'time', 'confirm']; // Пробная: адрес → время/дата/метод → подтверждение
   } else if (tariffId === 'monthly') {
-    return ['address', 'volume', 'confirm']; // Месячная: адрес → объём → подтверждение
+    return ['address', 'volume', 'time', 'confirm']; // Месячная: адрес → объём → время/дата/метод → подтверждение
   }
   return ['address', 'confirm'];
 };
@@ -420,11 +420,11 @@ function OrderContent() {
               <div className="bg-gradient-to-br from-teal-50 to-emerald-50 rounded-2xl p-6 border-2 border-teal-200">
                 <div className="flex items-center justify-between mb-4">
                   <div>
-                    <p className="text-gray-700 font-semibold text-base">От небольшого пакета до крупного мешка</p>
+                    <p className="text-gray-700 font-semibold text-base">Объем пакета до 70л</p>
                   </div>
                   <div className="w-16 h-20 bg-teal-600 rounded-2xl flex flex-col items-center justify-center text-white relative shadow-lg">
                     <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-8 h-3 bg-teal-700 rounded-t-full"></div>
-                    <p className="text-2xl font-black">{bagsCount * 10}</p>
+                    <p className="text-2xl font-black">10</p>
                     <p className="text-[10px] font-semibold">КГ</p>
                   </div>
                 </div>
@@ -465,8 +465,6 @@ function OrderContent() {
                 >
                   <option value={14}>14 дней</option>
                   <option value={30}>30 дней</option>
-                  <option value={60}>60 дней</option>
-                  <option value={90}>90 дней</option>
                 </select>
               </div>
 
@@ -486,7 +484,6 @@ function OrderContent() {
                 >
                   <option value="every_other_day">Через день</option>
                   <option value="daily">Каждый день</option>
-                  <option value="twice_week">2 раза в неделю</option>
                 </select>
               </div>
 
@@ -539,14 +536,14 @@ function OrderContent() {
                 <Clock className="w-6 h-6 text-gray-900" />
               </div>
               <div>
-                <h2 className="text-xl font-bold text-gray-900">{tariffId === 'trial' ? 'Детали' : 'Время'}</h2>
-                <p className="text-gray-500 text-sm">{tariffId === 'trial' ? 'Настройте вынос' : 'Выберите слот'}</p>
+                <h2 className="text-xl font-bold text-gray-900">{(tariffId === 'trial' || tariffId === 'monthly') ? 'Детали' : 'Время'}</h2>
+                <p className="text-gray-500 text-sm">{(tariffId === 'trial' || tariffId === 'monthly') ? 'Настройте вынос' : 'Выберите слот'}</p>
               </div>
             </div>
 
             <div className="space-y-4">
-              {/* DATE PICKER - Only for trial */}
-              {tariffId === 'trial' && (
+              {/* DATE PICKER - For trial and monthly */}
+              {(tariffId === 'trial' || tariffId === 'monthly') && (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Дата <span className="text-red-500">*</span>
@@ -612,7 +609,7 @@ function OrderContent() {
               {/* TIME SLOTS */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-3">
-                  Время {tariffId === 'trial' && <span className="text-red-500">*</span>}
+                  Время {(tariffId === 'trial' || tariffId === 'monthly') && <span className="text-red-500">*</span>}
                 </label>
                 <div className="space-y-3">
                   {timeSlots.map((s) => (
@@ -638,8 +635,8 @@ function OrderContent() {
                 </div>
               </div>
 
-              {/* PICKUP METHOD - Only for trial */}
-              {tariffId === 'trial' && (
+              {/* PICKUP METHOD - For trial and monthly */}
+              {(tariffId === 'trial' || tariffId === 'monthly') && (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-3">
                     Способ передачи <span className="text-red-500">*</span>
@@ -673,8 +670,8 @@ function OrderContent() {
                 </div>
               )}
 
-              {/* COMMENT - Only for trial */}
-              {tariffId === 'trial' && (
+              {/* COMMENT - For trial and monthly */}
+              {(tariffId === 'trial' || tariffId === 'monthly') && (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Комментарий курьеру
@@ -809,6 +806,47 @@ function OrderContent() {
                     </div>
                     
                     <div className="h-px bg-gray-200" />
+                    
+                    <div className="flex items-start gap-3">
+                      <Clock className="w-5 h-5 text-teal-600 mt-1 flex-shrink-0" />
+                      <div className="flex-1">
+                        <p className="text-gray-500 text-xs mb-1 font-medium uppercase tracking-wide">Дата и время</p>
+                        <p className="text-gray-900 font-semibold text-base">
+                          {new Date(deliveryDate).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' })}
+                        </p>
+                        <p className="text-gray-900 font-semibold text-base mt-1">
+                          {timeSlots.find((s) => s.id === slot)?.time}
+                        </p>
+                      </div>
+                    </div>
+                    
+                    <div className="h-px bg-gray-200" />
+                    
+                    <div className="flex items-start gap-3">
+                      <User className="w-5 h-5 text-teal-600 mt-1 flex-shrink-0" />
+                      <div className="flex-1">
+                        <p className="text-gray-500 text-xs mb-1 font-medium uppercase tracking-wide">Способ передачи</p>
+                        <p className="text-gray-900 font-semibold text-base">
+                          {pickupMethod === 'door' ? '🚪 За дверью' : '🤝 В руки'}
+                        </p>
+                      </div>
+                    </div>
+                    
+                    {comment && (
+                      <>
+                        <div className="h-px bg-gray-200" />
+                        
+                        <div className="flex items-start gap-3">
+                          <MessageSquare className="w-5 h-5 text-teal-600 mt-1 flex-shrink-0" />
+                          <div className="flex-1">
+                            <p className="text-gray-500 text-xs mb-1 font-medium uppercase tracking-wide">Комментарий</p>
+                            <p className="text-gray-900 text-base">{comment}</p>
+                          </div>
+                        </div>
+                      </>
+                    )}
+                    
+                    <div className="h-px bg-gray-200" />
                   </>
                 )}
                 
@@ -933,10 +971,10 @@ function OrderContent() {
       {/* Bottom */}
       <div className="fixed bottom-0 left-0 right-0 p-5 pb-24 bg-gradient-to-t from-white via-white/95 to-transparent z-50 border-t border-gray-200">
         {/* Validation hint for TIME step only */}
-        {step === 'time' && (tariffId === 'trial' ? (!deliveryDate || !slot) : !slot) && (
+        {step === 'time' && ((tariffId === 'trial' || tariffId === 'monthly') ? (!deliveryDate || !slot) : !slot) && (
           <div className="mb-3 bg-orange-50 border-2 border-orange-300 rounded-xl p-3">
             <p className="text-orange-900 text-sm font-semibold text-center">
-              {tariffId === 'trial' 
+              {(tariffId === 'trial' || tariffId === 'monthly')
                 ? (!deliveryDate && !slot ? '⚠️ Выберите дату и время' : !deliveryDate ? '⚠️ Выберите дату' : '⚠️ Выберите время')
                 : '⚠️ Выберите время вывоза'
               }
@@ -947,9 +985,9 @@ function OrderContent() {
         <Button
           fullWidth
           onClick={next}
-          disabled={((step === 'address' && (address.complexId === '0' || !address.building || !address.apartment)) || (step === 'time' && (tariffId === 'trial' ? (!deliveryDate || !slot) : !slot))) || loading}
+          disabled={((step === 'address' && (address.complexId === '0' || !address.building || !address.apartment)) || (step === 'time' && ((tariffId === 'trial' || tariffId === 'monthly') ? (!deliveryDate || !slot) : !slot))) || loading}
           className={
-            ((step === 'address' && (address.complexId === '0' || !address.building || !address.apartment)) || (step === 'time' && (tariffId === 'trial' ? (!deliveryDate || !slot) : !slot)))
+            ((step === 'address' && (address.complexId === '0' || !address.building || !address.apartment)) || (step === 'time' && ((tariffId === 'trial' || tariffId === 'monthly') ? (!deliveryDate || !slot) : !slot)))
               ? 'opacity-50 cursor-not-allowed'
               : ''
           }
