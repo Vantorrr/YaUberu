@@ -60,6 +60,18 @@ class ResidentialComplex(Base):
     name = Column(String(100), nullable=False)
     short_name = Column(String(20))  # For courier display
     is_active = Column(Boolean, default=True)
+    
+    buildings = relationship("ComplexBuilding", back_populates="complex", cascade="all, delete-orphan")
+
+
+class ComplexBuilding(Base):
+    __tablename__ = "complex_buildings"
+
+    id = Column(Integer, primary_key=True, index=True)
+    complex_id = Column(Integer, ForeignKey("residential_complexes.id"), nullable=False)
+    building_number = Column(String(50), nullable=False)
+    
+    complex = relationship("ResidentialComplex", back_populates="buildings")
 
 
 class Balance(Base):

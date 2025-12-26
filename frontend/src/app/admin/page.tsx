@@ -31,6 +31,7 @@ export default function AdminPage() {
   const [newCourierId, setNewCourierId] = useState('');
   
   const [newComplexName, setNewComplexName] = useState('');
+  const [newComplexBuildings, setNewComplexBuildings] = useState('');
 
   const loadData = async () => {
     setLoading(true);
@@ -114,12 +115,31 @@ export default function AdminPage() {
   const handleAddComplex = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newComplexName) return;
+    
+    // Parse buildings from textarea (split by newlines, filter empty)
+    const buildings = newComplexBuildings
+      .split('\n')
+      .map(b => b.trim())
+      .filter(b => b.length > 0);
+    
     try {
-      await api.createComplex(newComplexName);
+      await api.createComplex(newComplexName, buildings);
       setNewComplexName('');
+      setNewComplexBuildings('');
       loadData();
     } catch (e) {
       alert('Ошибка добавления ЖК');
+    }
+  };
+
+  const handleDeleteComplex = async (id: number) => {
+    if (confirm('Удалить ЖК и все его дома?')) {
+      try {
+        await api.deleteComplex(id);
+        loadData();
+      } catch (e) {
+        alert('Ошибка удаления');
+      }
     }
   };
 
@@ -436,10 +456,17 @@ export default function AdminPage() {
                 <form onSubmit={handleAddComplex} className="flex flex-col gap-3">
                     <input 
                         type="text" 
-                        placeholder="Название ЖК"
+                        placeholder="Название ЖК (например: ЖК Мещерский лес)"
                         value={newComplexName}
                         onChange={(e) => setNewComplexName(e.target.value)}
                         className="bg-gray-900 border border-gray-700 text-white rounded-lg p-3 text-sm focus:border-teal-500 outline-none"
+                    />
+                    <textarea
+                        placeholder="Номера домов (каждый с новой строки)&#10;Например:&#10;2к4&#10;2к5&#10;2к6&#10;2к7"
+                        value={newComplexBuildings}
+                        onChange={(e) => setNewComplexBuildings(e.target.value)}
+                        rows={5}
+                        className="bg-gray-900 border border-gray-700 text-white rounded-lg p-3 text-sm focus:border-teal-500 outline-none resize-none"
                     />
                     <button type="submit" className="bg-teal-600 text-white py-2 rounded-lg font-medium hover:bg-teal-500 transition-colors">
                         Создать зону
@@ -448,16 +475,39 @@ export default function AdminPage() {
              </div>
 
              <h3 className="font-bold text-gray-300 mt-6">Обслуживаемые зоны</h3>
-             <div className="grid gap-2">
+             <div className="grid gap-3">
                 {complexes.map(c => (
-                    <div key={c.id} className="p-4 bg-gray-800/30 rounded-xl border border-gray-800 flex justify-between items-center">
-                        <span className="text-white font-medium">{c.name}</span>
-                        {c.is_active ? (
-                            <span className="text-xs text-green-400 flex items-center gap-1">
-                                <CheckCircle className="w-3 h-3" /> Работаем
-                            </span>
-                        ) : (
-                            <span className="text-xs text-gray-500">Не активен</span>
+                    <div key={c.id} className="p-4 bg-gray-800/30 rounded-xl border border-gray-800">
+                        <div className="flex justify-between items-start mb-2">
+                            <div>
+                                <span className="text-white font-bold text-lg">{c.name}</span>
+                                {c.is_active ? (
+                                    <span className="ml-2 text-xs text-green-400 inline-flex items-center gap-1">
+                                        <CheckCircle className="w-3 h-3" /> Работаем
+                                    </span>
+                                ) : (
+                                    <span className="ml-2 text-xs text-gray-500">Не активен</span>
+                                )}
+                            </div>
+                            <button 
+                                onClick={() => handleDeleteComplex(c.id)}
+                                className="p-2 text-gray-500 hover:text-red-400 transition"
+                            >
+                                <Trash2 className="w-4 h-4" />
+                            </button>
+                        </div>
+                        
+                        {c.buildings && c.buildings.length > 0 && (
+                            <div className="mt-3 pt-3 border-t border-gray-700">
+                                <p className="text-xs text-gray-500 mb-2">Номера домов:</p>
+                                <div className="flex flex-wrap gap-2">
+                                    {c.buildings.map((b: string, idx: number) => (
+                                        <span key={idx} className="px-2 py-1 bg-gray-900/50 text-teal-400 text-xs rounded-lg border border-gray-700">
+                                            {b}
+                                        </span>
+                                    ))}
+                                </div>
+                            </div>
                         )}
                     </div>
                 ))}

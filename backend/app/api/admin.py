@@ -1,13 +1,14 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
+from sqlalchemy.orm import selectinload
 from pydantic import BaseModel
 from typing import List, Optional
 from datetime import date
 
 from app.models import (
     get_db, User, UserRole, Order, OrderStatus,
-    ResidentialComplex, Subscription, Balance, BalanceTransaction, TariffPrice
+    ResidentialComplex, Subscription, Balance, BalanceTransaction, TariffPrice, ComplexBuilding
 )
 from app.services.scheduler import generate_orders_for_today
 
@@ -17,6 +18,7 @@ router = APIRouter()
 class ComplexCreate(BaseModel):
     name: str
     short_name: Optional[str] = None
+    buildings: List[str] = []
 
 
 class CourierCreate(BaseModel):
@@ -193,13 +195,19 @@ async def create_complex(
     db: AsyncSession = Depends(get_db),
 ):
     """
-    Add a new residential complex
+    Add a new residential complex with buildings
     """
     complex = ResidentialComplex(
         name=request.name,
         short_name=request.short_name or request.name[:10],
     )
     db.add(complex)
+    await db.flush()
+    
+    for b_num in request.buildings:
+        if b_num.strip():
+            db.add(ComplexBuilding(complex_id=complex.id, building_number=b_num.strip()))
+            
     await db.commit()
     await db.refresh(complex)
     
@@ -213,10 +221,38 @@ async def list_complexes(
     """
     List all residential complexes
     """
-    result = await db.execute(select(ResidentialComplex))
+    result = await db.execute(
+        select(ResidentialComplex).options(selectinload(ResidentialComplex.buildings))
+    )
     complexes = result.scalars().all()
     
-    return [{"id": c.id, "name": c.name, "short_name": c.short_name, "is_active": c.is_active} for c in complexes]
+    return [{
+        "id": c.id, 
+        "name": c.name, 
+        "short_name": c.short_name, 
+        "is_active": c.is_active,
+        "buildings": [b.building_number for b in c.buildings]
+    } for c in complexes]
+
+
+@router.delete("/complexes/{complex_id}")
+async def delete_complex(
+    complex_id: int,
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Delete a residential complex
+    """
+    result = await db.execute(select(ResidentialComplex).where(ResidentialComplex.id == complex_id))
+    complex = result.scalar_one_or_none()
+    
+    if not complex:
+        raise HTTPException(status_code=404, detail="Complex not found")
+        
+    await db.delete(complex)
+    await db.commit()
+    
+    return {"status": "ok", "message": "Complex deleted"}
 
 
 @router.post("/couriers", response_model=dict)

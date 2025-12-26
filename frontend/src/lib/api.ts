@@ -211,10 +211,16 @@ class ApiClient {
       return this.request('/admin/complexes');
   }
 
-  async createComplex(name: string) {
+  async createComplex(name: string, buildings: string[] = []) {
       return this.request('/admin/complexes', {
           method: 'POST',
-          body: JSON.stringify({ name })
+          body: JSON.stringify({ name, buildings })
+      });
+  }
+
+  async deleteComplex(id: number) {
+      return this.request(`/admin/complexes/${id}`, {
+          method: 'DELETE'
       });
   }
 
