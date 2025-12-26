@@ -4,6 +4,7 @@ from sqlalchemy import select
 from app.config import settings
 from app.models import get_db, User, Balance
 import httpx
+import asyncio
 
 router = APIRouter()
 
@@ -58,6 +59,48 @@ async def send_telegram_photo(chat_id: int, photo_url: str, caption: str = None,
             print(f"[BOT] Photo sent: {response.status_code}")
         except Exception as e:
             print(f"[BOT ERROR] Failed to send photo: {e}")
+
+
+async def send_welcome_slides(chat_id: int):
+    """Send 3 onboarding slides for new users"""
+    token = settings.TELEGRAM_BOT_TOKEN
+    if not token:
+        print("[BOT ERROR] TELEGRAM_BOT_TOKEN is not set!")
+        return
+    
+    # 3 onboarding photos with captions
+    slides = [
+        {
+            "url": "https://i.ibb.co/Dz8JQdc/11111111.jpg",
+            "caption": "**1️⃣ Оставьте у двери**\n\nПросто выставьте пакет за дверь. Никаких лишних действий."
+        },
+        {
+            "url": "https://i.ibb.co/5vRX8Sq/22222222.jpg",
+            "caption": "**2️⃣ Курьер заберет**\n\nКурьер придёт в выбранное время и заберёт мусор."
+        },
+        {
+            "url": "https://i.ibb.co/SXgzwmn/333333333.jpg",
+            "caption": "**3️⃣ Забудьте о мусоре**\n\nПодписка работает автоматически. Вы просто живете."
+        }
+    ]
+    
+    async with httpx.AsyncClient() as client:
+        for slide in slides:
+            url = f"https://api.telegram.org/bot{token}/sendPhoto"
+            payload = {
+                "chat_id": chat_id,
+                "photo": slide["url"],
+                "caption": slide["caption"],
+                "parse_mode": "Markdown"
+            }
+            
+            try:
+                response = await client.post(url, json=payload)
+                print(f"[BOT] Slide sent: {response.status_code}")
+                # Small delay between slides
+                await asyncio.sleep(0.5)
+            except Exception as e:
+                print(f"[BOT ERROR] Failed to send slide: {e}")
 
 @router.post("/webhook")
 async def telegram_webhook(request: Request, db: AsyncSession = Depends(get_db)):
@@ -365,7 +408,11 @@ async def telegram_webhook(request: Request, db: AsyncSession = Depends(get_db))
                     keyboard=keyboard
                 )
             else:
-                # Новый пользователь или без реального телефона, просим контакт
+                # Новый пользователь или без реального телефона
+                # Отправляем 3 слайда-приветствия
+                await send_welcome_slides(chat_id)
+                
+                # Затем просим контакт
                 keyboard = {
                     "keyboard": [[
                         {
@@ -377,12 +424,11 @@ async def telegram_webhook(request: Request, db: AsyncSession = Depends(get_db))
                     "one_time_keyboard": True
                 }
                 
-                # Отправляем фото с приветствием для нового пользователя
-                caption = """👋 **Привет! Это сервис «Я УБЕРУ»**
+                welcome_text = """👋 **Привет! Это сервис «Я УБЕРУ»**
 
 Я выношу ваш бытовой мусор в удобное для вас время — по подписке или разово.
 
-♻️ Что вы можете сделать здесь:
+♻️ **Что вы можете сделать:**
 • Оформить подписку на вынос бытового мусора
 • Выбрать удобные дни и время
 • Заказать разовый вынос
@@ -390,12 +436,7 @@ async def telegram_webhook(request: Request, db: AsyncSession = Depends(get_db))
 
 👉 Чтобы начать, поделитесь номером телефона 👇"""
                 
-                await send_telegram_photo(
-                    chat_id,
-                    photo_url="https://i.ibb.co/pvLXGwbY/1766674254694d4f4e669eb.jpg",
-                    caption=caption,
-                    keyboard=keyboard
-                )
+                await send_telegram_message(chat_id, welcome_text, keyboard)
             
         # Логика 2: Пользователь отправил контакт
         elif "contact" in message:
