@@ -219,8 +219,8 @@ export default function OrdersPage() {
 
       {/* Edit Modal */}
       {showEditModal && selectedOrder && (
-        <div className="fixed inset-0 bg-black/50 flex items-end justify-center z-50 p-5">
-          <div className="bg-white rounded-3xl w-full max-w-md p-6 space-y-4 animate-slideUp">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-5">
+          <div className="bg-white rounded-3xl w-full max-w-md max-h-[90vh] overflow-y-auto p-6 space-y-4 animate-fadeIn">
             <h3 className="text-gray-900 font-bold text-xl">Перенести заказ</h3>
             
             <div>
