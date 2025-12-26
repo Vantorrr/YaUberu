@@ -294,7 +294,9 @@ function OrderContent() {
                   </div>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Подъезд</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Подъезд <span className="text-red-500">*</span>
+                  </label>
                   <div className="relative">
                     <DoorOpen className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-teal-500" />
                     <input
@@ -303,6 +305,7 @@ function OrderContent() {
                       value={address.entrance}
                       onChange={(e) => setAddress({ ...address, entrance: e.target.value })}
                       className="w-full pl-12 pr-4 py-4 rounded-xl bg-white border border-gray-300 text-gray-900 placeholder-gray-600 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 outline-none transition-all"
+                      required
                     />
                   </div>
                 </div>
@@ -310,7 +313,9 @@ function OrderContent() {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Этаж</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Этаж <span className="text-red-500">*</span>
+                  </label>
                   <input
                     type="number"
                     inputMode="numeric"
@@ -318,6 +323,7 @@ function OrderContent() {
                     value={address.floor}
                     onChange={(e) => setAddress({ ...address, floor: e.target.value })}
                     className="w-full px-4 py-4 rounded-xl bg-white border border-gray-300 text-gray-900 placeholder-gray-600 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 outline-none transition-all"
+                    required
                   />
                 </div>
                 <div>
@@ -341,7 +347,6 @@ function OrderContent() {
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Код домофона
-                  <span className="text-gray-500 ml-2">(необязательно)</span>
                 </label>
                 <input
                   type="text"
