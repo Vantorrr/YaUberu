@@ -536,31 +536,29 @@ function OrderContent() {
                 <Clock className="w-6 h-6 text-gray-900" />
               </div>
               <div>
-                <h2 className="text-xl font-bold text-gray-900">{(tariffId === 'trial' || tariffId === 'monthly') ? 'Детали' : 'Время'}</h2>
-                <p className="text-gray-500 text-sm">{(tariffId === 'trial' || tariffId === 'monthly') ? 'Настройте вынос' : 'Выберите слот'}</p>
+                <h2 className="text-xl font-bold text-gray-900">Детали</h2>
+                <p className="text-gray-500 text-sm">Настройте вынос</p>
               </div>
             </div>
 
             <div className="space-y-4">
-              {/* DATE PICKER - For trial and monthly */}
-              {(tariffId === 'trial' || tariffId === 'monthly') && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Дата <span className="text-red-500">*</span>
-                  </label>
-                  <div className="relative">
-                    <input
-                      type="date"
-                      value={deliveryDate}
-                      onChange={(e) => setDeliveryDate(e.target.value)}
-                      min={new Date().toISOString().split('T')[0]}
-                      className="w-full px-4 py-4 rounded-xl bg-white border-2 border-gray-200 text-gray-900 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 outline-none transition-all"
-                      style={{ colorScheme: 'light' }}
-                      required
-                    />
-                  </div>
+              {/* DATE PICKER - For all tariffs */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Дата <span className="text-red-500">*</span>
+                </label>
+                <div className="relative">
+                  <input
+                    type="date"
+                    value={deliveryDate}
+                    onChange={(e) => setDeliveryDate(e.target.value)}
+                    min={new Date().toISOString().split('T')[0]}
+                    className="w-full px-4 py-4 rounded-xl bg-white border-2 border-gray-200 text-gray-900 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 outline-none transition-all"
+                    style={{ colorScheme: 'light' }}
+                    required
+                  />
                 </div>
-              )}
+              </div>
 
               {/* URGENT OPTION - Only for single */}
               {tariffId === 'single' && (
@@ -609,7 +607,7 @@ function OrderContent() {
               {/* TIME SLOTS */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-3">
-                  Время {(tariffId === 'trial' || tariffId === 'monthly') && <span className="text-red-500">*</span>}
+                  Время <span className="text-red-500">*</span>
                 </label>
                 <div className="space-y-3">
                   {timeSlots.map((s) => (
@@ -720,7 +718,7 @@ function OrderContent() {
                   </div>
                 </div>
                 
-                {/* TIME - only for single orders */}
+                {/* DATE AND TIME - for single orders */}
                 {tariffId === 'single' && (
                   <>
                     <div className="h-px bg-gray-200" />
@@ -728,8 +726,11 @@ function OrderContent() {
                     <div className="flex items-start gap-3">
                       <Clock className="w-5 h-5 text-teal-600 mt-1 flex-shrink-0" />
                       <div className="flex-1">
-                        <p className="text-gray-500 text-xs mb-1 font-medium uppercase tracking-wide">Время</p>
-                        <p className={`font-bold text-base ${slot === 'urgent' ? 'text-orange-600' : 'text-gray-900'}`}>
+                        <p className="text-gray-500 text-xs mb-1 font-medium uppercase tracking-wide">Дата и время</p>
+                        <p className="text-gray-900 font-semibold text-base">
+                          {new Date(deliveryDate).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' })}
+                        </p>
+                        <p className={`font-bold text-base mt-1 ${slot === 'urgent' ? 'text-orange-600' : 'text-gray-900'}`}>
                           {slot === 'urgent' ? '⚡ СРОЧНО (в течение часа!)' : timeSlots.find((s) => s.id === slot)?.time}
                         </p>
                       </div>
@@ -889,7 +890,7 @@ function OrderContent() {
                 <textarea
                   value={comment}
                   onChange={(e) => setComment(e.target.value)}
-                  placeholder="Например: позвонить перед приездом, оставить у консьержа..."
+                  placeholder="Например: позвонить перед приездом, оставить у двери"
                   className="w-full px-4 py-3 rounded-xl bg-white border-2 border-gray-200 text-gray-900 placeholder-gray-400 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 outline-none transition-all resize-none"
                   rows={3}
                 />
@@ -928,22 +929,7 @@ function OrderContent() {
                       <span className={`text-sm font-semibold ${pickupMethod === 'hand' ? 'text-orange-600' : 'text-gray-600'}`}>В руки</span>
                     </div>
                   </div>
-                  
-                  {pickupMethod === 'hand' && (
-                    <p className="text-orange-600 text-xs text-center font-medium animate-in fade-in slide-in-from-top-1 bg-orange-50 py-2 px-3 rounded-lg border border-orange-200">
-                      ⚠️ Курьер будет назначен мгновенно.
-                    </p>
-                  )}
                 </div>
-
-                {slot === 'urgent' && (
-                  <div className="bg-orange-50 border border-orange-200 rounded-2xl p-4 flex gap-3">
-                    <AlertCircle className="w-5 h-5 text-orange-500 shrink-0" />
-                    <p className="text-orange-900 text-sm">
-                      Курьер будет назначен мгновенно.
-                    </p>
-                  </div>
-                )}
               </>
             )}
             
@@ -971,13 +957,10 @@ function OrderContent() {
       {/* Bottom */}
       <div className="fixed bottom-0 left-0 right-0 p-5 pb-24 bg-gradient-to-t from-white via-white/95 to-transparent z-50 border-t border-gray-200">
         {/* Validation hint for TIME step only */}
-        {step === 'time' && ((tariffId === 'trial' || tariffId === 'monthly') ? (!deliveryDate || !slot) : !slot) && (
+        {step === 'time' && (!deliveryDate || !slot) && (
           <div className="mb-3 bg-orange-50 border-2 border-orange-300 rounded-xl p-3">
             <p className="text-orange-900 text-sm font-semibold text-center">
-              {(tariffId === 'trial' || tariffId === 'monthly')
-                ? (!deliveryDate && !slot ? '⚠️ Выберите дату и время' : !deliveryDate ? '⚠️ Выберите дату' : '⚠️ Выберите время')
-                : '⚠️ Выберите время вывоза'
-              }
+              {!deliveryDate && !slot ? '⚠️ Выберите дату и время' : !deliveryDate ? '⚠️ Выберите дату' : '⚠️ Выберите время'}
             </p>
           </div>
         )}
@@ -985,9 +968,9 @@ function OrderContent() {
         <Button
           fullWidth
           onClick={next}
-          disabled={((step === 'address' && (address.complexId === '0' || !address.building || !address.apartment)) || (step === 'time' && ((tariffId === 'trial' || tariffId === 'monthly') ? (!deliveryDate || !slot) : !slot))) || loading}
+          disabled={((step === 'address' && (address.complexId === '0' || !address.building || !address.apartment)) || (step === 'time' && (!deliveryDate || !slot))) || loading}
           className={
-            ((step === 'address' && (address.complexId === '0' || !address.building || !address.apartment)) || (step === 'time' && ((tariffId === 'trial' || tariffId === 'monthly') ? (!deliveryDate || !slot) : !slot)))
+            ((step === 'address' && (address.complexId === '0' || !address.building || !address.apartment)) || (step === 'time' && (!deliveryDate || !slot)))
               ? 'opacity-50 cursor-not-allowed'
               : ''
           }
