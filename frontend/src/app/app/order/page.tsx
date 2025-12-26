@@ -4,7 +4,7 @@ import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
-import { ArrowLeft, MapPin, Clock, Check, Building, Home, DoorOpen, Hash, Zap, AlertCircle, User, Package, MessageSquare } from 'lucide-react';
+import { ArrowLeft, MapPin, Clock, Check, Building, Home, DoorOpen, Hash, Zap, AlertCircle, User, Package, MessageSquare, Layers } from 'lucide-react';
 import { api } from '@/lib/api';
 
 type Step = 'address' | 'volume' | 'time' | 'confirm';
@@ -316,15 +316,18 @@ function OrderContent() {
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Этаж <span className="text-red-500">*</span>
                   </label>
-                  <input
-                    type="number"
-                    inputMode="numeric"
-                    placeholder=""
-                    value={address.floor}
-                    onChange={(e) => setAddress({ ...address, floor: e.target.value })}
-                    className="w-full px-4 py-4 rounded-xl bg-white border border-gray-300 text-gray-900 placeholder-gray-600 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 outline-none transition-all"
-                    required
-                  />
+                  <div className="relative">
+                    <Layers className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-teal-500" />
+                    <input
+                      type="number"
+                      inputMode="numeric"
+                      placeholder=""
+                      value={address.floor}
+                      onChange={(e) => setAddress({ ...address, floor: e.target.value })}
+                      className="w-full pl-12 pr-4 py-4 rounded-xl bg-white border border-gray-300 text-gray-900 placeholder-gray-600 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 outline-none transition-all"
+                      required
+                    />
+                  </div>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -351,7 +354,7 @@ function OrderContent() {
                 <input
                   type="text"
                   inputMode="numeric"
-                  placeholder=""
+                  placeholder="# 123"
                   value={address.intercom}
                   onChange={(e) => setAddress({ ...address, intercom: e.target.value })}
                   className="w-full px-4 py-4 rounded-xl bg-white border border-gray-300 text-gray-900 placeholder-gray-600 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 outline-none transition-all"
