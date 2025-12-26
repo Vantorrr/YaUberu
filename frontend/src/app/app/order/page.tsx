@@ -21,7 +21,7 @@ const getStepsForTariff = (tariffId: string): Step[] => {
   if (tariffId === 'single') {
     return ['address', 'time', 'confirm']; // Разовый: адрес → время → подтверждение
   } else if (tariffId === 'trial') {
-    return ['address', 'confirm']; // Пробная: адрес → подтверждение (без времени, со след дня)
+    return ['address', 'time', 'confirm']; // Пробная: адрес → время/дата/метод → подтверждение
   } else if (tariffId === 'monthly') {
     return ['address', 'volume', 'confirm']; // Месячная: адрес → объём → подтверждение
   }
@@ -42,6 +42,7 @@ function OrderContent() {
   const [loading, setLoading] = useState(false);
   const [comment, setComment] = useState('');
   const [saveAddress, setSaveAddress] = useState(true); // Save address by default
+  const [deliveryDate, setDeliveryDate] = useState<string>(''); // For trial tariff date selection
   
   // Volume/Duration for dynamic pricing
   const [bagsCount, setBagsCount] = useState(1);
@@ -538,12 +539,29 @@ function OrderContent() {
                 <Clock className="w-6 h-6 text-gray-900" />
               </div>
               <div>
-                <h2 className="text-xl font-bold text-gray-900">Время</h2>
-                <p className="text-gray-500 text-sm">Выберите слот</p>
+                <h2 className="text-xl font-bold text-gray-900">{tariffId === 'trial' ? 'Детали' : 'Время'}</h2>
+                <p className="text-gray-500 text-sm">{tariffId === 'trial' ? 'Настройте вынос' : 'Выберите слот'}</p>
               </div>
             </div>
 
             <div className="space-y-4">
+              {/* DATE PICKER - Only for trial */}
+              {tariffId === 'trial' && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Дата <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="date"
+                    value={deliveryDate}
+                    onChange={(e) => setDeliveryDate(e.target.value)}
+                    min={new Date().toISOString().split('T')[0]}
+                    className="w-full px-4 py-4 rounded-xl bg-white border border-gray-300 text-gray-900 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 outline-none transition-all"
+                    required
+                  />
+                </div>
+              )}
+
               {/* URGENT OPTION - Only for single */}
               {tariffId === 'single' && (
                 <>
@@ -588,29 +606,85 @@ function OrderContent() {
                 </>
               )}
 
-              {/* STANDARD SLOTS */}
-              <div className="space-y-3">
-                {timeSlots.map((s) => (
-                  <Card 
-                    key={s.id} 
-                    onClick={() => setSlot(s.id)}
-                    className={`
-                      cursor-pointer hover:border-teal-300 transition-all
-                      ${slot === s.id ? 'border-teal-500 ring-2 ring-teal-500/30 bg-teal-50' : 'border-gray-200'}
-                    `}
-                  >
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-gray-900 font-semibold text-lg">{s.time}</p>
-                        <p className="text-gray-500 text-sm">{s.label}</p>
+              {/* TIME SLOTS */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-3">
+                  Время {tariffId === 'trial' && <span className="text-red-500">*</span>}
+                </label>
+                <div className="space-y-3">
+                  {timeSlots.map((s) => (
+                    <Card 
+                      key={s.id} 
+                      onClick={() => setSlot(s.id)}
+                      className={`
+                        cursor-pointer hover:border-teal-300 transition-all
+                        ${slot === s.id ? 'border-teal-500 ring-2 ring-teal-500/30 bg-teal-50' : 'border-gray-200'}
+                      `}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-gray-900 font-semibold text-lg">{s.time}</p>
+                          <p className="text-gray-500 text-sm">{s.label}</p>
+                        </div>
+                        <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${slot === s.id ? 'bg-teal-500 border-teal-500' : 'border-gray-300'}`}>
+                          {slot === s.id && <Check className="w-4 h-4 text-white" />}
+                        </div>
                       </div>
-                      <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${slot === s.id ? 'bg-teal-500 border-teal-500' : 'border-gray-300'}`}>
-                        {slot === s.id && <Check className="w-4 h-4 text-white" />}
-                      </div>
-                    </div>
-                  </Card>
-                ))}
+                    </Card>
+                  ))}
+                </div>
               </div>
+
+              {/* PICKUP METHOD - Only for trial */}
+              {tariffId === 'trial' && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-3">
+                    Способ передачи <span className="text-red-500">*</span>
+                  </label>
+                  <div className="grid grid-cols-2 gap-3">
+                    <Card 
+                      onClick={() => setPickupMethod('door')}
+                      className={`
+                        cursor-pointer hover:border-teal-300 transition-all
+                        ${pickupMethod === 'door' ? 'border-teal-500 ring-2 ring-teal-500/30 bg-teal-50' : 'border-gray-200'}
+                      `}
+                    >
+                      <div className="text-center py-4">
+                        <div className="text-2xl mb-2">🚪</div>
+                        <p className="text-gray-900 font-semibold">За дверью</p>
+                      </div>
+                    </Card>
+                    <Card 
+                      onClick={() => setPickupMethod('hand')}
+                      className={`
+                        cursor-pointer hover:border-teal-300 transition-all
+                        ${pickupMethod === 'hand' ? 'border-teal-500 ring-2 ring-teal-500/30 bg-teal-50' : 'border-gray-200'}
+                      `}
+                    >
+                      <div className="text-center py-4">
+                        <div className="text-2xl mb-2">🤝</div>
+                        <p className="text-gray-900 font-semibold">В руки</p>
+                      </div>
+                    </Card>
+                  </div>
+                </div>
+              )}
+
+              {/* COMMENT - Only for trial */}
+              {tariffId === 'trial' && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Комментарий курьеру
+                  </label>
+                  <textarea
+                    placeholder="Например: оставьте у двери, не звоните"
+                    value={comment}
+                    onChange={(e) => setComment(e.target.value)}
+                    rows={3}
+                    className="w-full px-4 py-4 rounded-xl bg-white border border-gray-300 text-gray-900 placeholder-gray-500 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 outline-none transition-all resize-none"
+                  />
+                </div>
+              )}
             </div>
           </>
         )}
@@ -660,6 +734,54 @@ function OrderContent() {
                         </p>
                       </div>
                     </div>
+                    
+                    <div className="h-px bg-gray-200" />
+                  </>
+                )}
+
+                {/* TRIAL DETAILS - date, time, method, comment */}
+                {tariffId === 'trial' && (
+                  <>
+                    <div className="h-px bg-gray-200" />
+                    
+                    <div className="flex items-start gap-3">
+                      <Clock className="w-5 h-5 text-teal-600 mt-1 flex-shrink-0" />
+                      <div className="flex-1">
+                        <p className="text-gray-500 text-xs mb-1 font-medium uppercase tracking-wide">Дата и время</p>
+                        <p className="text-gray-900 font-semibold text-base">
+                          {new Date(deliveryDate).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' })}
+                        </p>
+                        <p className="text-gray-900 font-semibold text-base mt-1">
+                          {timeSlots.find((s) => s.id === slot)?.time}
+                        </p>
+                      </div>
+                    </div>
+                    
+                    <div className="h-px bg-gray-200" />
+                    
+                    <div className="flex items-start gap-3">
+                      <User className="w-5 h-5 text-teal-600 mt-1 flex-shrink-0" />
+                      <div className="flex-1">
+                        <p className="text-gray-500 text-xs mb-1 font-medium uppercase tracking-wide">Способ передачи</p>
+                        <p className="text-gray-900 font-semibold text-base">
+                          {pickupMethod === 'door' ? '🚪 За дверью' : '🤝 В руки'}
+                        </p>
+                      </div>
+                    </div>
+                    
+                    {comment && (
+                      <>
+                        <div className="h-px bg-gray-200" />
+                        
+                        <div className="flex items-start gap-3">
+                          <MessageSquare className="w-5 h-5 text-teal-600 mt-1 flex-shrink-0" />
+                          <div className="flex-1">
+                            <p className="text-gray-500 text-xs mb-1 font-medium uppercase tracking-wide">Комментарий</p>
+                            <p className="text-gray-900 text-base">{comment}</p>
+                          </div>
+                        </div>
+                      </>
+                    )}
                     
                     <div className="h-px bg-gray-200" />
                   </>
@@ -716,20 +838,22 @@ function OrderContent() {
               </div>
             </Card>
 
-            {/* COMMENT FIELD */}
-            <div className="space-y-2">
-              <label className="text-gray-700 text-sm font-semibold ml-1 flex items-center gap-2">
-                <MessageSquare className="w-4 h-4 text-teal-600" />
-                Комментарий курьеру
-              </label>
-              <textarea
-                value={comment}
-                onChange={(e) => setComment(e.target.value)}
-                placeholder="Например: позвонить перед приездом, оставить у консьержа..."
-                className="w-full px-4 py-3 rounded-xl bg-white border-2 border-gray-200 text-gray-900 placeholder-gray-400 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 outline-none transition-all resize-none"
-                rows={3}
-              />
-            </div>
+            {/* COMMENT FIELD - only for single orders */}
+            {tariffId === 'single' && (
+              <div className="space-y-2">
+                <label className="text-gray-700 text-sm font-semibold ml-1 flex items-center gap-2">
+                  <MessageSquare className="w-4 h-4 text-teal-600" />
+                  Комментарий курьеру
+                </label>
+                <textarea
+                  value={comment}
+                  onChange={(e) => setComment(e.target.value)}
+                  placeholder="Например: позвонить перед приездом, оставить у консьержа..."
+                  className="w-full px-4 py-3 rounded-xl bg-white border-2 border-gray-200 text-gray-900 placeholder-gray-400 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 outline-none transition-all resize-none"
+                  rows={3}
+                />
+              </div>
+            )}
 
             {/* PICKUP METHOD TOGGLE - only for single orders */}
             {tariffId === 'single' && (
@@ -783,7 +907,15 @@ function OrderContent() {
             )}
             
             {/* For subscriptions, show info */}
-            {(tariffId === 'trial' || tariffId === 'monthly') && (
+            {tariffId === 'trial' && (
+              <div className="bg-teal-50 border border-teal-200 rounded-2xl p-4 flex gap-3">
+                <AlertCircle className="w-5 h-5 text-teal-600 shrink-0" />
+                <p className="text-teal-900 text-sm">
+                  📅 Это пробный старт! После первого выноса подписка активируется автоматически на 2 недели (через день).
+                </p>
+              </div>
+            )}
+            {tariffId === 'monthly' && (
               <div className="bg-teal-50 border border-teal-200 rounded-2xl p-4 flex gap-3">
                 <AlertCircle className="w-5 h-5 text-teal-600 shrink-0" />
                 <p className="text-teal-900 text-sm">
@@ -798,10 +930,13 @@ function OrderContent() {
       {/* Bottom */}
       <div className="fixed bottom-0 left-0 right-0 p-5 pb-24 bg-gradient-to-t from-white via-white/95 to-transparent z-50 border-t border-gray-200">
         {/* Validation hint for TIME step only */}
-        {step === 'time' && !slot && (
+        {step === 'time' && (tariffId === 'trial' ? (!deliveryDate || !slot) : !slot) && (
           <div className="mb-3 bg-orange-50 border-2 border-orange-300 rounded-xl p-3">
             <p className="text-orange-900 text-sm font-semibold text-center">
-              ⚠️ Выберите время вывоза
+              {tariffId === 'trial' 
+                ? (!deliveryDate && !slot ? '⚠️ Выберите дату и время' : !deliveryDate ? '⚠️ Выберите дату' : '⚠️ Выберите время')
+                : '⚠️ Выберите время вывоза'
+              }
             </p>
           </div>
         )}
@@ -809,9 +944,9 @@ function OrderContent() {
         <Button
           fullWidth
           onClick={next}
-          disabled={((step === 'address' && (address.complexId === '0' || !address.building || !address.apartment)) || (step === 'time' && !slot)) || loading}
+          disabled={((step === 'address' && (address.complexId === '0' || !address.building || !address.apartment)) || (step === 'time' && (tariffId === 'trial' ? (!deliveryDate || !slot) : !slot))) || loading}
           className={
-            ((step === 'address' && (address.complexId === '0' || !address.building || !address.apartment)) || (step === 'time' && !slot))
+            ((step === 'address' && (address.complexId === '0' || !address.building || !address.apartment)) || (step === 'time' && (tariffId === 'trial' ? (!deliveryDate || !slot) : !slot)))
               ? 'opacity-50 cursor-not-allowed'
               : ''
           }
