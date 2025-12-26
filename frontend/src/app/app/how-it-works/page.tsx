@@ -28,6 +28,12 @@ const slides = [
 export default function HowItWorksPage() {
   const router = useRouter();
 
+  const handleStart = () => {
+    // Mark onboarding as seen
+    localStorage.setItem('hasSeenOnboarding', 'true');
+    router.push('/app/tariffs');
+  };
+
   return (
     <div className="min-h-screen bg-white flex flex-col">
       {/* Hero */}
@@ -86,7 +92,7 @@ export default function HowItWorksPage() {
       {/* CTA Button - Fixed at bottom */}
       <div className="fixed bottom-8 left-0 right-0 px-5">
         <button
-          onClick={() => router.push('/app/tariffs')}
+          onClick={handleStart}
           className="w-full bg-gradient-to-r from-teal-600 to-teal-700 text-white font-bold py-5 rounded-2xl shadow-xl hover:shadow-2xl transition-all"
         >
           Начать пользоваться →
