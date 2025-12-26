@@ -547,18 +547,21 @@ function OrderContent() {
             <div className="space-y-4">
               {/* DATE PICKER - Only for trial */}
               {tariffId === 'trial' && (
-                <div className="-mx-5 px-5">
+                <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Дата <span className="text-red-500">*</span>
                   </label>
-                  <input
-                    type="date"
-                    value={deliveryDate}
-                    onChange={(e) => setDeliveryDate(e.target.value)}
-                    min={new Date().toISOString().split('T')[0]}
-                    className="w-full px-4 py-4 rounded-xl bg-white border border-gray-300 text-gray-900 focus:border-teal-500 outline-none transition-all"
-                    required
-                  />
+                  <div className="relative">
+                    <input
+                      type="date"
+                      value={deliveryDate}
+                      onChange={(e) => setDeliveryDate(e.target.value)}
+                      min={new Date().toISOString().split('T')[0]}
+                      className="w-full px-4 py-4 rounded-xl bg-white border-2 border-gray-200 text-gray-900 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 outline-none transition-all"
+                      style={{ colorScheme: 'light' }}
+                      required
+                    />
+                  </div>
                 </div>
               )}
 
