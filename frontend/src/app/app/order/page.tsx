@@ -462,7 +462,7 @@ function OrderContent() {
                 </div>
                 
                 <div className="flex items-center justify-between bg-white rounded-xl p-3 shadow-sm">
-                  <p className="text-gray-700 font-semibold">Кол-во мешков</p>
+                  <p className="text-gray-700 font-semibold">Кол-во пакетов</p>
                   <div className="flex items-center gap-3">
                     <button
                       onClick={() => setBagsCount(Math.max(1, bagsCount - 1))}
