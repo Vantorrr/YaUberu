@@ -32,6 +32,10 @@ class Settings(BaseSettings):
     
     # CORS
     ALLOWED_ORIGINS: str = "*"  # For production: "https://ya-uberu-frontend.up.railway.app"
+    
+    # YooKassa
+    YOOKASSA_SHOP_ID: str = ""
+    YOOKASSA_SECRET_KEY: str = ""
 
     class Config:
         env_file = ".env"

@@ -62,15 +62,18 @@ function OrderContent() {
       console.log('[TG] WebApp expanded to full screen');
     }
     
-    // Load complexes and saved addresses
+    // Load complexes, saved addresses, and balance
     Promise.all([
       api.getResidentialComplexes(),
-      api.getAddresses()
+      api.getAddresses(),
+      api.getBalance()
     ])
-      .then(([complexesData, addressesData]) => {
+      .then(([complexesData, addressesData, balanceData]) => {
         console.log('[ORDER] Loaded complexes:', complexesData);
         console.log('[ORDER] Loaded addresses:', addressesData);
+        console.log('[ORDER] Loaded balance:', balanceData);
         setComplexes(complexesData);
+        setBalance(balanceData.credits || 0);
         
         // Auto-fill if user has a default address
         const defaultAddr = addressesData.find((a: any) => a.is_default);
@@ -184,17 +187,45 @@ function OrderContent() {
         const pickupComment = effectivePickupMethod === 'hand' ? 'Передать лично в руки, позвонить в дверь/телефон' : 'Оставить у двери';
         const finalComment = comment ? `${comment}. ${pickupComment}` : pickupComment;
 
-        // 3. Create Order
-        await api.createOrder({
-          address_id: addressRes.id,
-          date: dateStr,
-          time_slot: timeSlotStr,
-          is_urgent: isUrgent,
-          comment: finalComment,
-          tariff_type: tariffId  // Pass tariff type for subscription creation
-        });
+        // 3. Create Order OR Payment
+        const cost = (tariffId === 'single' && isUrgent) ? 2 : 1; 
+        
+        // Use user selected date
+        const finalDate = deliveryDate || dateStr;
 
-        router.push('/app/order/success');
+        // Logic:
+        // 1. If Single tariff AND User has balance -> Direct Order (deduct balance)
+        // 2. Otherwise (Subscription OR No Balance) -> Payment
+        
+        if (tariffId === 'single' && balance >= cost) {
+            console.log('[ORDER] Paying with balance');
+            await api.createOrder({
+              address_id: addressRes.id,
+              date: finalDate,
+              time_slot: timeSlotStr,
+              is_urgent: isUrgent,
+              comment: finalComment,
+              tariff_type: tariffId
+            });
+            router.push('/app/order/success');
+        } else {
+            console.log('[ORDER] Redirecting to payment');
+            const paymentRes = await api.createPayment({
+              address_id: addressRes.id,
+              date: finalDate,
+              time_slot: timeSlotStr,
+              is_urgent: isUrgent,
+              comment: finalComment,
+              tariff_type: tariffId,
+              tariff_details: tariffId === 'monthly' ? { bags_count: bagsCount, duration, frequency } : undefined
+            });
+            
+            if (paymentRes.confirmation_url) {
+                window.location.href = paymentRes.confirmation_url;
+            } else {
+                 router.push('/app/order/success');
+            }
+        }
       } catch (err: any) {
         console.error(err);
         alert(err.message || 'Ошибка создания заказа. Проверьте баланс.');

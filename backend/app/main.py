@@ -4,7 +4,7 @@ from contextlib import asynccontextmanager
 import asyncio
 
 from app.config import settings
-from app.api import auth, orders, users, admin, courier, client_bot
+from app.api import auth, orders, users, admin, courier, client_bot, payments
 from app.models.base import Base, engine
 from app.services.scheduler import generate_orders_for_today
 # Import models to ensure they are registered with Base
@@ -99,6 +99,7 @@ app.include_router(orders.router, prefix="/api/orders", tags=["Orders"])
 app.include_router(admin.router, prefix="/api/admin", tags=["Admin"])
 app.include_router(courier.router, prefix="/api/courier", tags=["Courier"])
 app.include_router(client_bot.router, prefix="/api/client-bot", tags=["ClientBot"])
+app.include_router(payments.router, prefix="/api/payments", tags=["Payments"])
 
 
 @app.get("/")

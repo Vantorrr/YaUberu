@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Boolean, Date, Time, ForeignKey, Enum as SQLEnum
+from sqlalchemy import Column, Integer, String, Boolean, Date, Time, ForeignKey, Enum as SQLEnum, Text
 from sqlalchemy.orm import relationship
 import enum
 
@@ -118,3 +118,19 @@ class TrialUsage(Base):
     
     # This table ensures one trial per apartment
     # Unique constraint: (complex_id, building, apartment)
+
+
+class Payment(Base):
+    """Track payments via YooKassa"""
+    __tablename__ = "payments"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    yookassa_payment_id = Column(String(100), unique=True, nullable=False)
+    amount = Column(Integer, nullable=False)
+    status = Column(String(50), default="pending")  # pending, succeeded, canceled
+    description = Column(String(200))
+    tariff_type = Column(String(50))
+    order_data = Column(Text)  # JSON string with order details
+    
+    created_at = Column(Date, nullable=True)  # Using Date for simplicity, ideally DateTime

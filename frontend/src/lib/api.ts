@@ -250,6 +250,26 @@ class ApiClient {
     return response.json();
   }
 
+  // Payments (YooKassa)
+  async createPayment(data: {
+    address_id: number;
+    date: string;
+    time_slot: string;
+    is_urgent?: boolean;
+    comment?: string;
+    tariff_type: string;
+    tariff_details?: {
+      bags_count: number;
+      duration: number;
+      frequency: 'daily' | 'every_other_day' | 'twice_week';
+    };
+  }) {
+    return this.request('/payments/create', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
   // Tariffs (ADMIN)
   async getTariffs() {
     return this.request('/admin/tariffs');
