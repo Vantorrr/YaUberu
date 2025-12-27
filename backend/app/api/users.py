@@ -89,6 +89,34 @@ async def get_balance(
     return balance
 
 
+@router.get("/subscriptions")
+async def get_user_subscriptions(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Get user's active subscriptions
+    """
+    from app.models import Subscription
+    
+    result = await db.execute(
+        select(Subscription).where(
+            Subscription.user_id == current_user.id,
+            Subscription.is_active == True
+        )
+    )
+    subscriptions = result.scalars().all()
+    
+    return [{
+        "id": s.id,
+        "tariff": s.tariff.value,
+        "start_date": s.start_date.isoformat(),
+        "end_date": s.end_date.isoformat() if s.end_date else None,
+        "frequency": s.frequency.value if s.frequency else None,
+        "is_active": s.is_active
+    } for s in subscriptions]
+
+
 @router.get("/addresses", response_model=List[AddressResponse])
 async def get_addresses(
     db: AsyncSession = Depends(get_db),

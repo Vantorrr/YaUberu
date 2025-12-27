@@ -110,6 +110,10 @@ class ApiClient {
     return this.request('/users/balance');
   }
 
+  async getSubscriptions() {
+    return this.request('/users/subscriptions');
+  }
+
   async getAddresses(): Promise<Array<{
     id: number;
     complex_id?: number;
