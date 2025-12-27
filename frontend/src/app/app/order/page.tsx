@@ -197,11 +197,31 @@ function OrderContent() {
         const finalDate = deliveryDate || dateStr;
 
         // Logic:
-        // 1. If Single tariff AND User has balance -> Direct Order (deduct balance)
-        // 2. Otherwise (Subscription OR No Balance) -> Payment
+        // 1. If Subscription (trial or monthly) -> ALWAYS Payment (no matter balance)
+        // 2. If Single tariff AND User has balance -> Direct Order (deduct balance)
+        // 3. Otherwise -> Payment
         
-        if (tariffId === 'single' && balance >= cost) {
-            console.log('[ORDER] Paying with balance');
+        if (tariffId === 'trial' || tariffId === 'monthly') {
+            // Subscriptions ALWAYS require payment
+            console.log('[ORDER] Subscription - redirecting to payment');
+            const paymentRes = await api.createPayment({
+              address_id: addressRes.id,
+              date: finalDate,
+              time_slot: timeSlotStr,
+              is_urgent: isUrgent,
+              comment: finalComment,
+              tariff_type: tariffId,
+              tariff_details: tariffId === 'monthly' ? { bags_count: bagsCount, duration, frequency } : undefined
+            });
+            
+            if (paymentRes.confirmation_url) {
+                window.location.href = paymentRes.confirmation_url;
+            } else {
+                 router.push('/app/order/success');
+            }
+        } else if (tariffId === 'single' && balance >= cost) {
+            // Single order with sufficient balance - pay with balance
+            console.log('[ORDER] Single order - paying with balance');
             await api.createOrder({
               address_id: addressRes.id,
               date: finalDate,
@@ -212,15 +232,15 @@ function OrderContent() {
             });
             router.push('/app/order/success');
         } else {
-            console.log('[ORDER] Redirecting to payment');
+            // Single order without balance - payment required
+            console.log('[ORDER] Single order - redirecting to payment');
             const paymentRes = await api.createPayment({
               address_id: addressRes.id,
               date: finalDate,
               time_slot: timeSlotStr,
               is_urgent: isUrgent,
               comment: finalComment,
-              tariff_type: tariffId,
-              tariff_details: tariffId === 'monthly' ? { bags_count: bagsCount, duration, frequency } : undefined
+              tariff_type: tariffId
             });
             
             if (paymentRes.confirmation_url) {
