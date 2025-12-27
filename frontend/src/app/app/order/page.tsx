@@ -53,6 +53,9 @@ function OrderContent() {
   const [complexes, setComplexes] = useState<any[]>([]);
   const [selectedComplexBuildings, setSelectedComplexBuildings] = useState<string[]>([]);
   
+  // Balance for payment logic
+  const [balance, setBalance] = useState<number>(0);
+  
   useEffect(() => {
     // Expand to full screen
     if (typeof window !== 'undefined' && (window as any).Telegram?.WebApp) {
