@@ -75,10 +75,16 @@ async def create_payment(
     idempotence_key = str(uuid.uuid4())
     
     # Prepare receipt (required by 54-FZ for Russia)
+    # YooKassa requires either phone or email in receipt
+    customer = {}
+    if current_user.phone:
+        customer["phone"] = str(current_user.phone)
+    else:
+        # Use email as fallback since telegram_id is too long for phone
+        customer["email"] = f"user_{current_user.telegram_id}@ya-uberu.ru"
+    
     receipt = {
-        "customer": {
-            "phone": str(current_user.phone) if current_user.phone else f"+7{current_user.telegram_id}"
-        },
+        "customer": customer,
         "items": [
             {
                 "description": description,
