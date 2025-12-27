@@ -224,11 +224,20 @@ async def get_residential_complexes(
     db: AsyncSession = Depends(get_db),
 ):
     """
-    Get list of available residential complexes
+    Get list of available residential complexes with buildings
     """
+    from sqlalchemy.orm import selectinload
+    
     result = await db.execute(
-        select(ResidentialComplex).where(ResidentialComplex.is_active == True)
+        select(ResidentialComplex)
+        .where(ResidentialComplex.is_active == True)
+        .options(selectinload(ResidentialComplex.buildings))
     )
     complexes = result.scalars().all()
     
-    return [{"id": c.id, "name": c.name, "short_name": c.short_name} for c in complexes]
+    return [{
+        "id": c.id, 
+        "name": c.name, 
+        "short_name": c.short_name,
+        "buildings": [b.building_number for b in c.buildings]
+    } for c in complexes]

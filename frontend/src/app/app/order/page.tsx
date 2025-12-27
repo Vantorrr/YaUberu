@@ -51,6 +51,7 @@ function OrderContent() {
   
   // Dynamic Complexes
   const [complexes, setComplexes] = useState<any[]>([]);
+  const [selectedComplexBuildings, setSelectedComplexBuildings] = useState<string[]>([]);
   
   useEffect(() => {
     // Expand to full screen
@@ -255,7 +256,13 @@ function OrderContent() {
                   <Building className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-teal-600" />
                   <select
                     value={address.complexId}
-                    onChange={(e) => setAddress({ ...address, complexId: e.target.value })}
+                    onChange={(e) => {
+                      const complexId = e.target.value;
+                      setAddress({ ...address, complexId, building: '' });
+                      // Update available buildings for selected complex
+                      const complex = complexes.find((c) => c.id === parseInt(complexId));
+                      setSelectedComplexBuildings(complex?.buildings || []);
+                    }}
                     className="w-full pl-12 pr-4 py-4 rounded-xl bg-white border-2 border-gray-200 text-gray-900 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 outline-none transition-all appearance-none"
                     required
                   >
@@ -282,17 +289,41 @@ function OrderContent() {
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Дом <span className="text-red-500">*</span>
                   </label>
-                  <div className="relative">
-                    <Home className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-teal-500" />
-                    <input
-                      type="text"
-                      placeholder=""
-                      value={address.building}
-                      onChange={(e) => setAddress({ ...address, building: e.target.value })}
-                      className="w-full pl-12 pr-4 py-4 rounded-xl bg-white border border-gray-300 text-gray-900 placeholder-gray-600 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 outline-none transition-all"
-                      required
-                    />
-                  </div>
+                  {selectedComplexBuildings.length > 0 ? (
+                    <div className="relative">
+                      <Home className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-teal-500" />
+                      <select
+                        value={address.building}
+                        onChange={(e) => setAddress({ ...address, building: e.target.value })}
+                        className="w-full pl-12 pr-4 py-4 rounded-xl bg-white border border-gray-300 text-gray-900 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 outline-none transition-all appearance-none"
+                        required
+                      >
+                        <option value="">-- Выберите дом --</option>
+                        {selectedComplexBuildings.map((building, idx) => (
+                          <option key={idx} value={building}>
+                            {building}
+                          </option>
+                        ))}
+                      </select>
+                      <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
+                        <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        </svg>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="relative">
+                      <Home className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-teal-500" />
+                      <input
+                        type="text"
+                        placeholder=""
+                        value={address.building}
+                        onChange={(e) => setAddress({ ...address, building: e.target.value })}
+                        className="w-full pl-12 pr-4 py-4 rounded-xl bg-white border border-gray-300 text-gray-900 placeholder-gray-600 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 outline-none transition-all"
+                        required
+                      />
+                    </div>
+                  )}
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
