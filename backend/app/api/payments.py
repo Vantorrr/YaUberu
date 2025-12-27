@@ -97,12 +97,16 @@ async def create_payment(
                     "value": str(amount),
                     "currency": "RUB"
                 },
-                "vat_code": 1  # НДС 20%
+                "vat_code": 1,
+                "payment_subject": "service",
+                "payment_mode": "full_payment"
             }
         ]
     }
     
-    payment = YookassaPayment.create({
+    print(f"[PAYMENT] Full receipt: {receipt}")
+    
+    payment_data = {
         "amount": {
             "value": str(amount),
             "currency": "RUB"
@@ -118,7 +122,11 @@ async def create_payment(
             "user_id": current_user.id,
             "tariff_type": request.tariff_type
         }
-    }, idempotence_key)
+    }
+    
+    print(f"[PAYMENT] Creating payment with data: {payment_data}")
+    
+    payment = YookassaPayment.create(payment_data, idempotence_key)
 
     # 3. Save pending payment to DB
     db_payment = Payment(
