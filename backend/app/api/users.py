@@ -110,9 +110,9 @@ async def get_user_subscriptions(
     return [{
         "id": s.id,
         "tariff": s.tariff.value,
-        "start_date": s.start_date.isoformat(),
+        "start_date": s.start_date.isoformat() if s.start_date else None,
         "end_date": s.end_date.isoformat() if s.end_date else None,
-        "frequency": s.frequency.value if s.frequency else None,
+        "frequency": s.frequency,  # Already a string, not enum
         "is_active": s.is_active
     } for s in subscriptions]
 
