@@ -57,7 +57,7 @@ async def create_payment(
     # Prepare receipt (required by 54-FZ for Russia)
     receipt = {
         "customer": {
-            "phone": str(current_user.phone_number) if current_user.phone_number else f"+7{current_user.telegram_id}"
+            "phone": str(current_user.phone) if current_user.phone else f"+7{current_user.telegram_id}"
         },
         "items": [
             {
