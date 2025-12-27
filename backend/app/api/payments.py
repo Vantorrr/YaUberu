@@ -53,6 +53,25 @@ async def create_payment(
 
     # 2. Create payment in Yookassa
     idempotence_key = str(uuid.uuid4())
+    
+    # Prepare receipt (required by 54-FZ for Russia)
+    receipt = {
+        "customer": {
+            "phone": str(current_user.phone_number) if current_user.phone_number else f"+7{current_user.telegram_id}"
+        },
+        "items": [
+            {
+                "description": description,
+                "quantity": "1.00",
+                "amount": {
+                    "value": str(amount),
+                    "currency": "RUB"
+                },
+                "vat_code": 1  # НДС 20%
+            }
+        ]
+    }
+    
     payment = YookassaPayment.create({
         "amount": {
             "value": str(amount),
@@ -64,6 +83,7 @@ async def create_payment(
         },
         "capture": True,
         "description": description,
+        "receipt": receipt,
         "metadata": {
             "user_id": current_user.id,
             "tariff_type": request.tariff_type
