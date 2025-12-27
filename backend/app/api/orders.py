@@ -146,6 +146,18 @@ async def create_order(
                 frequency='every_other_day'
             )
             db.add(subscription)
+            
+            # ADD subscription credits to balance (refund the order cost + add subscription credits)
+            balance.credits += (cost + total_credits)  # Refund order cost + add subscription credits
+            
+            # Log subscription purchase
+            subscription_transaction = BalanceTransaction(
+                balance_id=balance.id,
+                amount=total_credits,
+                description=f"Подписка {'Пробная' if request.tariff_type == 'trial' else 'Месячная'} (+{total_credits} выносов)",
+                order_id=order.id,
+            )
+            db.add(subscription_transaction)
     
     await db.commit()
     await db.refresh(order)
