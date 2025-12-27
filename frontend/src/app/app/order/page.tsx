@@ -602,7 +602,7 @@ function OrderContent() {
                       </div>
                     </div>
                     <p className="text-gray-500 text-xs">
-                      {pickupsCount} выносов × {bagsCount} мешок{bagsCount > 1 ? (bagsCount < 5 ? 'а' : 'ов') : ''}
+                      {pickupsCount} выносов × {bagsCount} пакет{bagsCount > 1 ? (bagsCount < 5 ? 'а' : 'ов') : ''}
                     </p>
                   </div>
                 );
@@ -881,7 +881,7 @@ function OrderContent() {
                       <div className="flex-1">
                         <p className="text-gray-500 text-xs mb-1 font-medium uppercase tracking-wide">Детали подписки</p>
                         <p className="text-gray-900 font-semibold text-base">
-                          {bagsCount} мешок{bagsCount > 1 ? (bagsCount < 5 ? 'а' : 'ов') : ''} × {duration} дней
+                          {bagsCount} пакет{bagsCount > 1 ? (bagsCount < 5 ? 'а' : 'ов') : ''} × {duration} дней
                         </p>
                         <p className="text-gray-600 text-sm mt-1">
                           Частота: {frequency === 'daily' ? 'Каждый день' : frequency === 'every_other_day' ? 'Через день' : '2 раза в неделю'}
