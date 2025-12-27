@@ -471,7 +471,7 @@ async def telegram_webhook(request: Request, db: AsyncSession = Depends(get_db))
                 await db.flush()
                 
                 # Даем приветственные бонусы
-                balance = Balance(user_id=user.id, credits=5)
+                balance = Balance(user_id=user.id, credits=0)
                 db.add(balance)
             
             await db.commit()

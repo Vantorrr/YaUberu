@@ -71,7 +71,7 @@ async def telegram_auth(
         await db.flush()
         
         # Create balance for new user (GIVE 5 FREE CREDITS)
-        balance = Balance(user_id=user.id, credits=5)
+        balance = Balance(user_id=user.id, credits=0)
         db.add(balance)
         await db.commit()
         await db.refresh(user)
@@ -146,7 +146,7 @@ async def telegram_contact_auth(
         await db.flush()
         
         # Create balance for new user (GIVE 5 FREE CREDITS)
-        balance = Balance(user_id=user.id, credits=5)
+        balance = Balance(user_id=user.id, credits=0)
         db.add(balance)
         await db.commit()
         await db.refresh(user)
