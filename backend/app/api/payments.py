@@ -10,7 +10,7 @@ from datetime import date, datetime, timedelta
 from app.config import settings
 from app.models import get_db, User, Order, OrderStatus, TimeSlot, Address, Balance, BalanceTransaction, Subscription, Tariff, Payment, ResidentialComplex, UserRole
 from app.api.deps import get_current_user
-from app.api.orders import CreateOrderRequest
+from app.api.orders import CreateOrderRequest, TariffDetails
 from app.services.notifications import notify_all_couriers_new_order, notify_admins_new_order, notify_client_order_created
 
 router = APIRouter()
@@ -32,21 +32,41 @@ async def create_payment(
     amount = 0
     description = ""
     
-    # Simple logic for now, should fetch from TariffPrice table in production
+    # Calculate price based on tariff type
     if request.tariff_type == 'single':
-        amount = 390 if request.is_urgent else 199 # Example prices
+        amount = 450 if request.is_urgent else 150
         description = "Разовый вынос мусора"
     elif request.tariff_type == 'trial':
-        amount = 199 # Trial price
+        amount = 199 # Fixed trial price
         description = "Подписка 'Пробный старт' (7 выносов)"
     elif request.tariff_type == 'monthly':
-        # TODO: Dynamic price calculation based on bags/frequency/duration
-        # For MVP taking a fixed price or calculate based on some logic passed in request?
-        # Ideally frontend passes the calculated price or we verify it here.
-        # Let's assume frontend sends the parameters correctly and we calculate standard price.
-        # For MVP hardcode or simple calculation:
-        amount = 1890 # Example monthly price
-        description = "Подписка 'Месяц Комфорт'"
+        # Dynamic price calculation based on bags/frequency/duration
+        if request.tariff_details:
+            base_price = 150  # Base price per pickup
+            frequencyMultiplier = {
+                'daily': 1,
+                'every_other_day': 0.5,
+                'twice_week': 2/7
+            }
+            daysInPeriod = request.tariff_details.duration
+            pickupsCount = int(daysInPeriod * frequencyMultiplier.get(request.tariff_details.frequency, 0.5))
+            totalPrice = base_price * pickupsCount * request.tariff_details.bags_count
+            
+            # Apply discount based on duration
+            if daysInPeriod >= 60:
+                discount = 0.3
+            elif daysInPeriod >= 30:
+                discount = 0.2
+            elif daysInPeriod >= 14:
+                discount = 0.1
+            else:
+                discount = 0
+            
+            amount = int(totalPrice * (1 - discount))
+            description = f"Подписка 'Месяц Комфорт' ({pickupsCount} выносов)"
+        else:
+            amount = 1890  # Fallback price
+            description = "Подписка 'Месяц Комфорт'"
     
     if amount == 0:
         raise HTTPException(status_code=400, detail="Invalid tariff type or price")
@@ -166,13 +186,22 @@ async def yookassa_webhook(request: Request, db: AsyncSession = Depends(get_db))
                 credits_to_add = 1
                 cost_to_deduct = 1
             elif request_obj.tariff_type == 'trial':
-                credits_to_add = 7 # 7 pickups for trial
-                cost_to_deduct = 0 # Subscription logic handles deduction? Usually trial includes first pickup? Let's assume we just create subscription and scheduler/user creates orders. 
-                # BUT user selected a date/time in the form! So we should create the FIRST order immediately.
-                cost_to_deduct = 1 
+                credits_to_add = 7 # 7 pickups for trial (14 days every other day)
+                cost_to_deduct = 1  # First order is created immediately
             elif request_obj.tariff_type == 'monthly':
-                 credits_to_add = 15 # Example
-                 cost_to_deduct = 1
+                 # Calculate credits based on tariff details
+                 if request_obj.tariff_details:
+                     frequencyMultiplier = {
+                         'daily': 1,
+                         'every_other_day': 0.5,
+                         'twice_week': 2/7
+                     }
+                     daysInPeriod = request_obj.tariff_details.duration
+                     pickupsCount = int(daysInPeriod * frequencyMultiplier.get(request_obj.tariff_details.frequency, 0.5))
+                     credits_to_add = pickupsCount
+                 else:
+                     credits_to_add = 15  # Fallback
+                 cost_to_deduct = 1  # First order is created immediately
             
             # Add credits transaction
             balance.credits += credits_to_add
@@ -212,9 +241,15 @@ async def yookassa_webhook(request: Request, db: AsyncSession = Depends(get_db))
             
             # C. Create Subscription (if trial/monthly)
             if request_obj.tariff_type in ['trial', 'monthly']:
-                 # Simplified subscription creation (similar to orders.py but using data from request/payment)
-                 # Determine duration/frequency from request or defaults
-                 duration_days = 14 if request_obj.tariff_type == 'trial' else 30
+                 # Get tariff details
+                 duration_days = 14  # Default for trial
+                 frequency = 'every_other_day'  # Default
+                 bags_count = 1  # Default
+                 
+                 if request_obj.tariff_type == 'monthly' and request_obj.tariff_details:
+                     duration_days = request_obj.tariff_details.duration
+                     frequency = request_obj.tariff_details.frequency
+                     bags_count = request_obj.tariff_details.bags_count
                  
                  sub = Subscription(
                     user_id=user.id,
@@ -227,8 +262,8 @@ async def yookassa_webhook(request: Request, db: AsyncSession = Depends(get_db))
                     is_active=True,
                     start_date=date.today(),
                     end_date=date.today() + timedelta(days=duration_days),
-                    frequency='every_other_day',
-                    bags_count=1 # Default
+                    frequency=frequency,
+                    bags_count=bags_count
                  )
                  db.add(sub)
                  await db.flush()

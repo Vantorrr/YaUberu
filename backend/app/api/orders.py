@@ -13,6 +13,12 @@ from app.config import settings
 router = APIRouter()
 
 
+class TariffDetails(BaseModel):
+    bags_count: int = 1
+    duration: int = 14  # days
+    frequency: str = 'every_other_day'  # 'daily', 'every_other_day', 'twice_week'
+
+
 class CreateOrderRequest(BaseModel):
     address_id: int
     date: date
@@ -20,6 +26,7 @@ class CreateOrderRequest(BaseModel):
     is_urgent: bool = False
     comment: Optional[str] = None
     tariff_type: Optional[str] = 'single'  # 'single', 'trial', 'monthly'
+    tariff_details: Optional[TariffDetails] = None
 
 
 class OrderResponse(BaseModel):
