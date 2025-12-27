@@ -11,7 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.base import async_session
 from app.models.order import Order, OrderStatus, Subscription, TimeSlot
-from app.models.user import User, UserRole
+from app.models.user import User, UserRole, Balance, BalanceTransaction
 from app.services.notifications import notify_all_couriers_new_order
 
 
@@ -97,10 +97,36 @@ async def generate_orders_for_today():
                 comment="Авто-заказ по подписке"
             )
             db.add(order)
+            await db.flush()  # Get order.id
+            
+            # Deduct credit from balance
+            balance_result = await db.execute(
+                select(Balance).where(Balance.user_id == sub.user_id)
+            )
+            balance = balance_result.scalar_one_or_none()
+            
+            if balance and balance.credits > 0:
+                balance.credits -= 1
+                
+                # Log transaction
+                transaction = BalanceTransaction(
+                    balance_id=balance.id,
+                    amount=-1,
+                    description=f"Авто-заказ по подписке #{order.id}",
+                    order_id=order.id,
+                )
+                db.add(transaction)
+            else:
+                print(f"[SCHEDULER] Warning: User {sub.user_id} has no credits, but order created")
             
             # Update subscription
             sub.last_generated_date = today
-            # Note: credits are deducted when order is completed, not created
+            sub.used_credits += 1
+            
+            # Check if subscription should be deactivated
+            if sub.used_credits >= sub.total_credits:
+                sub.is_active = False
+                print(f"[SCHEDULER] Subscription {sub.id} completed (used all credits)")
             
             generated += 1
             print(f"[SCHEDULER] Created order for subscription {sub.id}, user {sub.user_id}")
