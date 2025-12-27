@@ -79,9 +79,13 @@ async def create_payment(
     customer = {}
     if current_user.phone:
         customer["phone"] = str(current_user.phone)
+        print(f"[PAYMENT] Using phone: {current_user.phone}")
     else:
         # Use email as fallback since telegram_id is too long for phone
         customer["email"] = f"user_{current_user.telegram_id}@ya-uberu.ru"
+        print(f"[PAYMENT] Using email fallback: {customer['email']}")
+    
+    print(f"[PAYMENT] Customer dict: {customer}")
     
     receipt = {
         "customer": customer,
