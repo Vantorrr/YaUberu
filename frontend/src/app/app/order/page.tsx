@@ -392,9 +392,6 @@ function OrderContent() {
                   onChange={(e) => setAddress({ ...address, intercom: e.target.value })}
                   className="w-full px-4 py-4 rounded-xl bg-white border border-gray-300 text-gray-900 placeholder-gray-600 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 outline-none transition-all"
                 />
-                <p className="text-xs text-gray-500 mt-2">
-                  💡 Если домофона нет, оставьте пустым
-                </p>
               </div>
 
               {/* SAVE ADDRESS CHECKBOX */}
