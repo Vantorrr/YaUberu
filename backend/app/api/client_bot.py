@@ -218,7 +218,7 @@ async def telegram_webhook(request: Request, db: AsyncSession = Depends(get_db))
                 # Отправляем фото с меню
                 await send_telegram_photo(
                     chat_id,
-                    photo_url="https://i.ibb.co/tML76GVK/1766813478694f6f26aeffe.jpg",
+                    photo_url="https://i.ibb.co/5WLCg2CG/22222222.jpg",
                     caption=caption,
                     keyboard=keyboard
                 )
@@ -336,7 +336,7 @@ async def telegram_webhook(request: Request, db: AsyncSession = Depends(get_db))
                 # Отправляем фото с меню
                 await send_telegram_photo(
                     chat_id,
-                    photo_url="https://i.ibb.co/tML76GVK/1766813478694f6f26aeffe.jpg",
+                    photo_url="https://i.ibb.co/5WLCg2CG/22222222.jpg",
                     caption=caption,
                     keyboard=keyboard
                 )
@@ -403,7 +403,7 @@ async def telegram_webhook(request: Request, db: AsyncSession = Depends(get_db))
                 
                 await send_telegram_photo(
                     chat_id,
-                    photo_url="https://i.ibb.co/tML76GVK/1766813478694f6f26aeffe.jpg",
+                    photo_url="https://i.ibb.co/5WLCg2CG/22222222.jpg",
                     caption=caption,
                     keyboard=keyboard
                 )
