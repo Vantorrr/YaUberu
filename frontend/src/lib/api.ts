@@ -152,6 +152,7 @@ class ApiClient {
     time_slot: string;
     is_urgent?: boolean;
     comment?: string;
+    tariff_type?: string;
   }) {
     return this.request('/orders/', {
       method: 'POST',

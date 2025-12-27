@@ -5,7 +5,7 @@ from pydantic import BaseModel
 from typing import List, Optional
 from datetime import date, timedelta
 
-from app.models import get_db, Order, OrderStatus, TimeSlot, Address, Balance, BalanceTransaction, User, UserRole, ResidentialComplex
+from app.models import get_db, Order, OrderStatus, TimeSlot, Address, Balance, BalanceTransaction, User, UserRole, ResidentialComplex, Subscription, Tariff
 from app.api.deps import get_current_user
 from app.services.notifications import notify_all_couriers_new_order, notify_admins_new_order, notify_client_order_created
 from app.config import settings
@@ -19,6 +19,7 @@ class CreateOrderRequest(BaseModel):
     time_slot: TimeSlot
     is_urgent: bool = False
     comment: Optional[str] = None
+    tariff_type: Optional[str] = 'single'  # 'single', 'trial', 'monthly'
 
 
 class OrderResponse(BaseModel):
@@ -114,6 +115,37 @@ async def create_order(
         order_id=order.id,
     )
     db.add(transaction)
+    
+    # Create Subscription if tariff is trial or monthly
+    if request.tariff_type in ['trial', 'monthly']:
+        # Check if user already has active subscription of this type
+        existing_sub_result = await db.execute(
+            select(Subscription).where(
+                Subscription.user_id == current_user.id,
+                Subscription.is_active == True
+            )
+        )
+        existing_sub = existing_sub_result.scalar_one_or_none()
+        
+        if not existing_sub:
+            # Determine total credits and end date based on tariff
+            total_credits = 7 if request.tariff_type == 'trial' else 15  # trial=7 days (2 weeks every other day), monthly=15
+            end_date_delta = 14 if request.tariff_type == 'trial' else 30
+            
+            subscription = Subscription(
+                user_id=current_user.id,
+                address_id=request.address_id,
+                tariff=Tariff.TRIAL if request.tariff_type == 'trial' else Tariff.MONTHLY,
+                total_credits=total_credits,
+                used_credits=0,
+                schedule_days="1,3,5",  # Mon, Wed, Fri (every other day)
+                default_time_slot=request.time_slot,
+                is_active=True,
+                start_date=date.today(),
+                end_date=date.today() + timedelta(days=end_date_delta),
+                frequency='every_other_day'
+            )
+            db.add(subscription)
     
     await db.commit()
     await db.refresh(order)

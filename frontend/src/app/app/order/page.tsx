@@ -190,7 +190,8 @@ function OrderContent() {
           date: dateStr,
           time_slot: timeSlotStr,
           is_urgent: isUrgent,
-          comment: finalComment
+          comment: finalComment,
+          tariff_type: tariffId  // Pass tariff type for subscription creation
         });
 
         router.push('/app/order/success');

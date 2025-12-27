@@ -91,6 +91,11 @@ class Subscription(Base):
     schedule_days = Column(String(20))  # e.g., "1,3,5" for Mon, Wed, Fri
     default_time_slot = Column(SQLEnum(TimeSlot))
     
+    # Subscription period
+    start_date = Column(Date, nullable=True)
+    end_date = Column(Date, nullable=True)
+    frequency = Column(String(20), nullable=True)  # 'daily', 'every_other_day', 'twice_week'
+    
     is_active = Column(Boolean, default=True)
     
     # Last date when orders were generated (to avoid duplicates)
