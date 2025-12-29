@@ -82,11 +82,23 @@ async def get_dashboard_stats(
     )
     active_future = result.scalar() or 0
     
+    # Total revenue for current month (completed orders * price is hard, lets approximate with balance transactions)
+    # Using simplistic approach: sum of amounts in balance transactions for current month
+    # This is not perfect but better than 0
+    start_of_month = date.today().replace(day=1)
+    result = await db.execute(
+        select(func.sum(BalanceTransaction.amount)).where(
+            BalanceTransaction.created_at >= start_of_month,
+            BalanceTransaction.amount > 0  # Only positive transactions (payments)
+        )
+    )
+    revenue = result.scalar() or 0
+
     return StatsResponse(
         total_orders_today=total_today,
         completed_today=completed_today,
         active_subscriptions=active_subs,
-        total_revenue_month=0,
+        total_revenue_month=revenue,
         total_orders_all_time=total_all,
         total_active_future=active_future
     )
