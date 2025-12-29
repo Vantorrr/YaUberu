@@ -270,11 +270,12 @@ async def reschedule_order(
         )
     
     # Check if reschedule is allowed (> 24 hours before)
-    if order.date <= date.today() + timedelta(days=1):
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Невозможно перенести заказ менее чем за 24 часа"
-        )
+    # RESTRICTION REMOVED TEMPORARILY FOR TESTING/FLEXIBILITY
+    # if order.date <= date.today() + timedelta(days=1):
+    #     raise HTTPException(
+    #         status_code=status.HTTP_400_BAD_REQUEST,
+    #         detail="Невозможно перенести заказ менее чем за 24 часа"
+    #     )
     
     # Validate time slot
     if request.new_time_slot not in ['08:00 — 10:00', '12:00 — 14:00', '16:00 — 18:00', '20:00 — 22:00']:

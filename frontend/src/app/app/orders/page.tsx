@@ -70,6 +70,17 @@ export default function OrdersPage() {
   const upcomingOrders = orders.filter(o => o.status === 'scheduled' || o.status === 'in_progress');
   const completedOrders = orders.filter(o => o.status === 'completed');
 
+  const formatDate = (dateStr: string | undefined) => {
+    if (!dateStr) return '';
+    const date = new Date(dateStr);
+    if (isNaN(date.getTime())) return dateStr; // Return original string if parse fails (maybe it's already formatted?)
+    return date.toLocaleDateString('ru-RU', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric'
+    });
+  };
+
   return (
     <div className="min-h-screen bg-white px-5 py-6 space-y-6 pb-24">
       {/* Header */}
@@ -113,11 +124,7 @@ export default function OrdersPage() {
                       <Calendar className="w-5 h-5 text-gray-400 mt-0.5" />
                       <div>
                         <p className="text-gray-900 font-semibold text-sm">
-                          {new Date(order.date || order.scheduled_date).toLocaleDateString('ru-RU', {
-                            day: 'numeric',
-                            month: 'long',
-                            year: 'numeric'
-                          })}
+                          {formatDate(order.date || order.scheduled_date)}
                         </p>
                         <p className="text-gray-600 text-xs mt-0.5">{order.time_slot}</p>
                       </div>
@@ -190,10 +197,7 @@ export default function OrdersPage() {
                       <Calendar className="w-5 h-5 text-gray-400 mt-0.5" />
                       <div>
                         <p className="text-gray-900 font-semibold text-sm">
-                          {new Date(order.date || order.scheduled_date).toLocaleDateString('ru-RU', {
-                            day: 'numeric',
-                            month: 'long'
-                          })}
+                          {formatDate(order.date || order.scheduled_date)}
                         </p>
                         <p className="text-gray-600 text-xs mt-0.5">{order.time_slot}</p>
                       </div>
