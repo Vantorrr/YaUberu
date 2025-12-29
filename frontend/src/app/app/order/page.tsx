@@ -32,11 +32,13 @@ function OrderContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const tariffId = searchParams.get('tariff') || 'single';
+  const urlDuration = searchParams.get('duration');
+  const urlUrgent = searchParams.get('urgent');
   
   const steps = getStepsForTariff(tariffId);
 
   const [step, setStep] = useState<Step>('address');
-  const [slot, setSlot] = useState<number | 'urgent' | null>(null);
+  const [slot, setSlot] = useState<number | 'urgent' | null>(urlUrgent === 'true' ? 'urgent' : null);
   const [address, setAddress] = useState({ complexId: '0', building: '', entrance: '', floor: '', apartment: '', intercom: '' });
   const [pickupMethod, setPickupMethod] = useState<'door' | 'hand'>('door');
   const [loading, setLoading] = useState(false);
@@ -46,7 +48,7 @@ function OrderContent() {
   
   // Volume/Duration for dynamic pricing
   const [bagsCount, setBagsCount] = useState(1);
-  const [duration, setDuration] = useState<number>(14); // days
+  const [duration, setDuration] = useState<number>(urlDuration ? parseInt(urlDuration) : 14); // days from URL or default 14
   const [frequency, setFrequency] = useState<'daily' | 'every_other_day' | 'twice_week'>('every_other_day');
   
   // Dynamic Complexes
@@ -571,24 +573,33 @@ function OrderContent() {
                 </div>
               </div>
 
-              {/* DURATION */}
-              <div>
-                <label className="block text-gray-700 font-semibold mb-2">Длительность</label>
-                <select
-                  value={duration}
-                  onChange={(e) => setDuration(Number(e.target.value))}
-                  className="w-full px-4 py-4 rounded-xl bg-white border-2 border-gray-200 text-gray-900 font-semibold focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 outline-none transition-all appearance-none cursor-pointer"
-                  style={{
-                    backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%239ca3af'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
-                    backgroundRepeat: 'no-repeat',
-                    backgroundPosition: 'right 1rem center',
-                    backgroundSize: '1.5rem'
-                  }}
-                >
-                  <option value={14}>14 дней</option>
-                  <option value={30}>30 дней</option>
-                </select>
-              </div>
+              {/* DURATION - only show if not fixed from URL */}
+              {!urlDuration ? (
+                <div>
+                  <label className="block text-gray-700 font-semibold mb-2">Длительность</label>
+                  <select
+                    value={duration}
+                    onChange={(e) => setDuration(Number(e.target.value))}
+                    className="w-full px-4 py-4 rounded-xl bg-white border-2 border-gray-200 text-gray-900 font-semibold focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 outline-none transition-all appearance-none cursor-pointer"
+                    style={{
+                      backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%239ca3af'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
+                      backgroundRepeat: 'no-repeat',
+                      backgroundPosition: 'right 1rem center',
+                      backgroundSize: '1.5rem'
+                    }}
+                  >
+                    <option value={14}>14 дней</option>
+                    <option value={30}>30 дней</option>
+                  </select>
+                </div>
+              ) : (
+                <div>
+                  <label className="block text-gray-700 font-semibold mb-2">Длительность</label>
+                  <div className="w-full px-4 py-4 rounded-xl bg-gray-50 border-2 border-gray-200 text-gray-900 font-semibold">
+                    {duration} дней
+                  </div>
+                </div>
+              )}
 
               {/* FREQUENCY */}
               <div>

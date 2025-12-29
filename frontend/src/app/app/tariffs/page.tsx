@@ -1,141 +1,114 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Check, Zap } from 'lucide-react';
-import { Button } from '@/components/ui/Button';
-import { api } from '@/lib/api';
-import { useEffect, useState } from 'react';
-
-interface Tariff {
-  id: number;
-  tariff_type: string;
-  name: string;
-  price: string;
-  old_price: string | null;
-  period: string | null;
-  description: string | null;
-}
+import { ArrowLeft, Zap } from 'lucide-react';
 
 export default function TariffsPage() {
   const router = useRouter();
-  const [tariffs, setTariffs] = useState<Tariff[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [hasSubscriptions, setHasSubscriptions] = useState<boolean>(false);
-
-  useEffect(() => {
-    const loadData = async () => {
-      try {
-        const [tariffsData, subscriptionsData] = await Promise.all([
-          api.getPublicTariffs(),
-          api.getSubscriptions()
-        ]);
-        setTariffs(tariffsData);
-        setHasSubscriptions(subscriptionsData && subscriptionsData.length > 0);
-      } catch (error) {
-        console.error('Failed to load data:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    loadData();
-  }, []);
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <div className="sticky top-0 z-10 bg-white/95 backdrop-blur border-b border-gray-200 px-5 py-4">
-        <div className="flex items-center gap-4">
+      <div className="sticky top-0 z-10 bg-white border-b border-gray-200 px-4 py-3">
+        <div className="flex items-center gap-3">
           <button
             onClick={() => router.back()}
-            className="w-10 h-10 bg-gray-100 rounded-xl flex items-center justify-center text-gray-900 hover:bg-gray-200 transition"
+            className="w-9 h-9 bg-gray-100 rounded-lg flex items-center justify-center"
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
-          <div>
-            <h1 className="text-lg font-bold text-gray-900">Выберите подписку</h1>
-            <p className="text-gray-500 text-sm">Оформите удобный тариф</p>
-          </div>
+          <h1 className="text-lg font-bold text-gray-900">Заказ</h1>
         </div>
       </div>
 
       {/* Content */}
-      <div className="px-5 py-6 space-y-4 pb-24">
-        {loading ? (
-          <div className="text-center py-10">
-            <p className="text-gray-500">Загрузка тарифов...</p>
+      <div className="px-4 py-4 space-y-3 pb-24">
+        {/* 1. Разовый вынос */}
+        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+          <button
+            onClick={() => router.push('/app/order?tariff=single')}
+            className="w-full p-4 text-left flex items-center justify-between"
+          >
+            <div>
+              <h3 className="font-bold text-base text-gray-900">Разовый вынос</h3>
+              <p className="text-gray-500 text-xs mt-0.5">от 139 ₽</p>
+            </div>
+          </button>
+          
+          {/* Срочный вынос - вложенная кнопка */}
+          <button
+            onClick={() => router.push('/app/order?tariff=single&urgent=true')}
+            className="w-full px-4 py-2.5 bg-orange-50 border-t border-orange-100 text-left flex items-center justify-between"
+          >
+            <div className="flex items-center gap-2">
+              <Zap className="w-4 h-4 text-orange-600" />
+              <span className="text-sm font-semibold text-orange-700">⚡️Срочный вынос</span>
+            </div>
+            <span className="text-sm font-bold text-orange-700">450 ₽</span>
+          </button>
+        </div>
+
+        {/* 2. Пробный старт - ВЫДЕЛЕННЫЙ */}
+        <button
+          onClick={() => router.push('/app/order?tariff=trial')}
+          className="w-full bg-gradient-to-br from-teal-400 to-teal-500 rounded-xl p-4 text-left shadow-md"
+        >
+          <div className="flex items-start justify-between">
+            <div>
+              <h3 className="font-bold text-lg text-white">Первая подписка</h3>
+              <p className="text-white/90 text-sm mt-1">Две недели будем выносить ваш мусор через день</p>
+            </div>
           </div>
-        ) : (
-          tariffs.map((t) => {
-            const isUrgent = t.tariff_type === 'single';
-            const isTrial = t.tariff_type === 'trial';
-            return (
-              <div
-                key={t.id}
-                onClick={() => router.push(`/app/order?tariff=${t.tariff_type}`)}
-                className={`relative p-6 rounded-2xl border-2 transition-all cursor-pointer hover:shadow-lg ${
-                  isTrial 
-                    ? 'bg-teal-50 border-teal-400 hover:border-teal-500' 
-                    : 'bg-white border-gray-200 hover:border-gray-300'
-                }`}
-              >
-                <div className="flex justify-between items-start mb-4">
-                  <div>
-                    <h3 className="text-gray-900 font-bold text-xl">{t.name}</h3>
-                    {isUrgent && (
-                      <div className="inline-flex items-center gap-1 mt-2 text-orange-600 text-xs font-semibold">
-                        <Zap className="w-4 h-4" />
-                        Срочный вынос
-                      </div>
-                    )}
-                  </div>
-                  <div className="text-right">
-                    {t.old_price && (
-                      <p className="text-gray-400 line-through text-sm">{t.old_price} ₽</p>
-                    )}
-                    <p className="text-gray-900 text-2xl">{t.price} ₽</p>
-                    {t.period && !isUrgent && (
-                      <p className="text-gray-500 text-xs mt-1">{t.period}</p>
-                    )}
-                  </div>
-                </div>
+          <div className="mt-3 flex items-baseline gap-2">
+            <span className="text-white/70 line-through text-sm">973 ₽</span>
+            <span className="text-white font-bold text-2xl">292 ₽</span>
+          </div>
+          <div className="mt-2 inline-block bg-white/20 text-white text-xs font-bold px-2 py-1 rounded">
+            Выгода 70%
+          </div>
+        </button>
 
-                {/* Description - for trial, only show to new users */}
-                {t.description && (!isTrial || !hasSubscriptions) && (
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2 text-base text-gray-700">
-                      <div className="w-6 h-6 bg-teal-500 rounded-full flex items-center justify-center flex-shrink-0">
-                        <Check className="w-4 h-4 text-white" />
-                      </div>
-                      <span>{t.description}</span>
-                    </div>
-                  </div>
-                )}
-                {/* For existing users, show alternative text for trial */}
-                {isTrial && hasSubscriptions && (
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2 text-base text-gray-700">
-                      <div className="w-6 h-6 bg-teal-500 rounded-full flex items-center justify-center flex-shrink-0">
-                        <Check className="w-4 h-4 text-white" />
-                      </div>
-                      <span>2 недели удобного вывоза мусора</span>
-                    </div>
-                  </div>
-                )}
+        {/* 3. Комфорт 2 недели */}
+        <button
+          onClick={() => router.push('/app/order?tariff=monthly&duration=14')}
+          className="w-full bg-white rounded-xl border border-gray-200 p-4 text-left"
+        >
+          <div className="flex items-start justify-between">
+            <div>
+              <h3 className="font-bold text-base text-gray-900">Комфорт 2 недели</h3>
+              <p className="text-gray-500 text-xs mt-0.5">от 756₽</p>
+            </div>
+          </div>
+          <p className="text-gray-600 text-sm mt-2">
+            Оплатите нужное количество пакетов по выгодной цене. Срок действия - 30 дней
+          </p>
+          <div className="mt-2 inline-block bg-teal-50 text-teal-700 text-xs font-bold px-2 py-1 rounded">
+            Выгода до 40%
+          </div>
+        </button>
 
-                {/* CTA Arrow */}
-                <div className="mt-4 flex justify-end">
-                  <div className="px-4 py-2 rounded-xl text-sm font-medium bg-gray-100 text-gray-900">
-                    Выбрать →
-                  </div>
-                </div>
-              </div>
-            );
-          })
-        )}
+        {/* 4. Комфорт месяц */}
+        <button
+          onClick={() => router.push('/app/order?tariff=monthly&duration=30')}
+          className="w-full bg-white rounded-xl border border-gray-200 p-4 text-left"
+        >
+          <div className="flex items-start justify-between">
+            <div>
+              <h3 className="font-bold text-base text-gray-900">Комфорт месяц</h3>
+              <p className="text-gray-500 text-xs mt-0.5">от 1459.5 ₽</p>
+            </div>
+          </div>
+          <p className="text-gray-600 text-sm mt-2">
+            Будем регулярно выносить мусор по выбранным дням
+          </p>
+          <div className="mt-2 inline-block bg-teal-50 text-teal-700 text-xs font-bold px-2 py-1 rounded">
+            Выгода до 35%
+          </div>
+        </button>
 
-        {/* Info message */}
-        <div className="bg-blue-50 border border-blue-200 rounded-2xl p-4 mt-6">
-          <p className="text-blue-900 text-sm">
+        {/* Info */}
+        <div className="bg-blue-50 border border-blue-200 rounded-xl p-3 mt-4">
+          <p className="text-blue-900 text-xs">
             💡 После оплаты вы сможете управлять подпиской во вкладке <strong>"Заказы"</strong>
           </p>
         </div>
@@ -143,4 +116,3 @@ export default function TariffsPage() {
     </div>
   );
 }
-
