@@ -180,12 +180,12 @@ async def get_today_orders(
     db: AsyncSession = Depends(get_db),
 ):
     """
-    Get all orders for today
+    Get all active orders (scheduled + in_progress), not just today
     """
-    today = date.today()
-    
     result = await db.execute(
-        select(Order).where(Order.date == today).order_by(Order.time_slot)
+        select(Order)
+        .where(Order.status.in_([OrderStatus.SCHEDULED, OrderStatus.IN_PROGRESS]))
+        .order_by(Order.date, Order.time_slot)
     )
     orders = result.scalars().all()
     
