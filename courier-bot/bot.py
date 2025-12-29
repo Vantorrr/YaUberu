@@ -407,12 +407,18 @@ async def admin_stats(callback: CallbackQuery):
         return
     
     text = f"""
-📊 **Статистика на сегодня**
+📊 **Статистика**
 
-📦 Заказов сегодня: **{stats.get('total_orders_today', 0)}**
+📅 **Сегодня:**
+📦 Заказов: **{stats.get('total_orders_today', 0)}**
 ✅ Выполнено: **{stats.get('completed_today', 0)}**
-👥 Активных подписок: **{stats.get('active_subscriptions', 0)}**
-💰 Выручка за месяц: **{stats.get('total_revenue_month', 0)} ₽**
+
+🌐 **Всего в сервисе:**
+⚡️ Активных заказов: **{stats.get('total_active_future', 0)}** (включая будущие)
+🗃 Всего заказов: **{stats.get('total_orders_all_time', 0)}**
+👥 Подписок: **{stats.get('active_subscriptions', 0)}**
+
+💰 Выручка (мес): **{stats.get('total_revenue_month', 0)} ₽**
 
 _Обновлено: {datetime.now().strftime('%H:%M')}_
 """

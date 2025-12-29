@@ -35,9 +35,61 @@ class StatsResponse(BaseModel):
     completed_today: int
     active_subscriptions: int
     total_revenue_month: float
+    total_orders_all_time: int  # New field
+    total_active_future: int    # New field: scheduled/in_progress for any date
 
-
-class TariffResponse(BaseModel):
+@router.get("/stats", response_model=StatsResponse)
+async def get_dashboard_stats(
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Get dashboard statistics for admin
+    """
+    today = date.today()
+    
+    # Orders today
+    result = await db.execute(
+        select(func.count(Order.id)).where(Order.date == today)
+    )
+    total_today = result.scalar() or 0
+    
+    # Completed today
+    result = await db.execute(
+        select(func.count(Order.id)).where(
+            Order.date == today,
+            Order.status == OrderStatus.COMPLETED
+        )
+    )
+    completed_today = result.scalar() or 0
+    
+    # Active subscriptions
+    result = await db.execute(
+        select(func.count(Subscription.id)).where(Subscription.is_active == True)
+    )
+    active_subs = result.scalar() or 0
+    
+    # Total orders all time
+    result = await db.execute(
+        select(func.count(Order.id))
+    )
+    total_all = result.scalar() or 0
+    
+    # Active future orders (not completed, not cancelled)
+    result = await db.execute(
+        select(func.count(Order.id)).where(
+            Order.status.in_([OrderStatus.SCHEDULED, OrderStatus.IN_PROGRESS])
+        )
+    )
+    active_future = result.scalar() or 0
+    
+    return StatsResponse(
+        total_orders_today=total_today,
+        completed_today=completed_today,
+        active_subscriptions=active_subs,
+        total_revenue_month=0,
+        total_orders_all_time=total_all,
+        total_active_future=active_future
+    )
     id: int
     tariff_type: str
     name: str
