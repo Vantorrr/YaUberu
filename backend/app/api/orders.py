@@ -41,6 +41,11 @@ class OrderResponse(BaseModel):
         from_attributes = True
 
 
+class RescheduleRequest(BaseModel):
+    new_date: str  # YYYY-MM-DD format
+    new_time_slot: str  # e.g. "08:00 — 10:00"
+
+
 @router.get("/", response_model=List[OrderResponse])
 async def get_orders(
     status_filter: Optional[OrderStatus] = None,
@@ -235,8 +240,7 @@ async def create_order(
 @router.put("/{order_id}/reschedule")
 async def reschedule_order(
     order_id: int,
-    new_date: date,
-    new_time_slot: TimeSlot,
+    request: RescheduleRequest,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
@@ -256,15 +260,31 @@ async def reschedule_order(
             detail="Order not found"
         )
     
+    # Parse date
+    try:
+        new_date = date.fromisoformat(request.new_date)
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid date format. Use YYYY-MM-DD"
+        )
+    
     # Check if reschedule is allowed (> 24 hours before)
     if order.date <= date.today() + timedelta(days=1):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Cannot reschedule order less than 24 hours before pickup"
+            detail="Невозможно перенести заказ менее чем за 24 часа"
+        )
+    
+    # Validate time slot
+    if request.new_time_slot not in ['08:00 — 10:00', '12:00 — 14:00', '16:00 — 18:00', '20:00 — 22:00']:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid time slot"
         )
     
     order.date = new_date
-    order.time_slot = new_time_slot
+    order.time_slot = TimeSlot(request.new_time_slot)
     
     await db.commit()
     

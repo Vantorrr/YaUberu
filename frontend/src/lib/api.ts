@@ -68,7 +68,20 @@ class ApiClient {
 
     if (!response.ok) {
       const error = await response.json().catch(() => ({ detail: 'Unknown error' }));
-      throw new Error(error.detail || 'API request failed');
+      
+      // Handle different error formats
+      let errorMessage = 'API request failed';
+      
+      if (typeof error.detail === 'string') {
+        errorMessage = error.detail;
+      } else if (Array.isArray(error.detail)) {
+        // FastAPI validation errors
+        errorMessage = error.detail.map((e: any) => e.msg || JSON.stringify(e)).join(', ');
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      throw new Error(errorMessage);
     }
 
     return response.json();
