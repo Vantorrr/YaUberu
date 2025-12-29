@@ -63,7 +63,7 @@ function OrderContent() {
   
   // Tariff prices from DB
   const [tariffPrices, setTariffPrices] = useState<any>({
-    single: { price: 150, urgent_price: 450 },
+    single: { price: 150, urgent_price: 250 },
     trial: { price: 199 },
     monthly: { base_price: 150 }
   });
@@ -97,7 +97,7 @@ function OrderContent() {
         
         // Parse tariff prices
         const prices: any = {
-          single: { price: 150, urgent_price: 450 },
+          single: { price: 150, urgent_price: 250 },
           trial: { price: 199 },
           monthly: { base_price: 150 }
         };
@@ -105,8 +105,8 @@ function OrderContent() {
         tariffsData.forEach((t: any) => {
           if (t.tariff_type === 'single') {
             prices.single.price = parseInt(t.price);
-            // Urgent price is typically 3x normal price, or use old_price if set
-            prices.single.urgent_price = t.old_price ? parseInt(t.old_price) : parseInt(t.price) * 3;
+            // Urgent price is fixed at 250 ₽
+            prices.single.urgent_price = 250;
           } else if (t.tariff_type === 'trial') {
             prices.trial.price = parseInt(t.price);
           } else if (t.tariff_type === 'monthly') {
