@@ -20,19 +20,24 @@ export default function TariffsPage() {
   const router = useRouter();
   const [tariffs, setTariffs] = useState<Tariff[]>([]);
   const [loading, setLoading] = useState(true);
+  const [hasSubscriptions, setHasSubscriptions] = useState<boolean>(false);
 
   useEffect(() => {
-    const loadTariffs = async () => {
+    const loadData = async () => {
       try {
-        const data = await api.getPublicTariffs();
-        setTariffs(data);
+        const [tariffsData, subscriptionsData] = await Promise.all([
+          api.getPublicTariffs(),
+          api.getSubscriptions()
+        ]);
+        setTariffs(tariffsData);
+        setHasSubscriptions(subscriptionsData && subscriptionsData.length > 0);
       } catch (error) {
-        console.error('Failed to load tariffs:', error);
+        console.error('Failed to load data:', error);
       } finally {
         setLoading(false);
       }
     };
-    loadTariffs();
+    loadData();
   }, []);
 
   return (
@@ -94,14 +99,25 @@ export default function TariffsPage() {
                   </div>
                 </div>
 
-                {/* Description */}
-                {t.description && (
+                {/* Description - for trial, only show to new users */}
+                {t.description && (!isTrial || !hasSubscriptions) && (
                   <div className="space-y-2">
                     <div className="flex items-center gap-2 text-base text-gray-700">
                       <div className="w-6 h-6 bg-teal-500 rounded-full flex items-center justify-center flex-shrink-0">
                         <Check className="w-4 h-4 text-white" />
                       </div>
                       <span>{t.description}</span>
+                    </div>
+                  </div>
+                )}
+                {/* For existing users, show alternative text for trial */}
+                {isTrial && hasSubscriptions && (
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2 text-base text-gray-700">
+                      <div className="w-6 h-6 bg-teal-500 rounded-full flex items-center justify-center flex-shrink-0">
+                        <Check className="w-4 h-4 text-white" />
+                      </div>
+                      <span>2 недели удобного вывоза мусора</span>
                     </div>
                   </div>
                 )}
