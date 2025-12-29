@@ -499,54 +499,57 @@ async def update_tariff(
     db: AsyncSession = Depends(get_db)
 ):
     """Update tariff price and details"""
-    from sqlalchemy import update
+    from sqlalchemy import text
     
     print(f"[ADMIN] Updating tariff {tariff_id} with data: {request.model_dump()}")
     
-    # Build update dict
-    update_data = {}
+    # Build SET clause
+    set_parts = []
+    params = {"tariff_id": tariff_id}
+    
     if request.name is not None:
-        update_data['name'] = request.name
+        set_parts.append("name = :name")
+        params["name"] = request.name
     if request.price is not None:
-        update_data['price'] = request.price
+        set_parts.append("price = :price")
+        params["price"] = request.price
         print(f"[ADMIN] Setting price to {request.price}")
     if request.old_price is not None:
-        update_data['old_price'] = request.old_price
+        set_parts.append("old_price = :old_price")
+        params["old_price"] = request.old_price
     if request.period is not None:
-        update_data['period'] = request.period
+        set_parts.append("period = :period")
+        params["period"] = request.period
     if request.description is not None:
-        update_data['description'] = request.description
+        set_parts.append("description = :description")
+        params["description"] = request.description
     if request.is_active is not None:
-        update_data['is_active'] = request.is_active
+        set_parts.append("is_active = :is_active")
+        params["is_active"] = request.is_active
     if request.is_urgent is not None:
-        update_data['is_urgent'] = request.is_urgent
+        set_parts.append("is_urgent = :is_urgent")
+        params["is_urgent"] = request.is_urgent
     
-    if not update_data:
+    if not set_parts:
         raise HTTPException(status_code=400, detail="No fields to update")
     
-    # Direct UPDATE statement
-    stmt = (
-        update(TariffPrice)
-        .where(TariffPrice.tariff_id == tariff_id)
-        .values(**update_data)
-    )
+    # Raw SQL UPDATE
+    sql = f"UPDATE tariff_prices SET {', '.join(set_parts)} WHERE tariff_id = :tariff_id"
+    print(f"[ADMIN] Executing SQL: {sql}")
+    print(f"[ADMIN] With params: {params}")
     
-    result = await db.execute(stmt)
-    
-    if result.rowcount == 0:
-        print(f"[ADMIN ERROR] Tariff {tariff_id} not found!")
-        raise HTTPException(status_code=404, detail="Tariff not found")
-    
+    result = await db.execute(text(sql), params)
     await db.commit()
-    print(f"[ADMIN] Committed! Rows affected: {result.rowcount}")
     
-    # Get updated tariff
-    result2 = await db.execute(
-        select(TariffPrice).where(TariffPrice.tariff_id == tariff_id)
-    )
-    tariff = result2.scalar_one()
+    print(f"[ADMIN] UPDATE committed! Rows: {result.rowcount}")
     
-    print(f"[ADMIN] Verified price in DB: {tariff.price}")
+    # Verify with SELECT
+    verify_sql = "SELECT tariff_id, price FROM tariff_prices WHERE tariff_id = :tariff_id"
+    result2 = await db.execute(text(verify_sql), {"tariff_id": tariff_id})
+    row = result2.fetchone()
+    
+    if row:
+        print(f"[ADMIN] Verified in DB: tariff_id={row[0]}, price={row[1]}")
     
     return {
         "status": "ok",
