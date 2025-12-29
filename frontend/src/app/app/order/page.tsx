@@ -223,8 +223,8 @@ function OrderContent() {
 
         // For subscriptions, always 'door' method
         const effectivePickupMethod = (tariffId === 'trial' || tariffId === 'monthly') ? 'door' : pickupMethod;
-        const pickupComment = effectivePickupMethod === 'hand' ? 'Передать лично в руки, позвонить в дверь/телефон' : 'Оставить у двери';
-        const finalComment = comment ? `${comment}. ${pickupComment}` : pickupComment;
+        // No automatic pickup comment - user writes their own comment if needed
+        const finalComment = comment || '';
 
         // 3. Create Order OR Payment
         // Cost in credits (for balance check)
