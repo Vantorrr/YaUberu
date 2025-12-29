@@ -34,7 +34,7 @@ export default function OrdersPage() {
 
   const openEditModal = (order: Order) => {
     setSelectedOrder(order);
-    setNewDate(order.date || order.scheduled_date);
+    setNewDate(order.date || order.scheduled_date || '');
     setNewTimeSlot(order.time_slot);
     setShowEditModal(true);
   };
