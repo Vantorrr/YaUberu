@@ -56,6 +56,9 @@ function OrderContent() {
   // Balance for payment logic
   const [balance, setBalance] = useState<number>(0);
   
+  // Check if user has any subscriptions (for first-time pricing)
+  const [hasSubscriptions, setHasSubscriptions] = useState<boolean>(false);
+  
   // Tariff prices from DB
   const [tariffPrices, setTariffPrices] = useState<any>({
     single: { price: 150, urgent_price: 450 },
@@ -72,20 +75,23 @@ function OrderContent() {
       console.log('[TG] WebApp expanded to full screen');
     }
     
-    // Load complexes, saved addresses, balance, and tariff prices
+    // Load complexes, saved addresses, balance, tariff prices, and subscriptions
     Promise.all([
       api.getResidentialComplexes(),
       api.getAddresses(),
       api.getBalance(),
-      api.getPublicTariffs()
+      api.getPublicTariffs(),
+      api.getSubscriptions()
     ])
-      .then(([complexesData, addressesData, balanceData, tariffsData]) => {
+      .then(([complexesData, addressesData, balanceData, tariffsData, subscriptionsData]) => {
         console.log('[ORDER] Loaded complexes:', complexesData);
         console.log('[ORDER] Loaded addresses:', addressesData);
         console.log('[ORDER] Loaded balance:', balanceData);
         console.log('[ORDER] Loaded tariffs:', tariffsData);
+        console.log('[ORDER] Loaded subscriptions:', subscriptionsData);
         setComplexes(complexesData);
         setBalance(balanceData.credits || 0);
+        setHasSubscriptions(subscriptionsData && subscriptionsData.length > 0);
         
         // Parse tariff prices
         const prices: any = {
@@ -605,6 +611,27 @@ function OrderContent() {
 
               {/* PRICE CALCULATION */}
               {(() => {
+                // Special price for first-time subscribers with trial-like parameters
+                const isTrialEquivalent = duration === 14 && frequency === 'every_other_day' && bagsCount === 1;
+                if (!hasSubscriptions && isTrialEquivalent) {
+                  const trialPrice = tariffPrices.trial.price;
+                  return (
+                    <div className="bg-gradient-to-br from-teal-50 to-teal-100 rounded-2xl p-5 border-2 border-teal-300">
+                      <div className="flex items-center justify-between mb-2">
+                        <div>
+                          <span className="text-gray-700 font-semibold text-lg">Стоимость</span>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-teal-600 font-bold text-3xl">{trialPrice} ₽</p>
+                        </div>
+                      </div>
+                      <p className="text-gray-500 text-xs">
+                        🎉 Специальная цена для первой подписки!
+                      </p>
+                    </div>
+                  );
+                }
+                
                 const basePrice = tariffPrices.monthly.base_price; // base price per pickup from DB
                 const frequencyMultiplier = {
                   daily: 1,
@@ -988,6 +1015,12 @@ function OrderContent() {
                       if (tariffId === 'single') return String(tariffPrices.single.price * bagsCount);
                       if (tariffId === 'trial') return String(tariffPrices.trial.price); // Fixed trial price from DB
                       if (tariffId === 'monthly') {
+                        // Special price for first-time subscribers with trial-like parameters
+                        const isTrialEquivalent = duration === 14 && frequency === 'every_other_day' && bagsCount === 1;
+                        if (!hasSubscriptions && isTrialEquivalent) {
+                          return String(tariffPrices.trial.price); // 199 руб - trial price
+                        }
+                        
                         // Dynamic calculation for monthly
                         const basePrice = tariffPrices.monthly.base_price; // From DB
                         const frequencyMultiplier = {
