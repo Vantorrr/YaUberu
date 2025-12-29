@@ -204,11 +204,13 @@ async def create_order(
         
         address_str = ", ".join(address_parts)
         time_slot_str = request.time_slot.value if hasattr(request.time_slot, 'value') else str(request.time_slot)
+        date_str = request.date.strftime('%d.%m.%Y')
         
         await notify_all_couriers_new_order(
             courier_telegram_ids=courier_tg_ids,
             order_id=order.id,
             address=address_str,
+            date_str=date_str,
             time_slot=time_slot_str,
             comment=request.comment
         )
@@ -219,6 +221,7 @@ async def create_order(
                 client_telegram_id=current_user.telegram_id,
                 order_id=order.id,
                 address=address_str,
+                date_str=date_str,
                 time_slot=time_slot_str
             )
         
@@ -228,6 +231,7 @@ async def create_order(
             admin_telegram_ids=settings.admin_ids,
             order_id=order.id,
             address=address_str,
+            date_str=date_str,
             time_slot=time_slot_str,
             client_name=client_name
         )

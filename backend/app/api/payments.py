@@ -321,25 +321,29 @@ async def yookassa_webhook(request: Request, db: AsyncSession = Depends(get_db))
                 address_parts.append(f"д. {address.building}, кв. {address.apartment}")
                 address_str = ", ".join(address_parts)
                 time_slot_str = request_obj.time_slot
+                # Format date if it's a date object, otherwise it might be a string depending on how pydantic parsed it
+                date_val = request_obj.date
+                date_str = date_val.strftime('%d.%m.%Y') if hasattr(date_val, 'strftime') else str(date_val)
                 
                 # Notify Admins
                 await notify_admins_new_order(
                     admin_telegram_ids=settings.admin_ids,
                     order_id=order.id,
                     address=address_str,
+                    date_str=date_str,
                     time_slot=time_slot_str,
                     client_name=user.name or "Клиент"
                 )
                 
                 # Notify Client
                 if user.telegram_id:
-                     await notify_client_order_created(user.telegram_id, order.id, address_str, time_slot_str)
+                     await notify_client_order_created(user.telegram_id, order.id, address_str, date_str, time_slot_str)
 
                 # Notify Couriers
                 couriers_res = await db.execute(select(User).where(User.role == UserRole.COURIER, User.is_active == True))
                 couriers = couriers_res.scalars().all()
                 courier_ids = [c.telegram_id for c in couriers if c.telegram_id]
-                await notify_all_couriers_new_order(courier_ids, order.id, address_str, time_slot_str, request_obj.comment)
+                await notify_all_couriers_new_order(courier_ids, order.id, address_str, date_str, time_slot_str, request_obj.comment)
 
             except Exception as e:
                 print(f"[WEBHOOK NOTIFY ERROR] {e}")

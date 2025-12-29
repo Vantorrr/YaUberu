@@ -43,11 +43,12 @@ async def send_telegram_notification(chat_id: int, text: str, reply_markup: dict
 
 # ============ NOTIFICATIONS FOR COURIERS ============
 
-async def notify_all_couriers_new_order(courier_telegram_ids: list, order_id: int, address: str, time_slot: str, comment: str = None):
+async def notify_all_couriers_new_order(courier_telegram_ids: list, order_id: int, address: str, date_str: str, time_slot: str, comment: str = None):
     """Notify ALL couriers about a new order - sent via CLIENT BOT"""
     text = (
         f"🆕 Новый заказ #{order_id}!\n\n"
         f"📍 {address}\n"
+        f"📅 {date_str}\n"
         f"🕐 {time_slot}\n"
     )
     if comment:
@@ -69,11 +70,12 @@ async def notify_all_couriers_new_order(courier_telegram_ids: list, order_id: in
 
 # ============ NOTIFICATIONS FOR CLIENTS ============
 
-async def notify_client_order_created(client_telegram_id: int, order_id: int, address: str, time_slot: str):
+async def notify_client_order_created(client_telegram_id: int, order_id: int, address: str, date_str: str, time_slot: str):
     """Notify client that their order was created successfully"""
     text = (
         f"✅ Заказ #{order_id} создан!\n\n"
         f"📍 Адрес: {address}\n"
+        f"📅 Дата: {date_str}\n"
         f"🕐 Время: {time_slot}\n\n"
         f"⏳ Ожидаем курьера...\n"
         f"Мы сообщим, когда курьер возьмет заказ"
@@ -120,12 +122,13 @@ async def notify_client_order_completed(client_telegram_id: int, bags_count: int
 
 # ============ NOTIFICATIONS FOR ADMINS ============
 
-async def notify_admins_new_order(admin_telegram_ids: list, order_id: int, address: str, time_slot: str, client_name: str = "Клиент"):
+async def notify_admins_new_order(admin_telegram_ids: list, order_id: int, address: str, date_str: str, time_slot: str, client_name: str = "Клиент"):
     """Notify all admins about a new order - sent via CLIENT BOT"""
     text = (
         f"📋 Новый заказ #{order_id}\n\n"
         f"👤 Клиент: {client_name}\n"
         f"📍 Адрес: {address}\n"
+        f"📅 Дата: {date_str}\n"
         f"🕐 Время: {time_slot}\n\n"
         f"Курьеры получили уведомление"
     )
