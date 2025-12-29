@@ -272,6 +272,7 @@ async def get_orders(complex_id: int, building: str, db: AsyncSession = Depends(
             "floor": addr.floor,
             "apartment": addr.apartment,
             "intercom": addr.intercom,
+            "date": order.date.strftime('%d.%m.%Y') if order.date else None,
             "time_slot": order.time_slot,
             "status": order.status.value,
             "comment": order.comment,
