@@ -543,25 +543,27 @@ async def update_tariff(
     
     print(f"[ADMIN] UPDATE committed! Rows: {result.rowcount}")
     
-    # Verify with SELECT
-    verify_sql = "SELECT tariff_id, price FROM tariff_prices WHERE tariff_id = :tariff_id"
+    # Verify with SELECT - get full row
+    verify_sql = "SELECT id, tariff_id, name, price, old_price, period, description, is_active, is_urgent FROM tariff_prices WHERE tariff_id = :tariff_id"
     result2 = await db.execute(text(verify_sql), {"tariff_id": tariff_id})
     row = result2.fetchone()
     
-    if row:
-        print(f"[ADMIN] Verified in DB: tariff_id={row[0]}, price={row[1]}")
+    if not row:
+        raise HTTPException(status_code=404, detail="Tariff not found after update")
+    
+    print(f"[ADMIN] Verified in DB: tariff_id={row[1]}, price={row[3]}")
     
     return {
         "status": "ok",
         "tariff": {
-            "id": tariff.id,
-            "tariff_id": tariff.tariff_id,
-            "name": tariff.name,
-            "price": tariff.price,
-            "old_price": tariff.old_price,
-            "period": tariff.period,
-            "description": tariff.description,
-            "is_active": tariff.is_active,
-            "is_urgent": tariff.is_urgent,
+            "id": row[0],
+            "tariff_id": row[1],
+            "name": row[2],
+            "price": row[3],
+            "old_price": row[4],
+            "period": row[5],
+            "description": row[6],
+            "is_active": row[7],
+            "is_urgent": row[8],
         }
     }
