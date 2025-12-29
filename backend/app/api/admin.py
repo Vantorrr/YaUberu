@@ -137,44 +137,6 @@ async def get_public_tariffs(db: AsyncSession = Depends(get_db)):
     ]
 
 
-@router.get("/stats", response_model=StatsResponse)
-async def get_dashboard_stats(
-    db: AsyncSession = Depends(get_db),
-):
-    """
-    Get dashboard statistics for admin
-    """
-    today = date.today()
-    
-    # Orders today
-    result = await db.execute(
-        select(func.count(Order.id)).where(Order.date == today)
-    )
-    total_today = result.scalar() or 0
-    
-    # Completed today
-    result = await db.execute(
-        select(func.count(Order.id)).where(
-            Order.date == today,
-            Order.status == OrderStatus.COMPLETED
-        )
-    )
-    completed_today = result.scalar() or 0
-    
-    # Active subscriptions
-    result = await db.execute(
-        select(func.count(Subscription.id)).where(Subscription.is_active == True)
-    )
-    active_subs = result.scalar() or 0
-    
-    return StatsResponse(
-        total_orders_today=total_today,
-        completed_today=completed_today,
-        active_subscriptions=active_subs,
-        total_revenue_month=0
-    )
-
-
 @router.get("/orders/today")
 async def get_today_orders(
     db: AsyncSession = Depends(get_db),
