@@ -189,29 +189,26 @@ function OrderContent() {
         
         console.log('[ORDER] Address created:', addressRes);
 
-        // 2. Prepare Data
+        // 2. Prepare Time Slot
         let timeSlotStr = '';
         let isUrgent = false;
 
-        // For subscriptions, use default time slot (no user choice)
-        if (tariffId === 'trial' || tariffId === 'monthly') {
-          timeSlotStr = '12:00-14:00'; // Default time for subscriptions
+        const mapping: Record<number, string> = {
+          1: '08:00-10:00',
+          2: '12:00-14:00',
+          3: '16:00-18:00',
+          4: '20:00-22:00',
+        };
+
+        if (slot === 'urgent') {
+          isUrgent = true;
+          // Urgent is usually within hour, but we pass a slot for backend compat
+          timeSlotStr = '12:00-14:00'; 
+        } else if (typeof slot === 'number') {
+           timeSlotStr = mapping[slot];
         } else {
-          // For single orders, user selects time
-          if (slot === 'urgent') {
-            isUrgent = true;
-            timeSlotStr = '12:00-14:00'; 
-          } else {
-            const mapping: Record<number, string> = {
-              1: '08:00-10:00',
-              2: '12:00-14:00',
-              3: '16:00-18:00',
-              4: '20:00-22:00',
-            };
-            if (typeof slot === 'number') {
-               timeSlotStr = mapping[slot];
-            }
-          }
+           // Fallback if slot is missing (should not happen due to validation)
+           timeSlotStr = '12:00-14:00';
         }
 
         const tomorrow = new Date();
@@ -224,10 +221,13 @@ function OrderContent() {
         const finalComment = comment ? `${comment}. ${pickupComment}` : pickupComment;
 
         // 3. Create Order OR Payment
-        const cost = (tariffId === 'single' && isUrgent) ? 2 : 1; 
+        // Cost in credits (for balance check)
+        const creditsCost = (tariffId === 'single' && isUrgent) ? 2 : 1; 
         
         // Use user selected date
         const finalDate = deliveryDate || dateStr;
+
+        console.log(`[ORDER] Submitting: tariff=${tariffId}, date=${finalDate}, slot=${timeSlotStr}, balance=${balance}`);
 
         // Logic:
         // 1. If Subscription (trial or monthly) -> ALWAYS Payment (no matter balance)
@@ -252,7 +252,7 @@ function OrderContent() {
             } else {
                  router.push('/app/order/success');
             }
-        } else if (tariffId === 'single' && balance >= cost) {
+        } else if (tariffId === 'single' && balance >= creditsCost) {
             // Single order with sufficient balance - pay with balance
             console.log('[ORDER] Single order - paying with balance');
             await api.createOrder({
