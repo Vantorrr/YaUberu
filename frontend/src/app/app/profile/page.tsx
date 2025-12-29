@@ -71,14 +71,17 @@ export default function ProfilePage() {
         </div>
         
         {/* Balance */}
-        <div className="flex items-center justify-between bg-white rounded-2xl p-4 shadow-sm">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-teal-100 rounded-xl flex items-center justify-center">
-              <Package className="w-5 h-5 text-teal-600" />
+        <div className="flex items-center justify-between bg-white rounded-2xl p-5 shadow-sm">
+          <div className="flex items-center gap-4 flex-1">
+            <div className="w-12 h-12 bg-teal-100 rounded-xl flex items-center justify-center">
+              <Package className="w-6 h-6 text-teal-600" />
             </div>
-            <div>
-              <p className="text-gray-500 text-xs">Ваш баланс</p>
-              <p className="text-gray-900 font-bold text-lg">{balance !== null ? balance : '...'} выносов</p>
+            <div className="flex-1">
+              <p className="text-gray-500 text-xs mb-1">Ваш баланс</p>
+              <div className="flex items-baseline gap-2">
+                <span className="text-gray-900 font-bold text-4xl">{balance !== null ? balance : '...'}</span>
+                <span className="text-gray-600 font-medium text-lg">выносов</span>
+              </div>
             </div>
           </div>
         </div>
