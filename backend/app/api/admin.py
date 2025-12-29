@@ -539,19 +539,27 @@ async def update_tariff(
     print(f"[ADMIN] With params: {params}")
     
     result = await db.execute(text(sql), params)
+    
+    print(f"[ADMIN] Executed UPDATE, rows: {result.rowcount}")
+    
+    # CRITICAL: Commit and close session
     await db.commit()
+    await db.close()
     
-    print(f"[ADMIN] UPDATE committed! Rows: {result.rowcount}")
+    print(f"[ADMIN] Transaction committed and closed")
     
-    # Verify with SELECT - get full row
+    # Verify with SELECT in NEW session
+    from app.models import async_session
     verify_sql = "SELECT id, tariff_id, name, price, old_price, period, description, is_active, is_urgent FROM tariff_prices WHERE tariff_id = :tariff_id"
-    result2 = await db.execute(text(verify_sql), {"tariff_id": tariff_id})
-    row = result2.fetchone()
+    
+    async with async_session() as new_db:
+        result2 = await new_db.execute(text(verify_sql), {"tariff_id": tariff_id})
+        row = result2.fetchone()
     
     if not row:
         raise HTTPException(status_code=404, detail="Tariff not found after update")
     
-    print(f"[ADMIN] Verified in DB: tariff_id={row[1]}, price={row[3]}")
+    print(f"[ADMIN] Verified in NEW session: tariff_id={row[1]}, price={row[3]}")
     
     return {
         "status": "ok",
