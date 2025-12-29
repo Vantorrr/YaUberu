@@ -499,40 +499,54 @@ async def update_tariff(
     db: AsyncSession = Depends(get_db)
 ):
     """Update tariff price and details"""
+    from sqlalchemy import update
+    
     print(f"[ADMIN] Updating tariff {tariff_id} with data: {request.model_dump()}")
     
-    result = await db.execute(
-        select(TariffPrice).where(TariffPrice.tariff_id == tariff_id)
-    )
-    tariff = result.scalar_one_or_none()
+    # Build update dict
+    update_data = {}
+    if request.name is not None:
+        update_data['name'] = request.name
+    if request.price is not None:
+        update_data['price'] = request.price
+        print(f"[ADMIN] Setting price to {request.price}")
+    if request.old_price is not None:
+        update_data['old_price'] = request.old_price
+    if request.period is not None:
+        update_data['period'] = request.period
+    if request.description is not None:
+        update_data['description'] = request.description
+    if request.is_active is not None:
+        update_data['is_active'] = request.is_active
+    if request.is_urgent is not None:
+        update_data['is_urgent'] = request.is_urgent
     
-    if not tariff:
+    if not update_data:
+        raise HTTPException(status_code=400, detail="No fields to update")
+    
+    # Direct UPDATE statement
+    stmt = (
+        update(TariffPrice)
+        .where(TariffPrice.tariff_id == tariff_id)
+        .values(**update_data)
+    )
+    
+    result = await db.execute(stmt)
+    
+    if result.rowcount == 0:
         print(f"[ADMIN ERROR] Tariff {tariff_id} not found!")
         raise HTTPException(status_code=404, detail="Tariff not found")
     
-    print(f"[ADMIN] Current tariff: id={tariff.id}, price={tariff.price}")
-    
-    # Update fields
-    if request.name is not None:
-        tariff.name = request.name
-    if request.price is not None:
-        print(f"[ADMIN] Updating price from {tariff.price} to {request.price}")
-        tariff.price = request.price
-    if request.old_price is not None:
-        tariff.old_price = request.old_price
-    if request.period is not None:
-        tariff.period = request.period
-    if request.description is not None:
-        tariff.description = request.description
-    if request.is_active is not None:
-        tariff.is_active = request.is_active
-    if request.is_urgent is not None:
-        tariff.is_urgent = request.is_urgent
-    
     await db.commit()
-    await db.refresh(tariff)
+    print(f"[ADMIN] Committed! Rows affected: {result.rowcount}")
     
-    print(f"[ADMIN] Committed! New price: {tariff.price}")
+    # Get updated tariff
+    result2 = await db.execute(
+        select(TariffPrice).where(TariffPrice.tariff_id == tariff_id)
+    )
+    tariff = result2.scalar_one()
+    
+    print(f"[ADMIN] Verified price in DB: {tariff.price}")
     
     return {
         "status": "ok",
