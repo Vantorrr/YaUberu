@@ -477,6 +477,35 @@ async def add_credits_to_client(
     }
 
 
+@router.post("/reset-all-balances")
+async def reset_all_balances(
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    ADMIN ONLY: Reset all user balances to 0
+    """
+    from sqlalchemy import text
+    
+    try:
+        # Reset all balances to 0
+        await db.execute(text("UPDATE balances SET credits = 0"))
+        await db.commit()
+        
+        # Get count of affected users
+        result = await db.execute(text("SELECT COUNT(*) FROM balances"))
+        count = result.scalar() or 0
+        
+        return {
+            "status": "ok",
+            "message": f"Reset {count} user balances to 0"
+        }
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error resetting balances: {str(e)}"
+        )
+
+
 # ================== SCHEDULER ==================
 
 @router.post("/scheduler/run")
