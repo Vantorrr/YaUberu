@@ -538,18 +538,10 @@ async def update_tariff(
     print(f"[ADMIN] Executing SQL: {sql}")
     print(f"[ADMIN] With params: {params}")
     
-    # Execute with execution_options
-    await db.execute(
-        text(sql).execution_options(isolation_level="AUTOCOMMIT"), 
-        params
-    )
+    # Just execute normally - NullPool handles connection issues
+    await db.execute(text(sql), params)
+    await db.commit()
     
-    # Even with autocommit, we try to commit
-    try:
-        await db.commit()
-    except:
-        pass
-        
     print(f"[ADMIN] UPDATE executed!")
     
     # Verify with SELECT in NEW session
