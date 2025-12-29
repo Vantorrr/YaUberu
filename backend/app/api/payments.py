@@ -8,7 +8,7 @@ import uuid
 from datetime import date, datetime, timedelta
 
 from app.config import settings
-from app.models import get_db, User, Order, OrderStatus, TimeSlot, Address, Balance, BalanceTransaction, Subscription, Tariff, Payment, ResidentialComplex, UserRole
+from app.models import get_db, User, Order, OrderStatus, TimeSlot, Address, Balance, BalanceTransaction, Subscription, Tariff, Payment, ResidentialComplex, UserRole, TariffPrice
 from app.api.deps import get_current_user
 from app.api.orders import CreateOrderRequest, TariffDetails
 from app.services.notifications import notify_all_couriers_new_order, notify_admins_new_order, notify_client_order_created
@@ -28,21 +28,39 @@ async def create_payment(
     """
     Create a payment in Yookassa and save pending payment in DB
     """
+    # 0. Load tariff prices from DB
+    tariff_res = await db.execute(select(TariffPrice).where(TariffPrice.is_active == True))
+    tariffs_list = tariff_res.scalars().all()
+    
+    # Parse into dict
+    tariff_prices = {}
+    for t in tariffs_list:
+        tariff_prices[t.tariff_id] = {
+            'price': t.price,
+            'old_price': t.old_price,
+            'name': t.name
+        }
+    
     # 1. Calculate price
     amount = 0
     description = ""
     
     # Calculate price based on tariff type
     if request.tariff_type == 'single':
-        amount = 450 if request.is_urgent else 150
-        description = "Разовый вынос мусора"
+        single_price = tariff_prices.get('single', {}).get('price', 150)
+        urgent_price = tariff_prices.get('single', {}).get('old_price', 450) or single_price * 3
+        amount = urgent_price if request.is_urgent else single_price
+        description = tariff_prices.get('single', {}).get('name', "Разовый вынос мусора")
     elif request.tariff_type == 'trial':
-        amount = 199 # Fixed trial price
-        description = "Подписка 'Пробный старт' (7 выносов)"
+        amount = tariff_prices.get('trial', {}).get('price', 199)
+        description = tariff_prices.get('trial', {}).get('name', "Подписка 'Пробный старт'") + " (7 выносов)"
     elif request.tariff_type == 'monthly':
         # Dynamic price calculation based on bags/frequency/duration
         if request.tariff_details:
-            base_price = 150  # Base price per pickup
+            # Get base price from DB (approximate from monthly price)
+            monthly_tariff_price = tariff_prices.get('monthly', {}).get('price', 945)
+            base_price = int(monthly_tariff_price / 7)  # Approximate base per pickup
+            
             frequencyMultiplier = {
                 'daily': 1,
                 'every_other_day': 0.5,
@@ -63,10 +81,10 @@ async def create_payment(
                 discount = 0
             
             amount = int(totalPrice * (1 - discount))
-            description = f"Подписка 'Месяц Комфорт' ({pickupsCount} выносов)"
+            description = f"{tariff_prices.get('monthly', {}).get('name', 'Подписка Месяц Комфорт')} ({pickupsCount} выносов)"
         else:
-            amount = 1890  # Fallback price
-            description = "Подписка 'Месяц Комфорт'"
+            amount = tariff_prices.get('monthly', {}).get('price', 945)
+            description = tariff_prices.get('monthly', {}).get('name', "Подписка 'Месяц Комфорт'")
     
     if amount == 0:
         raise HTTPException(status_code=400, detail="Invalid tariff type or price")

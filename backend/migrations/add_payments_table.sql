@@ -13,3 +13,4 @@ CREATE TABLE IF NOT EXISTS payments (
 
 CREATE INDEX idx_payments_yookassa_id ON payments(yookassa_payment_id);
 
+

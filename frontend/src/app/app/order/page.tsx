@@ -56,6 +56,13 @@ function OrderContent() {
   // Balance for payment logic
   const [balance, setBalance] = useState<number>(0);
   
+  // Tariff prices from DB
+  const [tariffPrices, setTariffPrices] = useState<any>({
+    single: { price: 150, urgent_price: 450 },
+    trial: { price: 199 },
+    monthly: { base_price: 150 }
+  });
+  
   useEffect(() => {
     // Expand to full screen
     if (typeof window !== 'undefined' && (window as any).Telegram?.WebApp) {
@@ -65,18 +72,44 @@ function OrderContent() {
       console.log('[TG] WebApp expanded to full screen');
     }
     
-    // Load complexes, saved addresses, and balance
+    // Load complexes, saved addresses, balance, and tariff prices
     Promise.all([
       api.getResidentialComplexes(),
       api.getAddresses(),
-      api.getBalance()
+      api.getBalance(),
+      api.getPublicTariffs()
     ])
-      .then(([complexesData, addressesData, balanceData]) => {
+      .then(([complexesData, addressesData, balanceData, tariffsData]) => {
         console.log('[ORDER] Loaded complexes:', complexesData);
         console.log('[ORDER] Loaded addresses:', addressesData);
         console.log('[ORDER] Loaded balance:', balanceData);
+        console.log('[ORDER] Loaded tariffs:', tariffsData);
         setComplexes(complexesData);
         setBalance(balanceData.credits || 0);
+        
+        // Parse tariff prices
+        const prices: any = {
+          single: { price: 150, urgent_price: 450 },
+          trial: { price: 199 },
+          monthly: { base_price: 150 }
+        };
+        
+        tariffsData.forEach((t: any) => {
+          if (t.tariff_type === 'single') {
+            prices.single.price = parseInt(t.price);
+            // Urgent price is typically 3x normal price, or use old_price if set
+            prices.single.urgent_price = t.old_price ? parseInt(t.old_price) : parseInt(t.price) * 3;
+          } else if (t.tariff_type === 'trial') {
+            prices.trial.price = parseInt(t.price);
+          } else if (t.tariff_type === 'monthly') {
+            // For monthly, the price in DB is the starting price
+            // We use it as base_price for calculations
+            prices.monthly.base_price = Math.floor(parseInt(t.price) / 7); // Approximate base per pickup
+          }
+        });
+        
+        setTariffPrices(prices);
+        console.log('[ORDER] Parsed tariff prices:', prices);
         
         // Auto-fill if user has a default address
         const defaultAddr = addressesData.find((a: any) => a.is_default);
@@ -572,7 +605,7 @@ function OrderContent() {
 
               {/* PRICE CALCULATION */}
               {(() => {
-                const basePrice = 150; // base price per pickup
+                const basePrice = tariffPrices.monthly.base_price; // base price per pickup from DB
                 const frequencyMultiplier = {
                   daily: 1,
                   every_other_day: 0.5,
@@ -672,7 +705,7 @@ function OrderContent() {
                         </div>
                       </div>
                       <div className="text-right">
-                        <p className="text-gray-900 font-bold text-xl">450 ₽</p>
+                        <p className="text-gray-900 font-bold text-xl">{tariffPrices.single.urgent_price} ₽</p>
                       </div>
                     </div>
                     <div className="absolute top-0 right-0 w-32 h-32 bg-orange-500/20 rounded-full blur-[40px] -mr-10 -mt-10" />
@@ -938,12 +971,12 @@ function OrderContent() {
                   <span className="text-gray-700 font-semibold">Итого к оплате</span>
                   <span className="text-teal-600 font-bold text-3xl">
                     {(() => {
-                      if (slot === 'urgent') return '450';
-                      if (tariffId === 'single') return String(150 * bagsCount);
-                      if (tariffId === 'trial') return '199'; // Fixed trial price
+                      if (slot === 'urgent') return String(tariffPrices.single.urgent_price);
+                      if (tariffId === 'single') return String(tariffPrices.single.price * bagsCount);
+                      if (tariffId === 'trial') return String(tariffPrices.trial.price); // Fixed trial price from DB
                       if (tariffId === 'monthly') {
                         // Dynamic calculation for monthly
-                        const basePrice = 150;
+                        const basePrice = tariffPrices.monthly.base_price; // From DB
                         const frequencyMultiplier = {
                           daily: 1,
                           every_other_day: 0.5,
@@ -956,7 +989,7 @@ function OrderContent() {
                         const discountedPrice = Math.round(totalPrice * (1 - discount));
                         return String(discountedPrice);
                       }
-                      return '150';
+                      return String(tariffPrices.single.price);
                     })()} ₽
                   </span>
                 </div>
