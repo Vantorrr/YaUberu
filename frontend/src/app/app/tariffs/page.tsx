@@ -54,17 +54,14 @@ export default function TariffsPage() {
           className="w-full bg-gradient-to-br from-teal-400 to-teal-500 rounded-xl p-4 text-left shadow-md"
         >
           <div className="flex items-start justify-between">
-            <div>
+            <div className="flex-1">
               <h3 className="font-bold text-lg text-white">Первая подписка</h3>
               <p className="text-white/90 text-sm mt-1">Две недели будем выносить ваш мусор через день</p>
             </div>
-          </div>
-          <div className="mt-3 flex items-baseline gap-2">
-            <span className="text-white/70 line-through text-sm">973 ₽</span>
-            <span className="text-white font-bold text-2xl">292 ₽</span>
-          </div>
-          <div className="mt-2 inline-block bg-white/20 text-white text-xs font-bold px-2 py-1 rounded">
-            Выгода 70%
+            <div className="text-right ml-3">
+              <p className="text-white/70 line-through text-sm">973 ₽</p>
+              <p className="text-white font-bold text-2xl">292 ₽</p>
+            </div>
           </div>
         </button>
 
@@ -73,18 +70,17 @@ export default function TariffsPage() {
           onClick={() => router.push('/app/order?tariff=monthly&duration=14')}
           className="w-full bg-white rounded-xl border border-gray-200 p-4 text-left"
         >
-          <div className="flex items-start justify-between">
-            <div>
+          <div className="flex items-start justify-between mb-2">
+            <div className="flex-1">
               <h3 className="font-bold text-base text-gray-900">Комфорт 2 недели</h3>
-              <p className="text-gray-500 text-xs mt-0.5">от 756₽</p>
+            </div>
+            <div className="text-right ml-3">
+              <p className="text-gray-900 font-bold text-lg">от 756₽</p>
             </div>
           </div>
-          <p className="text-gray-600 text-sm mt-2">
+          <p className="text-gray-600 text-sm">
             Оплатите нужное количество пакетов по выгодной цене. Срок действия - 30 дней
           </p>
-          <div className="mt-2 inline-block bg-teal-50 text-teal-700 text-xs font-bold px-2 py-1 rounded">
-            Выгода до 40%
-          </div>
         </button>
 
         {/* 4. Комфорт месяц */}
@@ -92,18 +88,17 @@ export default function TariffsPage() {
           onClick={() => router.push('/app/order?tariff=monthly&duration=30')}
           className="w-full bg-white rounded-xl border border-gray-200 p-4 text-left"
         >
-          <div className="flex items-start justify-between">
-            <div>
+          <div className="flex items-start justify-between mb-2">
+            <div className="flex-1">
               <h3 className="font-bold text-base text-gray-900">Комфорт месяц</h3>
-              <p className="text-gray-500 text-xs mt-0.5">от 1459.5 ₽</p>
+            </div>
+            <div className="text-right ml-3">
+              <p className="text-gray-900 font-bold text-lg">от 1459.5 ₽</p>
             </div>
           </div>
-          <p className="text-gray-600 text-sm mt-2">
+          <p className="text-gray-600 text-sm">
             Будем регулярно выносить мусор по выбранным дням
           </p>
-          <div className="mt-2 inline-block bg-teal-50 text-teal-700 text-xs font-bold px-2 py-1 rounded">
-            Выгода до 35%
-          </div>
         </button>
 
         {/* Info */}
