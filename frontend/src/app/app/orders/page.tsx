@@ -34,7 +34,7 @@ export default function OrdersPage() {
 
   const openEditModal = (order: Order) => {
     setSelectedOrder(order);
-    setNewDate(order.scheduled_date);
+    setNewDate(order.date || order.scheduled_date);
     setNewTimeSlot(order.time_slot);
     setShowEditModal(true);
   };
@@ -113,7 +113,7 @@ export default function OrdersPage() {
                       <Calendar className="w-5 h-5 text-gray-400 mt-0.5" />
                       <div>
                         <p className="text-gray-900 font-semibold text-sm">
-                          {new Date(order.scheduled_date).toLocaleDateString('ru-RU', {
+                          {new Date(order.date || order.scheduled_date).toLocaleDateString('ru-RU', {
                             day: 'numeric',
                             month: 'long',
                             year: 'numeric'
@@ -190,7 +190,7 @@ export default function OrdersPage() {
                       <Calendar className="w-5 h-5 text-gray-400 mt-0.5" />
                       <div>
                         <p className="text-gray-900 font-semibold text-sm">
-                          {new Date(order.scheduled_date).toLocaleDateString('ru-RU', {
+                          {new Date(order.date || order.scheduled_date).toLocaleDateString('ru-RU', {
                             day: 'numeric',
                             month: 'long'
                           })}

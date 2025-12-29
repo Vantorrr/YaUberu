@@ -17,7 +17,8 @@ export interface Order {
   time_slot: string;
   status: string;
   created_at: string;
-  scheduled_date: string;
+  date: string; // Changed from scheduled_date
+  scheduled_date?: string; // Keep for backward compatibility if needed
   comment?: string;
 }
 
