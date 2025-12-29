@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Zap } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 
 export default function TariffsPage() {
   const router = useRouter();
@@ -24,29 +24,19 @@ export default function TariffsPage() {
       {/* Content */}
       <div className="px-4 py-4 space-y-3 pb-24">
         {/* 1. Разовый вынос */}
-        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-          <button
-            onClick={() => router.push('/app/order?tariff=single')}
-            className="w-full p-4 text-left flex items-center justify-between"
-          >
-            <div>
+        <button
+          onClick={() => router.push('/app/order?tariff=single')}
+          className="w-full bg-white rounded-xl border border-gray-200 p-4 text-left"
+        >
+          <div className="flex items-start justify-between">
+            <div className="flex-1">
               <h3 className="font-bold text-base text-gray-900">Разовый вынос</h3>
-              <p className="text-gray-500 text-xs mt-0.5">от 139 ₽</p>
             </div>
-          </button>
-          
-          {/* Срочный вынос - вложенная кнопка */}
-          <button
-            onClick={() => router.push('/app/order?tariff=single&urgent=true')}
-            className="w-full px-4 py-2.5 bg-orange-50 border-t border-orange-100 text-left flex items-center justify-between"
-          >
-            <div className="flex items-center gap-2">
-              <Zap className="w-4 h-4 text-orange-600" />
-              <span className="text-sm font-semibold text-orange-700">⚡️Срочный вынос</span>
+            <div className="text-right ml-3">
+              <p className="text-gray-900 font-bold text-lg">от 139 ₽</p>
             </div>
-            <span className="text-sm font-bold text-orange-700">450 ₽</span>
-          </button>
-        </div>
+          </div>
+        </button>
 
         {/* 2. Пробный старт - ВЫДЕЛЕННЫЙ */}
         <button
