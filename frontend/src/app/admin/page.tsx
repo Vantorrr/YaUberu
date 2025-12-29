@@ -215,7 +215,7 @@ export default function AdminPage() {
       </div>
 
       {/* Stats Overview */}
-      <div className="grid grid-cols-2 gap-4 mb-8">
+      <div className="grid grid-cols-2 gap-4 mb-4">
         <div className="bg-gray-800/50 p-4 rounded-2xl border border-gray-700">
           <div className="flex items-center gap-2 mb-2 text-gray-400">
             <Package className="w-4 h-4" />
@@ -229,6 +229,23 @@ export default function AdminPage() {
             <span className="text-xs">Выполнено</span>
           </div>
           <p className="text-3xl font-bold text-teal-400">{stats?.completed_today || 0}</p>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-4 mb-8">
+        <div className="bg-gray-800/50 p-4 rounded-2xl border border-gray-700">
+          <div className="flex items-center gap-2 mb-2 text-gray-400">
+            <TrendingUp className="w-4 h-4" />
+            <span className="text-xs">Активные (все)</span>
+          </div>
+          <p className="text-3xl font-bold text-yellow-400">{stats?.total_active_future || 0}</p>
+        </div>
+        <div className="bg-gray-800/50 p-4 rounded-2xl border border-gray-700">
+          <div className="flex items-center gap-2 mb-2 text-gray-400">
+            <Coins className="w-4 h-4" />
+            <span className="text-xs">Выручка (мес)</span>
+          </div>
+          <p className="text-xl font-bold text-green-400">{stats?.total_revenue_month?.toLocaleString('ru-RU') || 0} ₽</p>
         </div>
       </div>
 
