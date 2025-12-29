@@ -667,7 +667,17 @@ function OrderContent() {
                   <input
                     type="date"
                     value={deliveryDate}
-                    onChange={(e) => setDeliveryDate(e.target.value)}
+                    onChange={(e) => {
+                      const selectedDate = e.target.value;
+                      const today = new Date().toISOString().split('T')[0];
+                      // Block past dates
+                      if (selectedDate >= today) {
+                        setDeliveryDate(selectedDate);
+                      } else {
+                        // If user somehow selected a past date, reset to today
+                        setDeliveryDate(today);
+                      }
+                    }}
                     min={new Date().toISOString().split('T')[0]}
                     className="w-full px-4 py-4 rounded-xl bg-white border-2 border-gray-200 text-gray-900 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 outline-none transition-all"
                     style={{ colorScheme: 'light' }}
