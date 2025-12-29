@@ -659,7 +659,7 @@ function OrderContent() {
 
             <div className="space-y-4">
               {/* DATE PICKER - For all tariffs */}
-              <div>
+              <div className={slot === 'urgent' ? 'hidden' : ''}>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Дата <span className="text-red-500">*</span>
                 </label>
@@ -671,7 +671,7 @@ function OrderContent() {
                     min={new Date().toISOString().split('T')[0]}
                     className="w-full px-4 py-4 rounded-xl bg-white border-2 border-gray-200 text-gray-900 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 outline-none transition-all"
                     style={{ colorScheme: 'light' }}
-                    required
+                    required={slot !== 'urgent'}
                   />
                 </div>
               </div>
@@ -680,7 +680,10 @@ function OrderContent() {
               {tariffId === 'single' && (
                 <>
                   <div 
-                    onClick={() => setSlot('urgent')}
+                    onClick={() => {
+                      setSlot('urgent');
+                      setDeliveryDate(new Date().toISOString().split('T')[0]);
+                    }}
                     className={`
                       relative overflow-hidden rounded-2xl p-5 border transition-all cursor-pointer
                       ${slot === 'urgent' 
