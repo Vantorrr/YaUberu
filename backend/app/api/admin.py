@@ -538,15 +538,19 @@ async def update_tariff(
     print(f"[ADMIN] Executing SQL: {sql}")
     print(f"[ADMIN] With params: {params}")
     
-    result = await db.execute(text(sql), params)
+    # Execute with execution_options
+    await db.execute(
+        text(sql).execution_options(isolation_level="AUTOCOMMIT"), 
+        params
+    )
     
-    print(f"[ADMIN] Executed UPDATE, rows: {result.rowcount}")
-    
-    # CRITICAL: Commit and close session
-    await db.commit()
-    await db.close()
-    
-    print(f"[ADMIN] Transaction committed and closed")
+    # Even with autocommit, we try to commit
+    try:
+        await db.commit()
+    except:
+        pass
+        
+    print(f"[ADMIN] UPDATE executed!")
     
     # Verify with SELECT in NEW session
     from app.models import async_session
