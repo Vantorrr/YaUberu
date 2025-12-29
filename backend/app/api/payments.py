@@ -320,7 +320,7 @@ async def yookassa_webhook(request: Request, db: AsyncSession = Depends(get_db))
                      if c_obj: address_parts.append(c_obj.name)
                 address_parts.append(f"д. {address.building}, кв. {address.apartment}")
                 address_str = ", ".join(address_parts)
-                time_slot_str = request_obj.time_slot
+                time_slot_str = request_obj.time_slot.value if hasattr(request_obj.time_slot, 'value') else str(request_obj.time_slot)
                 # Format date if it's a date object, otherwise it might be a string depending on how pydantic parsed it
                 date_val = request_obj.date
                 date_str = date_val.strftime('%d.%m.%Y') if hasattr(date_val, 'strftime') else str(date_val)
