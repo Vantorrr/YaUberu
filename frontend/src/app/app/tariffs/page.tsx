@@ -93,7 +93,7 @@ export default function TariffsPage() {
                       <p className="text-gray-400 line-through text-sm">{t.old_price} ₽</p>
                     )}
                     <p className="text-gray-900 text-2xl">{t.price} ₽</p>
-                    {t.period && (
+                    {t.period && !isUrgent && (
                       <p className="text-gray-500 text-xs mt-1">{t.period}</p>
                     )}
                   </div>
