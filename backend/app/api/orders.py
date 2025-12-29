@@ -212,7 +212,9 @@ async def create_order(
             address=address_str,
             date_str=date_str,
             time_slot=time_slot_str,
-            comment=request.comment
+            comment=request.comment,
+            tariff_type=request.tariff_type,
+            order_date=request.date
         )
         
         # Notify client about order creation

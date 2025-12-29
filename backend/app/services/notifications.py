@@ -43,10 +43,23 @@ async def send_telegram_notification(chat_id: int, text: str, reply_markup: dict
 
 # ============ NOTIFICATIONS FOR COURIERS ============
 
-async def notify_all_couriers_new_order(courier_telegram_ids: list, order_id: int, address: str, date_str: str, time_slot: str, comment: str = None):
+async def notify_all_couriers_new_order(courier_telegram_ids: list, order_id: int, address: str, date_str: str, time_slot: str, comment: str = None, tariff_type: str = None, order_date = None):
     """Notify ALL couriers about a new order - sent via CLIENT BOT"""
-    text = (
-        f"🆕 Новый заказ #{order_id}!\n\n"
+    
+    # Check if this is a single order for TODAY
+    from datetime import date as date_type
+    is_today = False
+    if order_date and isinstance(order_date, date_type):
+        is_today = (order_date == date_type.today())
+    
+    # Build message
+    text = f"🆕 Новый заказ #{order_id}!\n\n"
+    
+    # If it's a single order for TODAY, highlight it!
+    if tariff_type == 'single' and is_today:
+        text = f"⚡ СРОЧНО! РАЗОВЫЙ ВЫНОС НА СЕГОДНЯ!\n\n🆕 Заказ #{order_id}\n\n"
+    
+    text += (
         f"📍 {address}\n"
         f"📅 {date_str}\n"
         f"🕐 {time_slot}\n"

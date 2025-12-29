@@ -138,14 +138,18 @@ async def generate_orders_for_today():
                     address_str = f"{sub.address.complex.name}, д. {sub.address.building}, " + address_str
                 
                 time_slot_str = sub.default_time_slot.value if sub.default_time_slot else "08:00-10:00"
+                date_str = today.strftime('%d.%m.%Y')
                 
                 # Notify couriers
                 await notify_all_couriers_new_order(
                     courier_telegram_ids=courier_tg_ids,
                     order_id=order.id,
                     address=address_str,
+                    date_str=date_str,
                     time_slot=time_slot_str,
-                    comment="Подписка"
+                    comment="Подписка",
+                    tariff_type='subscription',
+                    order_date=today
                 )
         
         await db.commit()

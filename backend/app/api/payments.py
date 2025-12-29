@@ -343,7 +343,7 @@ async def yookassa_webhook(request: Request, db: AsyncSession = Depends(get_db))
                 couriers_res = await db.execute(select(User).where(User.role == UserRole.COURIER, User.is_active == True))
                 couriers = couriers_res.scalars().all()
                 courier_ids = [c.telegram_id for c in couriers if c.telegram_id]
-                await notify_all_couriers_new_order(courier_ids, order.id, address_str, date_str, time_slot_str, request_obj.comment)
+                await notify_all_couriers_new_order(courier_ids, order.id, address_str, date_str, time_slot_str, request_obj.comment, tariff_type=request_obj.tariff_type, order_date=date_val)
 
             except Exception as e:
                 print(f"[WEBHOOK NOTIFY ERROR] {e}")
