@@ -90,6 +90,9 @@ async def get_dashboard_stats(
         total_orders_all_time=total_all,
         total_active_future=active_future
     )
+
+
+class TariffResponse(BaseModel):
     id: int
     tariff_type: str
     name: str
