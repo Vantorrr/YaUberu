@@ -44,18 +44,25 @@ export default function TariffsAdminPage() {
     e.preventDefault();
     if (!editingTariff) return;
     
+    const updateData = {
+      name: form.name,
+      price: parseInt(form.price, 10),
+      old_price: form.old_price ? parseInt(form.old_price, 10) : null,
+      period: form.period || null,
+      description: form.description,
+    };
+    
+    console.log('[ADMIN] Updating tariff:', editingTariff.tariff_id, updateData);
+    
     try {
-      await api.updateTariff(editingTariff.tariff_id, {
-        name: form.name,
-        price: parseInt(form.price, 10),
-        old_price: form.old_price ? parseInt(form.old_price, 10) : null,
-        period: form.period || null,
-        description: form.description,
-      });
+      const result = await api.updateTariff(editingTariff.tariff_id, updateData);
+      console.log('[ADMIN] Update result:', result);
+      alert('✅ Тариф обновлен!');
       setEditingTariff(null);
       loadTariffs();
-    } catch (error) {
-      alert('Ошибка сохранения');
+    } catch (error: any) {
+      console.error('[ADMIN] Update error:', error);
+      alert(`❌ Ошибка: ${error.message || 'Неизвестная ошибка'}`);
     }
   };
 

@@ -499,18 +499,24 @@ async def update_tariff(
     db: AsyncSession = Depends(get_db)
 ):
     """Update tariff price and details"""
+    print(f"[ADMIN] Updating tariff {tariff_id} with data: {request.model_dump()}")
+    
     result = await db.execute(
         select(TariffPrice).where(TariffPrice.tariff_id == tariff_id)
     )
     tariff = result.scalar_one_or_none()
     
     if not tariff:
+        print(f"[ADMIN ERROR] Tariff {tariff_id} not found!")
         raise HTTPException(status_code=404, detail="Tariff not found")
+    
+    print(f"[ADMIN] Current tariff: id={tariff.id}, price={tariff.price}")
     
     # Update fields
     if request.name is not None:
         tariff.name = request.name
     if request.price is not None:
+        print(f"[ADMIN] Updating price from {tariff.price} to {request.price}")
         tariff.price = request.price
     if request.old_price is not None:
         tariff.old_price = request.old_price
@@ -525,6 +531,8 @@ async def update_tariff(
     
     await db.commit()
     await db.refresh(tariff)
+    
+    print(f"[ADMIN] Committed! New price: {tariff.price}")
     
     return {
         "status": "ok",
