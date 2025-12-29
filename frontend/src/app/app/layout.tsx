@@ -27,23 +27,17 @@ const slides = [
 ];
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
+  // Always show splash screen on app start
   const [showSplash, setShowSplash] = useState(true);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Check if user has seen splash screen
-    const hasSeenSplash = localStorage.getItem('hasSeenSplash');
-    
-    if (hasSeenSplash) {
-      // Already seen - skip splash
-      setShowSplash(false);
-    }
+    // No longer checking localStorage - always show splash
     setLoading(false);
   }, []);
 
   const handleStartUsing = () => {
-    // Mark splash as seen
-    localStorage.setItem('hasSeenSplash', 'true');
+    // Just hide splash, don't save state
     setShowSplash(false);
   };
 
