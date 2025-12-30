@@ -69,7 +69,7 @@ export default function TariffsPage() {
             </div>
           </div>
           <p className="text-gray-600 text-sm">
-            Оплатите нужное количество пакетов по выгодной цене. Срок действия - 30 дней
+            Регулярный вынос мусора в течение 14 дней
           </p>
         </button>
 
@@ -87,7 +87,7 @@ export default function TariffsPage() {
             </div>
           </div>
           <p className="text-gray-600 text-sm">
-            Будем регулярно выносить мусор по выбранным дням
+            Регулярный вынос мусора в течение 30 дней
           </p>
         </button>
 
