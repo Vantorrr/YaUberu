@@ -46,7 +46,8 @@ export default function TariffsPage() {
           <div className="flex items-start justify-between">
             <div className="flex-1">
               <h3 className="font-bold text-lg text-white">Первая подписка</h3>
-              <p className="text-white/90 text-sm mt-1">Две недели будем выносить ваш мусор через день</p>
+              <p className="text-white/80 text-xs font-medium mt-0.5">Для новых пользователей</p>
+              <p className="text-white/90 text-sm mt-2">Две недели будем выносить ваш мусор через день</p>
             </div>
             <div className="text-right ml-3">
               <p className="text-white/70 line-through text-sm">973 ₽</p>
