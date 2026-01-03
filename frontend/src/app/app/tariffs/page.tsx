@@ -1,10 +1,48 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft } from 'lucide-react';
+import { api } from '@/lib/api';
 
 export default function TariffsPage() {
   const router = useRouter();
+  const [tariffs, setTariffs] = useState<any>({});
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const loadTariffs = async () => {
+      try {
+        const data = await api.getPublicTariffs();
+        // Convert array to object keyed by tariff_id
+        const tariffsMap = data.reduce((acc: any, t: any) => {
+          acc[t.tariff_id] = t;
+          return acc;
+        }, {});
+        setTariffs(tariffsMap);
+      } catch (error) {
+        console.error('Failed to load tariffs:', error);
+        // Use fallback prices if API fails
+        setTariffs({
+          single: { price: 139, name: 'Разовый вынос' },
+          trial: { price: 292, old_price: 973, name: 'Первая подписка', description: 'Две недели будем выносить ваш мусор через день' },
+          monthly_14: { price: 756, name: 'Комфорт 2 недели', description: 'Регулярный вынос мусора в течение 14 дней' },
+          monthly_30: { price: 1460, name: 'Комфорт месяц', description: 'Регулярный вынос мусора в течение 30 дней' },
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadTariffs();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <p className="text-gray-600">Загрузка тарифов...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -30,10 +68,10 @@ export default function TariffsPage() {
         >
           <div className="flex items-start justify-between">
             <div className="flex-1">
-              <h3 className="font-bold text-base text-gray-900">Разовый вынос</h3>
+              <h3 className="font-bold text-base text-gray-900">{tariffs.single?.name || 'Разовый вынос'}</h3>
             </div>
             <div className="text-right ml-3">
-              <p className="text-gray-900 font-bold text-lg">от 139 ₽</p>
+              <p className="text-gray-900 font-bold text-lg">от {tariffs.single?.price || 139} ₽</p>
             </div>
           </div>
         </button>
@@ -45,13 +83,15 @@ export default function TariffsPage() {
         >
           <div className="flex items-start justify-between">
             <div className="flex-1">
-              <h3 className="font-bold text-lg text-white">Первая подписка</h3>
+              <h3 className="font-bold text-lg text-white">{tariffs.trial?.name || 'Первая подписка'}</h3>
               <p className="text-white/80 text-xs font-medium mt-0.5">Для новых пользователей</p>
-              <p className="text-white/90 text-sm mt-2">Две недели будем выносить ваш мусор через день</p>
+              <p className="text-white/90 text-sm mt-2">{tariffs.trial?.description || 'Две недели будем выносить ваш мусор через день'}</p>
             </div>
             <div className="text-right ml-3">
-              <p className="text-white/70 line-through text-sm">973 ₽</p>
-              <p className="text-white font-bold text-2xl">292 ₽</p>
+              {tariffs.trial?.old_price && (
+                <p className="text-white/70 line-through text-sm">{tariffs.trial.old_price} ₽</p>
+              )}
+              <p className="text-white font-bold text-2xl">{tariffs.trial?.price || 292} ₽</p>
             </div>
           </div>
         </button>
@@ -63,14 +103,14 @@ export default function TariffsPage() {
         >
           <div className="flex items-start justify-between mb-2">
             <div className="flex-1">
-              <h3 className="font-bold text-base text-gray-900">Комфорт 2 недели</h3>
+              <h3 className="font-bold text-base text-gray-900">{tariffs.monthly_14?.name || 'Комфорт 2 недели'}</h3>
             </div>
             <div className="text-right ml-3">
-              <p className="text-gray-900 font-bold text-lg">от 756₽</p>
+              <p className="text-gray-900 font-bold text-lg">от {tariffs.monthly_14?.price || 756}₽</p>
             </div>
           </div>
           <p className="text-gray-600 text-sm">
-            Регулярный вынос мусора в течение 14 дней
+            {tariffs.monthly_14?.description || 'Регулярный вынос мусора в течение 14 дней'}
           </p>
         </button>
 
@@ -81,14 +121,14 @@ export default function TariffsPage() {
         >
           <div className="flex items-start justify-between mb-2">
             <div className="flex-1">
-              <h3 className="font-bold text-base text-gray-900">Комфорт месяц</h3>
+              <h3 className="font-bold text-base text-gray-900">{tariffs.monthly_30?.name || 'Комфорт месяц'}</h3>
             </div>
             <div className="text-right ml-3">
-              <p className="text-gray-900 font-bold text-lg">от 1459.5 ₽</p>
+              <p className="text-gray-900 font-bold text-lg">от {tariffs.monthly_30?.price || 1460} ₽</p>
             </div>
           </div>
           <p className="text-gray-600 text-sm">
-            Регулярный вынос мусора в течение 30 дней
+            {tariffs.monthly_30?.description || 'Регулярный вынос мусора в течение 30 дней'}
           </p>
         </button>
 
