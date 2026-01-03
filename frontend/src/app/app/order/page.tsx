@@ -103,16 +103,17 @@ function OrderContent() {
         };
         
         tariffsData.forEach((t: any) => {
-          if (t.tariff_type === 'single') {
+          if (t.tariff_type === 'single' || t.tariff_id === 'single') {
             prices.single.price = parseInt(t.price);
-            // Urgent price is fixed at 250 ₽
-            prices.single.urgent_price = 250;
-          } else if (t.tariff_type === 'trial') {
+            // Urgent price is stored in old_price field
+            prices.single.urgent_price = t.old_price ? parseInt(t.old_price) : 250;
+          } else if (t.tariff_type === 'trial' || t.tariff_id === 'trial') {
             prices.trial.price = parseInt(t.price);
-          } else if (t.tariff_type === 'monthly') {
-            // For monthly, the price in DB is the starting price
-            // We use it as base_price for calculations
-            prices.monthly.base_price = Math.floor(parseInt(t.price) / 7); // Approximate base per pickup
+          } else if (t.tariff_type === 'monthly' || t.tariff_id === 'monthly_14' || t.tariff_id === 'monthly_30') {
+            // For monthly, use monthly_14 price as base_price (7 pickups in 14 days)
+            if (t.tariff_id === 'monthly_14' || t.tariff_type === 'monthly') {
+              prices.monthly.base_price = Math.floor(parseInt(t.price) / 7); // Approximate base per pickup
+            }
           }
         });
         
