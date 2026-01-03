@@ -10,10 +10,10 @@ import { api } from '@/lib/api';
 type Step = 'address' | 'volume' | 'time' | 'confirm';
 
 const timeSlots = [
-  { id: 1, time: '08:00 — 10:00', label: 'Утро' },
-  { id: 2, time: '12:00 — 14:00', label: 'День' },
-  { id: 3, time: '16:00 — 18:00', label: 'Вечер' },
-  { id: 4, time: '20:00 — 22:00', label: 'Ночь' },
+  { id: 1, time: '08:00 — 10:00', label: 'Утро ☀️' },
+  { id: 2, time: '12:00 — 14:00', label: 'День ☀️' },
+  { id: 3, time: '16:00 — 18:00', label: 'Вечер 🌙' },
+  { id: 4, time: '20:00 — 22:00', label: 'Ночь 🌙' },
 ];
 
 // Dynamic steps based on tariff
