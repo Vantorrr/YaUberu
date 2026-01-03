@@ -244,10 +244,10 @@ export default function OrdersPage() {
                 onChange={(e) => setNewTimeSlot(e.target.value)}
                 className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl text-gray-900 focus:border-teal-500 focus:outline-none"
               >
-                <option value="08:00-10:00">08:00 - 10:00</option>
-                <option value="12:00-14:00">12:00 - 14:00</option>
-                <option value="16:00-18:00">16:00 - 18:00</option>
-                <option value="20:00-22:00">20:00 - 22:00</option>
+                <option value="08:00 — 10:00">08:00 — 10:00</option>
+                <option value="12:00 — 14:00">12:00 — 14:00</option>
+                <option value="16:00 — 18:00">16:00 — 18:00</option>
+                <option value="20:00 — 22:00">20:00 — 22:00</option>
               </select>
             </div>
 
