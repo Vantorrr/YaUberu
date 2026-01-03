@@ -107,7 +107,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         </div>
 
         {/* CTA Button - Fixed at bottom */}
-        <div className="fixed bottom-8 left-0 right-0 px-5">
+        <div className="fixed bottom-8 left-0 right-0 px-5 z-50">
           <button
             onClick={handleStartUsing}
             className="w-full bg-gradient-to-r from-teal-600 to-teal-700 text-white font-bold py-5 rounded-2xl shadow-xl hover:shadow-2xl transition-all"
