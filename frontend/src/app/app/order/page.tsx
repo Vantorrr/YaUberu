@@ -308,7 +308,7 @@ function OrderContent() {
   return (
     <div className="min-h-screen bg-white">
       {/* Header */}
-      <div className="sticky top-0 z-10 bg-white/95 backdrop-blur border-b border-gray-200 px-5 py-4">
+      <div className="sticky top-0 z-50 bg-white border-b border-gray-200 px-5 py-4">
         <div className="flex items-center gap-4">
           <button onClick={back} className="w-10 h-10 bg-gray-100 rounded-xl flex items-center justify-center text-gray-900 hover:bg-gray-200 transition">
             <ArrowLeft className="w-5 h-5" />
