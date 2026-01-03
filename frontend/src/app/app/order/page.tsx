@@ -1124,7 +1124,7 @@ function OrderContent() {
                     frequency === 'daily' ? 'каждый день' :
                     frequency === 'twice_week' ? '2 раза в неделю' :
                     'через день'
-                  }. Курьер заберёт мусор у двери.
+                  }.
                 </p>
               </div>
             )}
