@@ -24,7 +24,7 @@ export default function TariffsPage() {
         console.error('Failed to load tariffs:', error);
         // Use fallback prices if API fails
         setTariffs({
-          single: { price: 139, name: 'Разовый вынос' },
+          single: { price: 139, name: 'Разовый вынос', description: 'Заберу мусор в удобное для вас время' },
           trial: { price: 199, old_price: 756, name: 'Первая подписка', description: 'Две недели будем выносить ваш мусор через день' },
           monthly_14: { price: 756, name: 'Комфорт 2 недели', description: 'Регулярный вынос мусора в течение 14 дней' },
           monthly_30: { price: 1350, name: 'Комфорт месяц', description: 'Регулярный вынос мусора в течение 30 дней' },
@@ -66,7 +66,7 @@ export default function TariffsPage() {
           onClick={() => router.push('/app/order?tariff=single')}
           className="w-full bg-white rounded-xl border border-gray-200 p-4 text-left"
         >
-          <div className="flex items-start justify-between">
+          <div className="flex items-start justify-between mb-2">
             <div className="flex-1">
               <h3 className="font-bold text-base text-gray-900">{tariffs.single?.name || 'Разовый вынос'}</h3>
             </div>
@@ -74,6 +74,11 @@ export default function TariffsPage() {
               <p className="text-gray-900 font-bold text-lg">от {tariffs.single?.price || 139} ₽</p>
             </div>
           </div>
+          {tariffs.single?.description && (
+            <p className="text-gray-600 text-sm">
+              {tariffs.single.description}
+            </p>
+          )}
         </button>
 
         {/* 2. Пробный старт - ВЫДЕЛЕННЫЙ */}
