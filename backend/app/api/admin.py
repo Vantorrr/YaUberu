@@ -106,7 +106,8 @@ async def get_dashboard_stats(
 
 class TariffResponse(BaseModel):
     id: int
-    tariff_type: str
+    tariff_id: str  # Changed from tariff_type
+    tariff_type: str  # Keep for backward compatibility
     name: str
     price: str
     old_price: Optional[str]
@@ -126,7 +127,8 @@ async def get_public_tariffs(db: AsyncSession = Depends(get_db)):
     return [
         TariffResponse(
             id=t.id,
-            tariff_type=t.tariff_id,  # tariff_id -> tariff_type
+            tariff_id=t.tariff_id,  # For frontend compatibility
+            tariff_type=t.tariff_id,  # Backward compatibility
             name=t.name,
             price=str(t.price),  # int -> str
             old_price=str(t.old_price) if t.old_price else None,  # int -> str

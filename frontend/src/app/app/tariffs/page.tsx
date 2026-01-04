@@ -25,9 +25,9 @@ export default function TariffsPage() {
         // Use fallback prices if API fails
         setTariffs({
           single: { price: 139, name: 'Разовый вынос' },
-          trial: { price: 292, old_price: 973, name: 'Первая подписка', description: 'Две недели будем выносить ваш мусор через день' },
+          trial: { price: 199, old_price: 756, name: 'Первая подписка', description: 'Две недели будем выносить ваш мусор через день' },
           monthly_14: { price: 756, name: 'Комфорт 2 недели', description: 'Регулярный вынос мусора в течение 14 дней' },
-          monthly_30: { price: 1460, name: 'Комфорт месяц', description: 'Регулярный вынос мусора в течение 30 дней' },
+          monthly_30: { price: 1350, name: 'Комфорт месяц', description: 'Регулярный вынос мусора в течение 30 дней' },
         });
       } finally {
         setLoading(false);
@@ -91,7 +91,7 @@ export default function TariffsPage() {
               {tariffs.trial?.old_price && (
                 <p className="text-white/70 line-through text-sm">{tariffs.trial.old_price} ₽</p>
               )}
-              <p className="text-white font-bold text-2xl">{tariffs.trial?.price || 292} ₽</p>
+              <p className="text-white font-bold text-2xl">{tariffs.trial?.price || 199} ₽</p>
             </div>
           </div>
         </button>
@@ -124,7 +124,7 @@ export default function TariffsPage() {
               <h3 className="font-bold text-base text-gray-900">{tariffs.monthly_30?.name || 'Комфорт месяц'}</h3>
             </div>
             <div className="text-right ml-3">
-              <p className="text-gray-900 font-bold text-lg">от {tariffs.monthly_30?.price || 1460} ₽</p>
+              <p className="text-gray-900 font-bold text-lg">от {tariffs.monthly_30?.price || 1350} ₽</p>
             </div>
           </div>
           <p className="text-gray-600 text-sm">

@@ -16,3 +16,4 @@ CREATE INDEX idx_payments_yookassa_id ON payments(yookassa_payment_id);
 
 
 
+
