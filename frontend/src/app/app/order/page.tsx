@@ -529,7 +529,57 @@ function OrderContent() {
           </>
         )}
 
-        {/* Step 2: Volume/Duration - ONLY FOR MONTHLY */}
+        {/* Step 2: Volume - FOR SINGLE TARIFF */}
+        {step === 'volume' && tariffId === 'single' && (
+          <>
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-12 h-12 bg-purple-500 rounded-xl flex items-center justify-center">
+                <Package className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <h2 className="text-xl font-bold text-gray-900">Количество мешков</h2>
+                <p className="text-gray-500 text-sm">Выберите сколько мешков вынести</p>
+              </div>
+            </div>
+
+            <div className="space-y-6">
+              {/* BAGS COUNT */}
+              <div className="bg-gradient-to-br from-teal-50 to-emerald-50 rounded-2xl p-6 border-2 border-teal-200">
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <p className="text-gray-700 font-semibold text-base">Объем пакета до 70л</p>
+                  </div>
+                  <div className="w-16 h-20 bg-teal-600 rounded-2xl flex flex-col items-center justify-center text-white relative shadow-lg">
+                    <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-8 h-3 bg-teal-700 rounded-t-full"></div>
+                    <p className="text-2xl font-black">10</p>
+                    <p className="text-[10px] font-semibold">КГ</p>
+                  </div>
+                </div>
+                
+                <div className="flex items-center justify-between bg-white rounded-xl p-3 shadow-sm">
+                  <p className="text-gray-700 font-semibold">Кол-во пакетов</p>
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={() => setBagsCount(Math.max(1, bagsCount - 1))}
+                      className="w-10 h-10 rounded-xl bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-900 font-bold text-xl transition-all active:scale-95"
+                    >
+                      −
+                    </button>
+                    <span className="text-2xl font-bold text-gray-900 w-8 text-center">{bagsCount}</span>
+                    <button
+                      onClick={() => setBagsCount(Math.min(10, bagsCount + 1))}
+                      className="w-10 h-10 rounded-xl bg-teal-600 hover:bg-teal-700 flex items-center justify-center text-white font-bold text-xl transition-all active:scale-95"
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </>
+        )}
+
+        {/* Step 2: Volume/Duration - FOR MONTHLY TARIFF */}
         {step === 'volume' && tariffId === 'monthly' && (
           <>
             <div className="flex items-center gap-3 mb-6">
