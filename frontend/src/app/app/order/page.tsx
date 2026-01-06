@@ -957,10 +957,22 @@ function OrderContent() {
                     </div>
                     
                     <div className="h-px bg-gray-200" />
+                    
+                    <div className="flex items-start gap-3">
+                      <Package className="w-5 h-5 text-teal-600 mt-1 flex-shrink-0" />
+                      <div className="flex-1">
+                        <p className="text-gray-500 text-xs mb-1 font-medium uppercase tracking-wide">Количество</p>
+                        <p className="text-gray-900 font-semibold text-base">
+                          {bagsCount} мешок{bagsCount > 1 ? (bagsCount < 5 ? 'а' : 'ов') : ''}
+                        </p>
+                      </div>
+                    </div>
+                    
+                    <div className="h-px bg-gray-200" />
                   </>
                 )}
 
-                {/* TRIAL DETAILS - date, time, method, comment */}
+                {/* TRIAL DETAILS - date, time, bags, method, comment */}
                 {tariffId === 'trial' && (
                   <>
                     <div className="h-px bg-gray-200" />
@@ -974,6 +986,18 @@ function OrderContent() {
                         </p>
                         <p className="text-gray-900 font-semibold text-base mt-1">
                           {timeSlots.find((s) => s.id === slot)?.time}
+                        </p>
+                      </div>
+                    </div>
+                    
+                    <div className="h-px bg-gray-200" />
+                    
+                    <div className="flex items-start gap-3">
+                      <Package className="w-5 h-5 text-teal-600 mt-1 flex-shrink-0" />
+                      <div className="flex-1">
+                        <p className="text-gray-500 text-xs mb-1 font-medium uppercase tracking-wide">Количество</p>
+                        <p className="text-gray-900 font-semibold text-base">
+                          1 мешок
                         </p>
                       </div>
                     </div>
