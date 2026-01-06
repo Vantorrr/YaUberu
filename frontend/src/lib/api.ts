@@ -167,6 +167,11 @@ class ApiClient {
     is_urgent?: boolean;
     comment?: string;
     tariff_type?: string;
+    tariff_details?: {
+      bags_count: number;
+      duration?: number;
+      frequency?: 'daily' | 'every_other_day' | 'twice_week';
+    };
   }) {
     return this.request('/orders/', {
       method: 'POST',
@@ -274,8 +279,8 @@ class ApiClient {
     tariff_type: string;
     tariff_details?: {
       bags_count: number;
-      duration: number;
-      frequency: 'daily' | 'every_other_day' | 'twice_week';
+      duration?: number;
+      frequency?: 'daily' | 'every_other_day' | 'twice_week';
     };
   }) {
     return this.request('/payments/create', {

@@ -19,9 +19,9 @@ const timeSlots = [
 // Dynamic steps based on tariff
 const getStepsForTariff = (tariffId: string): Step[] => {
   if (tariffId === 'single') {
-    return ['address', 'time', 'confirm']; // Разовый: адрес → время → подтверждение
+    return ['address', 'volume', 'time', 'confirm']; // Разовый: адрес → количество мешков → время → подтверждение
   } else if (tariffId === 'trial') {
-    return ['address', 'time', 'confirm']; // Пробная: адрес → время/дата/метод → подтверждение
+    return ['address', 'time', 'confirm']; // Пробная: адрес → время/дата/метод → подтверждение (1 мешок по умолчанию)
   } else if (tariffId === 'monthly') {
     return ['address', 'volume', 'time', 'confirm']; // Месячная: адрес → объём → время/дата/метод → подтверждение
   }
@@ -230,8 +230,8 @@ function OrderContent() {
         const finalComment = comment || '';
 
         // 3. Create Order OR Payment
-        // Cost in credits (for balance check)
-        const creditsCost = (tariffId === 'single' && isUrgent) ? 2 : 1; 
+        // Cost in credits (for balance check) - each bag costs 1 credit, urgent costs 2x per bag
+        const creditsCost = tariffId === 'single' ? (isUrgent ? bagsCount * 2 : bagsCount) : 1; 
         
         // Use user selected date
         const finalDate = deliveryDate || dateStr;
@@ -253,7 +253,7 @@ function OrderContent() {
               is_urgent: isUrgent,
               comment: finalComment,
               tariff_type: tariffId,
-              tariff_details: tariffId === 'monthly' ? { bags_count: bagsCount, duration, frequency } : undefined
+              tariff_details: tariffId === 'monthly' ? { bags_count: bagsCount, duration, frequency } : (tariffId === 'trial' ? { bags_count: 1 } : undefined)
             });
             
             if (paymentRes.confirmation_url) {
@@ -270,7 +270,8 @@ function OrderContent() {
               time_slot: timeSlotStr,
               is_urgent: isUrgent,
               comment: finalComment,
-              tariff_type: tariffId
+              tariff_type: tariffId,
+              tariff_details: { bags_count: bagsCount }
             });
             router.push('/app/order/success');
         } else {
@@ -282,7 +283,8 @@ function OrderContent() {
               time_slot: timeSlotStr,
               is_urgent: isUrgent,
               comment: finalComment,
-              tariff_type: tariffId
+              tariff_type: tariffId,
+              tariff_details: { bags_count: bagsCount }
             });
             
             if (paymentRes.confirmation_url) {
@@ -1023,9 +1025,9 @@ function OrderContent() {
                   <span className="text-gray-700 font-semibold">Итого к оплате</span>
                   <span className="text-teal-600 font-bold text-3xl">
                     {(() => {
-                      if (slot === 'urgent') return String(tariffPrices.single.urgent_price);
+                      if (slot === 'urgent') return String(tariffPrices.single.urgent_price * bagsCount);
                       if (tariffId === 'single') return String(tariffPrices.single.price * bagsCount);
-                      if (tariffId === 'trial') return String(tariffPrices.trial.price); // Fixed trial price from DB
+                      if (tariffId === 'trial') return String(tariffPrices.trial.price); // Fixed trial price from DB (1 bag included)
                       if (tariffId === 'monthly') {
                         // Special price for first-time subscribers with trial-like parameters
                         const isTrialEquivalent = duration === 14 && frequency === 'every_other_day' && bagsCount === 1;
@@ -1047,7 +1049,7 @@ function OrderContent() {
                         const discountedPrice = Math.round(totalPrice * (1 - discount));
                         return String(discountedPrice);
                       }
-                      return String(tariffPrices.single.price);
+                      return String(tariffPrices.single.price * bagsCount);
                     })()} ₽
                   </span>
                 </div>

@@ -9,23 +9,32 @@ export default function TariffsPage() {
   const router = useRouter();
   const [tariffs, setTariffs] = useState<any>({});
   const [loading, setLoading] = useState(true);
+  const [hasSubscriptions, setHasSubscriptions] = useState(false);
 
   useEffect(() => {
-    const loadTariffs = async () => {
+    const loadData = async () => {
       try {
-        const data = await api.getPublicTariffs();
+        // Load tariffs and subscriptions in parallel
+        const [tariffsData, subscriptionsData] = await Promise.all([
+          api.getPublicTariffs(),
+          api.getSubscriptions()
+        ]);
+        
         // Convert array to object keyed by tariff_id
-        const tariffsMap = data.reduce((acc: any, t: any) => {
+        const tariffsMap = tariffsData.reduce((acc: any, t: any) => {
           acc[t.tariff_id] = t;
           return acc;
         }, {});
         setTariffs(tariffsMap);
+        
+        // Check if user has any subscriptions
+        setHasSubscriptions(subscriptionsData && subscriptionsData.length > 0);
       } catch (error) {
-        console.error('Failed to load tariffs:', error);
+        console.error('Failed to load data:', error);
         // Use fallback prices if API fails
         setTariffs({
           single: { price: 139, name: 'Разовый вынос', description: 'Заберу мусор в удобное для вас время' },
-          trial: { price: 199, old_price: 756, name: 'Первая подписка', description: 'Две недели будем выносить ваш мусор через день' },
+          trial: { price: 199, old_price: 756, name: 'Первая подписка', description: '1 мешок • Две недели будем выносить ваш мусор через день' },
           monthly_14: { price: 756, name: 'Комфорт 2 недели', description: 'Регулярный вынос мусора в течение 14 дней' },
           monthly_30: { price: 1350, name: 'Комфорт месяц', description: 'Регулярный вынос мусора в течение 30 дней' },
         });
@@ -33,7 +42,7 @@ export default function TariffsPage() {
         setLoading(false);
       }
     };
-    loadTariffs();
+    loadData();
   }, []);
 
   if (loading) {
@@ -81,25 +90,27 @@ export default function TariffsPage() {
           )}
         </button>
 
-        {/* 2. Пробный старт - ВЫДЕЛЕННЫЙ */}
-        <button
-          onClick={() => router.push('/app/order?tariff=trial')}
-          className="w-full bg-gradient-to-br from-teal-400 to-teal-500 rounded-xl p-4 text-left shadow-md"
-        >
-          <div className="flex items-start justify-between">
-            <div className="flex-1">
-              <h3 className="font-bold text-lg text-white">{tariffs.trial?.name || 'Первая подписка'}</h3>
-              <p className="text-white/80 text-xs font-medium mt-0.5">Для новых пользователей</p>
-              <p className="text-white/90 text-sm mt-2">{tariffs.trial?.description || 'Две недели будем выносить ваш мусор через день'}</p>
+        {/* 2. Пробный старт - ВЫДЕЛЕННЫЙ (только для новых пользователей) */}
+        {!hasSubscriptions && (
+          <button
+            onClick={() => router.push('/app/order?tariff=trial')}
+            className="w-full bg-gradient-to-br from-teal-400 to-teal-500 rounded-xl p-4 text-left shadow-md"
+          >
+            <div className="flex items-start justify-between">
+              <div className="flex-1">
+                <h3 className="font-bold text-lg text-white">{tariffs.trial?.name || 'Первая подписка'}</h3>
+                <p className="text-white/80 text-xs font-medium mt-0.5">Для новых пользователей</p>
+                <p className="text-white/90 text-sm mt-2">{tariffs.trial?.description || '1 мешок • Две недели будем выносить ваш мусор через день'}</p>
+              </div>
+              <div className="text-right ml-3">
+                {tariffs.trial?.old_price && (
+                  <p className="text-white/70 line-through text-sm">{tariffs.trial.old_price} ₽</p>
+                )}
+                <p className="text-white font-bold text-2xl">{tariffs.trial?.price || 199} ₽</p>
+              </div>
             </div>
-            <div className="text-right ml-3">
-              {tariffs.trial?.old_price && (
-                <p className="text-white/70 line-through text-sm">{tariffs.trial.old_price} ₽</p>
-              )}
-              <p className="text-white font-bold text-2xl">{tariffs.trial?.price || 199} ₽</p>
-            </div>
-          </div>
-        </button>
+          </button>
+        )}
 
         {/* 3. Комфорт 2 недели */}
         <button
