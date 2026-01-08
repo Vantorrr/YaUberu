@@ -223,7 +223,7 @@ async def yookassa_webhook(request: Request, db: AsyncSession = Depends(get_db))
                 cost_to_deduct = 1
             elif request_obj.tariff_type == 'trial':
                 credits_to_add = 7 # 7 pickups for trial (14 days every other day)
-                cost_to_deduct = 1  # First order is created immediately
+                cost_to_deduct = 0  # First order is already paid for in trial package
             elif request_obj.tariff_type == 'monthly':
                  # Calculate credits based on tariff details
                  if request_obj.tariff_details:

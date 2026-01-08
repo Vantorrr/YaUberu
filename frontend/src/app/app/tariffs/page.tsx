@@ -14,10 +14,11 @@ export default function TariffsPage() {
   useEffect(() => {
     const loadData = async () => {
       try {
-        // Load tariffs and subscriptions in parallel
-        const [tariffsData, subscriptionsData] = await Promise.all([
+        // Load tariffs, subscriptions, and orders in parallel
+        const [tariffsData, subscriptionsData, ordersData] = await Promise.all([
           api.getPublicTariffs(),
-          api.getSubscriptions()
+          api.getSubscriptions(),
+          api.getOrders()
         ]);
         
         // Convert array to object keyed by tariff_id
@@ -27,8 +28,10 @@ export default function TariffsPage() {
         }, {});
         setTariffs(tariffsMap);
         
-        // Check if user has any subscriptions
-        setHasSubscriptions(subscriptionsData && subscriptionsData.length > 0);
+        // Check if user has any subscriptions OR has already ordered trial
+        const hasAnySubscription = subscriptionsData && subscriptionsData.length > 0;
+        const hasTrialOrder = ordersData && ordersData.some((order: any) => order.tariff_type === 'trial');
+        setHasSubscriptions(hasAnySubscription || hasTrialOrder);
       } catch (error) {
         console.error('Failed to load data:', error);
         // Use fallback prices if API fails
