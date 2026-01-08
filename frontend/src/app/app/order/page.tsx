@@ -796,64 +796,7 @@ function OrderContent() {
                 </>
               )}
 
-              {/* DATE PICKER - For all tariffs */}
-              <div className={slot === 'urgent' ? 'hidden' : ''}>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Дата <span className="text-red-500">*</span>
-                </label>
-                <div className="relative">
-                  <input
-                    type="date"
-                    value={deliveryDate}
-                    onChange={(e) => {
-                      const selectedDate = e.target.value;
-                      const today = new Date().toISOString().split('T')[0];
-                      // Block past dates
-                      if (selectedDate >= today) {
-                        setDeliveryDate(selectedDate);
-                      } else {
-                        // If user somehow selected a past date, reset to today
-                        setDeliveryDate(today);
-                      }
-                    }}
-                    min={new Date().toISOString().split('T')[0]}
-                    className="w-full px-4 py-4 rounded-xl bg-white border-2 border-gray-200 text-gray-900 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 outline-none transition-all"
-                    style={{ colorScheme: 'light' }}
-                    required={slot !== 'urgent'}
-                  />
-                </div>
-              </div>
-
-              {/* TIME SLOTS */}
-              <div className={slot === 'urgent' ? 'hidden' : ''}>
-                <label className="block text-sm font-medium text-gray-700 mb-3">
-                  Время <span className="text-red-500">*</span>
-                </label>
-                <div className="space-y-2">
-                  {timeSlots.map((s) => (
-                    <div 
-                      key={s.id} 
-                      onClick={() => setSlot(s.id)}
-                      className={`
-                        cursor-pointer hover:border-teal-300 transition-all rounded-xl border-2 p-3
-                        ${slot === s.id ? 'border-teal-500 ring-2 ring-teal-500/30 bg-teal-50' : 'border-gray-200 bg-white'}
-                      `}
-                    >
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-gray-900 font-semibold text-base">{s.time}</p>
-                          <p className="text-gray-500 text-xs">{s.label}</p>
-                        </div>
-                        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${slot === s.id ? 'bg-teal-500 border-teal-500' : 'border-gray-300'}`}>
-                          {slot === s.id && <Check className="w-3 h-3 text-white" />}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* BAGS COUNT - Only for single */}
+              {/* BAGS COUNT - Only for single (MOVED UP) */}
               {tariffId === 'single' && (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-3">
@@ -892,6 +835,63 @@ function OrderContent() {
                   </div>
                 </div>
               )}
+
+              {/* DATE PICKER - For all tariffs */}
+              <div className={slot === 'urgent' ? 'hidden' : ''}>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Дата <span className="text-red-500">*</span>
+                </label>
+                <div className="relative">
+                  <input
+                    type="date"
+                    value={deliveryDate}
+                    onChange={(e) => {
+                      const selectedDate = e.target.value;
+                      const today = new Date().toISOString().split('T')[0];
+                      // Block past dates
+                      if (selectedDate >= today) {
+                        setDeliveryDate(selectedDate);
+                      } else {
+                        // If user somehow selected a past date, reset to today
+                        setDeliveryDate(today);
+                      }
+                    }}
+                    min={new Date().toISOString().split('T')[0]}
+                    className="w-full px-4 py-4 rounded-xl bg-white border-2 border-gray-200 text-gray-900 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 outline-none transition-all"
+                    style={{ colorScheme: 'light' }}
+                    required={slot !== 'urgent'}
+                  />
+                </div>
+              </div>
+
+              {/* TIME SLOTS - 2x2 GRID */}
+              <div className={slot === 'urgent' ? 'hidden' : ''}>
+                <label className="block text-sm font-medium text-gray-700 mb-3">
+                  Время <span className="text-red-500">*</span>
+                </label>
+                <div className="grid grid-cols-2 gap-2">
+                  {timeSlots.map((s) => (
+                    <div 
+                      key={s.id} 
+                      onClick={() => setSlot(s.id)}
+                      className={`
+                        cursor-pointer hover:border-teal-300 transition-all rounded-xl border-2 p-3
+                        ${slot === s.id ? 'border-teal-500 ring-2 ring-teal-500/30 bg-teal-50' : 'border-gray-200 bg-white'}
+                      `}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-gray-900 font-semibold text-sm">{s.time}</p>
+                          <p className="text-gray-500 text-xs">{s.label}</p>
+                        </div>
+                        <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center transition-all ${slot === s.id ? 'bg-teal-500 border-teal-500' : 'border-gray-300'}`}>
+                          {slot === s.id && <Check className="w-2.5 h-2.5 text-white" />}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
 
               {/* PRICE DISPLAY */}
               <div>
