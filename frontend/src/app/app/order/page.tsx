@@ -10,11 +10,21 @@ import { api } from '@/lib/api';
 type Step = 'address' | 'volume' | 'time' | 'confirm';
 
 const timeSlots = [
-  { id: 1, time: '08:00 — 10:00', label: 'Утро' },
-  { id: 2, time: '12:00 — 14:00', label: 'День' },
-  { id: 3, time: '16:00 — 18:00', label: 'Вечер' },
-  { id: 4, time: '20:00 — 22:00', label: 'Ночь' },
+  { id: 1, time: '08:00 — 10:00', label: 'Утро', endHour: 10 },
+  { id: 2, time: '12:00 — 14:00', label: 'День', endHour: 14 },
+  { id: 3, time: '16:00 — 18:00', label: 'Вечер', endHour: 18 },
+  { id: 4, time: '20:00 — 22:00', label: 'Ночь', endHour: 22 },
 ];
+
+// Helper function to check if time slot is still available today
+const isTimeSlotAvailable = (endHour: number, selectedDate: string) => {
+  const today = new Date().toISOString().split('T')[0];
+  if (selectedDate !== today) {
+    return true; // Future dates - all slots available
+  }
+  const currentHour = new Date().getHours();
+  return currentHour < endHour; // Only show if current time is before slot end
+};
 
 // Dynamic steps based on tariff
 const getStepsForTariff = (tariffId: string): Step[] => {
@@ -853,15 +863,29 @@ function OrderContent() {
                     onChange={(e) => {
                       const selectedDate = e.target.value;
                       const today = new Date().toISOString().split('T')[0];
+                      const tomorrow = new Date();
+                      tomorrow.setDate(tomorrow.getDate() + 1);
+                      const tomorrowStr = tomorrow.toISOString().split('T')[0];
+                      
+                      // For subscriptions (trial/monthly), minimum date is tomorrow
+                      const minDate = (tariffId === 'trial' || tariffId === 'monthly') ? tomorrowStr : today;
+                      
                       // Block past dates
-                      if (selectedDate >= today) {
+                      if (selectedDate >= minDate) {
                         setDeliveryDate(selectedDate);
                       } else {
-                        // If user somehow selected a past date, reset to today
-                        setDeliveryDate(today);
+                        // If user somehow selected a past date, reset to minimum allowed date
+                        setDeliveryDate(minDate);
                       }
                     }}
-                    min={new Date().toISOString().split('T')[0]}
+                    min={(() => {
+                      if (tariffId === 'trial' || tariffId === 'monthly') {
+                        const tomorrow = new Date();
+                        tomorrow.setDate(tomorrow.getDate() + 1);
+                        return tomorrow.toISOString().split('T')[0];
+                      }
+                      return new Date().toISOString().split('T')[0];
+                    })()}
                     className="w-full px-4 py-4 rounded-xl bg-white border-2 border-gray-200 text-gray-900 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 outline-none transition-all"
                     style={{ colorScheme: 'light' }}
                     required={slot !== 'urgent'}
@@ -875,7 +899,9 @@ function OrderContent() {
                   Время <span className="text-red-500">*</span>
                 </label>
                 <div className="grid grid-cols-2 gap-2">
-                  {timeSlots.map((s) => (
+                  {timeSlots
+                    .filter((s) => tariffId !== 'single' || isTimeSlotAvailable(s.endHour, deliveryDate))
+                    .map((s) => (
                     <div 
                       key={s.id} 
                       onClick={() => setSlot(s.id)}
