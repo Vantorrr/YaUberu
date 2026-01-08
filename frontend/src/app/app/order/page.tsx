@@ -829,27 +829,64 @@ function OrderContent() {
                 <label className="block text-sm font-medium text-gray-700 mb-3">
                   Время <span className="text-red-500">*</span>
                 </label>
-                <div className="space-y-3">
+                <div className="space-y-2">
                   {timeSlots.map((s) => (
-                    <Card 
+                    <div 
                       key={s.id} 
                       onClick={() => setSlot(s.id)}
                       className={`
-                        cursor-pointer hover:border-teal-300 transition-all
-                        ${slot === s.id ? 'border-teal-500 ring-2 ring-teal-500/30 bg-teal-50' : 'border-gray-200'}
+                        cursor-pointer hover:border-teal-300 transition-all rounded-xl border-2 p-3
+                        ${slot === s.id ? 'border-teal-500 ring-2 ring-teal-500/30 bg-teal-50' : 'border-gray-200 bg-white'}
                       `}
                     >
                       <div className="flex items-center justify-between">
                         <div>
-                          <p className="text-gray-900 font-semibold text-lg">{s.time}</p>
-                          <p className="text-gray-500 text-sm">{s.label}</p>
+                          <p className="text-gray-900 font-semibold text-base">{s.time}</p>
+                          <p className="text-gray-500 text-xs">{s.label}</p>
                         </div>
-                        <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${slot === s.id ? 'bg-teal-500 border-teal-500' : 'border-gray-300'}`}>
-                          {slot === s.id && <Check className="w-4 h-4 text-white" />}
+                        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${slot === s.id ? 'bg-teal-500 border-teal-500' : 'border-gray-300'}`}>
+                          {slot === s.id && <Check className="w-3 h-3 text-white" />}
                         </div>
                       </div>
-                    </Card>
+                    </div>
                   ))}
+                </div>
+
+                {/* PRICE DISPLAY */}
+                <div className="bg-gradient-to-br from-teal-50 to-green-50 rounded-2xl border-2 border-teal-200 p-4 mt-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-gray-600 text-sm mb-1">Итого к оплате</p>
+                      <p className="text-gray-900 font-bold text-2xl">
+                        {(() => {
+                          if (tariffId === 'trial') {
+                            return '199';
+                          }
+                          if (tariffId === 'single') {
+                            if (slot === 'urgent') {
+                              return String(tariffPrices.single.urgent_price * bagsCount);
+                            }
+                            return String(tariffPrices.single.price * bagsCount);
+                          }
+                          if (tariffId === 'monthly') {
+                            const basePrice = tariffPrices.monthly.price;
+                            const pickupsCount = frequency === 'daily' ? duration : frequency === 'every_other_day' ? Math.floor(duration / 2) : Math.floor((duration / 7) * 2);
+                            const totalPrice = basePrice * pickupsCount * bagsCount;
+                            const discount = duration >= 60 ? 0.3 : duration >= 30 ? 0.2 : duration >= 14 ? 0.1 : 0;
+                            const discountedPrice = Math.round(totalPrice * (1 - discount));
+                            return String(discountedPrice);
+                          }
+                          return '0';
+                        })()} ₽
+                      </p>
+                      {tariffId !== 'trial' && bagsCount > 1 && (
+                        <p className="text-gray-500 text-xs mt-1">
+                          {bagsCount} мешок{bagsCount > 1 ? (bagsCount < 5 ? 'а' : 'ов') : ''}
+                        </p>
+                      )}
+                    </div>
+                    <div className="text-4xl">💰</div>
+                  </div>
                 </div>
               </div>
 
