@@ -926,11 +926,6 @@ function OrderContent() {
                           return '0';
                         })()} ₽
                       </p>
-                      {tariffId !== 'trial' && bagsCount > 1 && (
-                        <p className="text-gray-500 text-xs mt-1">
-                          {bagsCount} мешок{bagsCount > 1 ? (bagsCount < 5 ? 'а' : 'ов') : ''}
-                        </p>
-                      )}
                     </div>
                     <div className="text-4xl">💰</div>
                   </div>
