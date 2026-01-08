@@ -19,11 +19,11 @@ const timeSlots = [
 // Dynamic steps based on tariff
 const getStepsForTariff = (tariffId: string): Step[] => {
   if (tariffId === 'single') {
-    return ['address', 'volume', 'time', 'confirm']; // Разовый: адрес → количество мешков → время → подтверждение
+    return ['address', 'time', 'volume', 'confirm']; // Разовый: адрес → время → количество мешков → подтверждение
   } else if (tariffId === 'trial') {
     return ['address', 'time', 'confirm']; // Пробная: адрес → время/дата/метод → подтверждение (1 мешок по умолчанию)
   } else if (tariffId === 'monthly') {
-    return ['address', 'volume', 'time', 'confirm']; // Месячная: адрес → объём → время/дата/метод → подтверждение
+    return ['address', 'time', 'volume', 'confirm']; // Месячная: адрес → время/дата/метод → объём → подтверждение
   }
   return ['address', 'confirm'];
 };
