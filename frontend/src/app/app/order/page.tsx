@@ -798,36 +798,31 @@ function OrderContent() {
 
               {/* BAGS COUNT - Only for single (MOVED UP) */}
               {tariffId === 'single' && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-3">
-                    Количество мешков <span className="text-red-500">*</span>
-                  </label>
-                  <div className="bg-gradient-to-br from-purple-50 to-blue-50 border-2 border-purple-200 rounded-2xl p-6">
-                    <div className="flex items-center justify-between mb-4">
-                      <div>
-                        <p className="text-gray-700 font-semibold text-base">Объем пакета до 70л</p>
-                        <p className="text-gray-500 text-sm">Выберите нужное количество</p>
-                      </div>
-                      <div className="w-16 h-16 bg-teal-600 rounded-2xl flex items-center justify-center shadow-lg">
-                        <span className="text-white text-2xl font-bold">{bagsCount}</span>
-                      </div>
+                <div className="bg-gradient-to-br from-teal-50 to-emerald-50 rounded-2xl p-6 border-2 border-teal-200">
+                  <div className="flex items-center justify-between mb-4">
+                    <div>
+                      <p className="text-gray-700 font-semibold text-base">Объем пакета до 70л</p>
                     </div>
-                    <div className="flex items-center justify-center gap-4">
+                    <div className="w-16 h-20 bg-teal-600 rounded-2xl flex flex-col items-center justify-center text-white relative shadow-lg">
+                      <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-8 h-3 bg-teal-700 rounded-t-full"></div>
+                      <p className="text-2xl font-black">10</p>
+                      <p className="text-[10px] font-semibold">КГ</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center justify-between bg-white rounded-xl p-3 shadow-sm">
+                    <p className="text-gray-700 font-semibold">Кол-во пакетов</p>
+                    <div className="flex items-center gap-3">
                       <button
                         onClick={() => setBagsCount(Math.max(1, bagsCount - 1))}
-                        disabled={bagsCount <= 1}
-                        className="w-12 h-12 rounded-xl bg-gray-200 hover:bg-gray-300 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center font-bold text-xl text-gray-900 transition-all"
+                        className="w-10 h-10 rounded-xl bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-900 font-bold text-xl transition-all active:scale-95"
                       >
                         −
                       </button>
-                      <div className="flex-1 text-center">
-                        <p className="text-3xl font-bold text-gray-900">{bagsCount}</p>
-                        <p className="text-gray-500 text-sm">мешок{bagsCount > 1 ? (bagsCount < 5 ? 'а' : 'ов') : ''}</p>
-                      </div>
+                      <span className="text-2xl font-bold text-gray-900 w-8 text-center">{bagsCount}</span>
                       <button
                         onClick={() => setBagsCount(Math.min(10, bagsCount + 1))}
-                        disabled={bagsCount >= 10}
-                        className="w-12 h-12 rounded-xl bg-teal-600 hover:bg-teal-700 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center font-bold text-xl text-white transition-all"
+                        className="w-10 h-10 rounded-xl bg-teal-600 hover:bg-teal-700 flex items-center justify-center text-white font-bold text-xl transition-all active:scale-95"
                       >
                         +
                       </button>
