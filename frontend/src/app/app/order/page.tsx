@@ -19,7 +19,7 @@ const timeSlots = [
 // Dynamic steps based on tariff
 const getStepsForTariff = (tariffId: string): Step[] => {
   if (tariffId === 'single') {
-    return ['address', 'time', 'volume', 'confirm']; // Разовый: адрес → время → количество мешков → подтверждение
+    return ['address', 'time', 'confirm']; // Разовый: адрес → время+мешки → подтверждение
   } else if (tariffId === 'trial') {
     return ['address', 'time', 'confirm']; // Пробная: адрес → время/дата/метод → подтверждение (1 мешок по умолчанию)
   } else if (tariffId === 'monthly') {
@@ -749,35 +749,7 @@ function OrderContent() {
             </div>
 
             <div className="space-y-4">
-              {/* DATE PICKER - For all tariffs */}
-              <div className={slot === 'urgent' ? 'hidden' : ''}>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Дата <span className="text-red-500">*</span>
-                </label>
-                <div className="relative">
-                  <input
-                    type="date"
-                    value={deliveryDate}
-                    onChange={(e) => {
-                      const selectedDate = e.target.value;
-                      const today = new Date().toISOString().split('T')[0];
-                      // Block past dates
-                      if (selectedDate >= today) {
-                        setDeliveryDate(selectedDate);
-                      } else {
-                        // If user somehow selected a past date, reset to today
-                        setDeliveryDate(today);
-                      }
-                    }}
-                    min={new Date().toISOString().split('T')[0]}
-                    className="w-full px-4 py-4 rounded-xl bg-white border-2 border-gray-200 text-gray-900 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 outline-none transition-all"
-                    style={{ colorScheme: 'light' }}
-                    required={slot !== 'urgent'}
-                  />
-                </div>
-              </div>
-
-              {/* URGENT OPTION - Only for single */}
+              {/* URGENT OPTION - Only for single (MOVED TO TOP) */}
               {tariffId === 'single' && (
                 <>
                   <div 
@@ -824,8 +796,36 @@ function OrderContent() {
                 </>
               )}
 
+              {/* DATE PICKER - For all tariffs */}
+              <div className={slot === 'urgent' ? 'hidden' : ''}>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Дата <span className="text-red-500">*</span>
+                </label>
+                <div className="relative">
+                  <input
+                    type="date"
+                    value={deliveryDate}
+                    onChange={(e) => {
+                      const selectedDate = e.target.value;
+                      const today = new Date().toISOString().split('T')[0];
+                      // Block past dates
+                      if (selectedDate >= today) {
+                        setDeliveryDate(selectedDate);
+                      } else {
+                        // If user somehow selected a past date, reset to today
+                        setDeliveryDate(today);
+                      }
+                    }}
+                    min={new Date().toISOString().split('T')[0]}
+                    className="w-full px-4 py-4 rounded-xl bg-white border-2 border-gray-200 text-gray-900 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 outline-none transition-all"
+                    style={{ colorScheme: 'light' }}
+                    required={slot !== 'urgent'}
+                  />
+                </div>
+              </div>
+
               {/* TIME SLOTS */}
-              <div>
+              <div className={slot === 'urgent' ? 'hidden' : ''}>
                 <label className="block text-sm font-medium text-gray-700 mb-3">
                   Время <span className="text-red-500">*</span>
                 </label>
@@ -851,9 +851,51 @@ function OrderContent() {
                     </div>
                   ))}
                 </div>
+              </div>
 
-                {/* PRICE DISPLAY */}
-                <div className="bg-gradient-to-br from-teal-50 to-green-50 rounded-2xl border-2 border-teal-200 p-4 mt-4">
+              {/* BAGS COUNT - Only for single */}
+              {tariffId === 'single' && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-3">
+                    Количество мешков <span className="text-red-500">*</span>
+                  </label>
+                  <div className="bg-gradient-to-br from-purple-50 to-blue-50 border-2 border-purple-200 rounded-2xl p-6">
+                    <div className="flex items-center justify-between mb-4">
+                      <div>
+                        <p className="text-gray-700 font-semibold text-base">Объем пакета до 70л</p>
+                        <p className="text-gray-500 text-sm">Выберите нужное количество</p>
+                      </div>
+                      <div className="w-16 h-16 bg-teal-600 rounded-2xl flex items-center justify-center shadow-lg">
+                        <span className="text-white text-2xl font-bold">{bagsCount}</span>
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-center gap-4">
+                      <button
+                        onClick={() => setBagsCount(Math.max(1, bagsCount - 1))}
+                        disabled={bagsCount <= 1}
+                        className="w-12 h-12 rounded-xl bg-gray-200 hover:bg-gray-300 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center font-bold text-xl text-gray-900 transition-all"
+                      >
+                        −
+                      </button>
+                      <div className="flex-1 text-center">
+                        <p className="text-3xl font-bold text-gray-900">{bagsCount}</p>
+                        <p className="text-gray-500 text-sm">мешок{bagsCount > 1 ? (bagsCount < 5 ? 'а' : 'ов') : ''}</p>
+                      </div>
+                      <button
+                        onClick={() => setBagsCount(Math.min(10, bagsCount + 1))}
+                        disabled={bagsCount >= 10}
+                        className="w-12 h-12 rounded-xl bg-teal-600 hover:bg-teal-700 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center font-bold text-xl text-white transition-all"
+                      >
+                        +
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* PRICE DISPLAY */}
+              <div>
+                <div className="bg-gradient-to-br from-teal-50 to-green-50 rounded-2xl border-2 border-teal-200 p-4">
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-gray-600 text-sm mb-1">Итого к оплате</p>
