@@ -1235,7 +1235,7 @@ function OrderContent() {
             {tariffId === 'single' && (
               <>
                 <div className="space-y-2">
-                  <p className="text-gray-700 text-sm font-semibold ml-1">Как забрать мусор?</p>
+                  <p className="text-gray-700 text-sm font-semibold ml-1">Способ передачи</p>
                   <div className="grid grid-cols-2 gap-3">
                     <div 
                       onClick={() => setPickupMethod('door')}
@@ -1246,8 +1246,8 @@ function OrderContent() {
                           : 'bg-white border-gray-200 hover:border-gray-300'}
                       `}
                     >
-                      <DoorOpen className={`w-6 h-6 ${pickupMethod === 'door' ? 'text-teal-600' : 'text-gray-400'}`} />
-                      <span className={`text-sm font-semibold ${pickupMethod === 'door' ? 'text-teal-600' : 'text-gray-600'}`}>У двери</span>
+                      <div className="text-2xl">🚪</div>
+                      <span className={`text-sm font-semibold ${pickupMethod === 'door' ? 'text-teal-600' : 'text-gray-600'}`}>За дверью</span>
                     </div>
 
                     <div 
@@ -1259,7 +1259,7 @@ function OrderContent() {
                           : 'bg-white border-gray-200 hover:border-gray-300'}
                       `}
                     >
-                      <User className={`w-6 h-6 ${pickupMethod === 'hand' ? 'text-orange-600' : 'text-gray-400'}`} />
+                      <div className="text-2xl">🤝</div>
                       <span className={`text-sm font-semibold ${pickupMethod === 'hand' ? 'text-orange-600' : 'text-gray-600'}`}>В руки</span>
                     </div>
                   </div>
