@@ -65,7 +65,7 @@ function OrderContent() {
   const [tariffPrices, setTariffPrices] = useState<any>({
     single: { price: 150, urgent_price: 250 },
     trial: { price: 199 },
-    monthly: { base_price: 150 }
+    monthly: { price: 150 }
   });
   
   useEffect(() => {
@@ -99,7 +99,7 @@ function OrderContent() {
         const prices: any = {
           single: { price: 150, urgent_price: 250 },
           trial: { price: 199 },
-          monthly: { base_price: 150 }
+          monthly: { price: 150 }
         };
         
         tariffsData.forEach((t: any) => {
@@ -110,9 +110,9 @@ function OrderContent() {
           } else if (t.tariff_type === 'trial' || t.tariff_id === 'trial') {
             prices.trial.price = parseInt(t.price);
           } else if (t.tariff_type === 'monthly' || t.tariff_id === 'monthly_14' || t.tariff_id === 'monthly_30') {
-            // For monthly, use monthly_14 price as base_price (7 pickups in 14 days)
+            // For monthly, use monthly_14 price as base price per pickup (7 pickups in 14 days)
             if (t.tariff_id === 'monthly_14' || t.tariff_type === 'monthly') {
-              prices.monthly.base_price = Math.floor(parseInt(t.price) / 7); // Approximate base per pickup
+              prices.monthly.price = Math.floor(parseInt(t.price) / 7); // Approximate base per pickup
             }
           }
         });
@@ -696,7 +696,7 @@ function OrderContent() {
                   );
                 }
                 
-                const basePrice = tariffPrices.monthly.base_price; // base price per pickup from DB
+                const basePrice = tariffPrices.monthly.price; // base price per pickup from DB
                 const frequencyMultiplier = {
                   daily: 1,
                   every_other_day: 0.5,
@@ -916,7 +916,7 @@ function OrderContent() {
                             return String(tariffPrices.single.price * bagsCount);
                           }
                           if (tariffId === 'monthly') {
-                            const basePrice = tariffPrices.monthly.price;
+                            const basePrice = tariffPrices.monthly?.price || 150;
                             const pickupsCount = frequency === 'daily' ? duration : frequency === 'every_other_day' ? Math.floor(duration / 2) : Math.floor((duration / 7) * 2);
                             const totalPrice = basePrice * pickupsCount * bagsCount;
                             const discount = duration >= 60 ? 0.3 : duration >= 30 ? 0.2 : duration >= 14 ? 0.1 : 0;
