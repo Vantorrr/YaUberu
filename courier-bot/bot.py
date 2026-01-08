@@ -565,10 +565,21 @@ async def show_orders_in_building(callback: CallbackQuery, state: FSMContext):
             status_emoji = "🔵"
             status_text = "🔵 Взят"
         
-        text += (
-            f"{status_emoji} **Заказ #{order['id']}** — {status_text}\n"
-            f"┌ 📍 {order.get('full_address', f'д. {building}')}\n"
-            f"├ 🕐 {order['time_slot']}\n"
+        # Format date
+        date_str = ""
+        if order.get('date'):
+            try:
+                from datetime import datetime
+                date_obj = datetime.fromisoformat(str(order['date']))
+                date_str = date_obj.strftime('%d.%m.%Y')
+            except:
+                date_str = str(order['date'])
+        
+        text += f"{status_emoji} **Заказ #{order['id']}** — {status_text}\n"
+        text += f"┌ 📍 {order.get('full_address', f'д. {building}')}\n"
+        if date_str:
+            text += f"├ 📅 {date_str}\n"
+        text += f"├ 🕐 {order['time_slot']}\n"
             f"├ 🚪 Подъезд {order['entrance']}, этаж {order['floor']}\n"
             f"├ 🏠 Квартира {order['apartment']}\n"
             f"├ 🔑 Домофон: `{order['intercom']}`\n"
@@ -652,10 +663,21 @@ async def take_order_handler(callback: CallbackQuery, state: FSMContext):
             status_emoji = "🔵"
             status_text = "🔵 Взят"
         
-        text += (
-            f"{status_emoji} **Заказ #{order['id']}** — {status_text}\n"
-            f"┌ 📍 {order.get('full_address', f'д. {building}')}\n"
-            f"├ 🕐 {order['time_slot']}\n"
+        # Format date
+        date_str = ""
+        if order.get('date'):
+            try:
+                from datetime import datetime
+                date_obj = datetime.fromisoformat(str(order['date']))
+                date_str = date_obj.strftime('%d.%m.%Y')
+            except:
+                date_str = str(order['date'])
+        
+        text += f"{status_emoji} **Заказ #{order['id']}** — {status_text}\n"
+        text += f"┌ 📍 {order.get('full_address', f'д. {building}')}\n"
+        if date_str:
+            text += f"├ 📅 {date_str}\n"
+        text += f"├ 🕐 {order['time_slot']}\n"
             f"├ 🚪 Подъезд {order['entrance']}, этаж {order['floor']}\n"
             f"├ 🏠 Квартира {order['apartment']}\n"
             f"├ 🔑 Домофон: `{order['intercom']}`\n"
@@ -756,10 +778,21 @@ async def set_bags_and_complete(callback: CallbackQuery, state: FSMContext):
             status_emoji = "🔵"
             status_text = "🔵 Взят"
         
-        text += (
-            f"{status_emoji} **Заказ #{order['id']}** — {status_text}\n"
-            f"┌ 📍 {order.get('full_address', f'д. {building}')}\n"
-            f"├ 🕐 {order['time_slot']}\n"
+        # Format date
+        date_str = ""
+        if order.get('date'):
+            try:
+                from datetime import datetime
+                date_obj = datetime.fromisoformat(str(order['date']))
+                date_str = date_obj.strftime('%d.%m.%Y')
+            except:
+                date_str = str(order['date'])
+        
+        text += f"{status_emoji} **Заказ #{order['id']}** — {status_text}\n"
+        text += f"┌ 📍 {order.get('full_address', f'д. {building}')}\n"
+        if date_str:
+            text += f"├ 📅 {date_str}\n"
+        text += f"├ 🕐 {order['time_slot']}\n"
             f"├ 🚪 Подъезд {order['entrance']}, этаж {order['floor']}\n"
             f"├ 🏠 Квартира {order['apartment']}\n"
             f"├ 🔑 Домофон: `{order['intercom']}`\n"
