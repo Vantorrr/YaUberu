@@ -580,10 +580,9 @@ async def show_orders_in_building(callback: CallbackQuery, state: FSMContext):
         if date_str:
             text += f"├ 📅 {date_str}\n"
         text += f"├ 🕐 {order['time_slot']}\n"
-            f"├ 🚪 Подъезд {order['entrance']}, этаж {order['floor']}\n"
-            f"├ 🏠 Квартира {order['apartment']}\n"
-            f"├ 🔑 Домофон: `{order['intercom']}`\n"
-        )
+        text += f"├ 🚪 Подъезд {order['entrance']}, этаж {order['floor']}\n"
+        text += f"├ 🏠 Квартира {order['apartment']}\n"
+        text += f"├ 🔑 Домофон: `{order['intercom']}`\n"
         if order.get('comment'):
             text += f"└ 💬 _{order['comment']}_\n"
         text += "\n"
@@ -678,10 +677,9 @@ async def take_order_handler(callback: CallbackQuery, state: FSMContext):
         if date_str:
             text += f"├ 📅 {date_str}\n"
         text += f"├ 🕐 {order['time_slot']}\n"
-            f"├ 🚪 Подъезд {order['entrance']}, этаж {order['floor']}\n"
-            f"├ 🏠 Квартира {order['apartment']}\n"
-            f"├ 🔑 Домофон: `{order['intercom']}`\n"
-        )
+        text += f"├ 🚪 Подъезд {order['entrance']}, этаж {order['floor']}\n"
+        text += f"├ 🏠 Квартира {order['apartment']}\n"
+        text += f"├ 🔑 Домофон: `{order['intercom']}`\n"
         if order.get('comment'):
             text += f"└ 💬 _{order['comment']}_\n"
         text += "\n"
@@ -793,10 +791,9 @@ async def set_bags_and_complete(callback: CallbackQuery, state: FSMContext):
         if date_str:
             text += f"├ 📅 {date_str}\n"
         text += f"├ 🕐 {order['time_slot']}\n"
-            f"├ 🚪 Подъезд {order['entrance']}, этаж {order['floor']}\n"
-            f"├ 🏠 Квартира {order['apartment']}\n"
-            f"├ 🔑 Домофон: `{order['intercom']}`\n"
-        )
+        text += f"├ 🚪 Подъезд {order['entrance']}, этаж {order['floor']}\n"
+        text += f"├ 🏠 Квартира {order['apartment']}\n"
+        text += f"├ 🔑 Домофон: `{order['intercom']}`\n"
         if order.get('comment'):
             text += f"└ 💬 _{order['comment']}_\n"
         text += "\n"
