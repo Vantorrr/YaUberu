@@ -754,8 +754,14 @@ function OrderContent() {
                 <>
                   <div 
                     onClick={() => {
-                      setSlot('urgent');
-                      setDeliveryDate(new Date().toISOString().split('T')[0]);
+                      if (slot === 'urgent') {
+                        // If urgent is already selected, deselect it
+                        setSlot(null);
+                      } else {
+                        // Select urgent mode
+                        setSlot('urgent');
+                        setDeliveryDate(new Date().toISOString().split('T')[0]);
+                      }
                     }}
                     className={`
                       relative overflow-hidden rounded-2xl p-5 border transition-all cursor-pointer
@@ -777,7 +783,9 @@ function OrderContent() {
                               Hot
                             </span>
                           </div>
-                          <p className="text-orange-900 text-sm">Приедем в течение часа</p>
+                          <p className="text-orange-900 text-sm">
+                            {slot === 'urgent' ? '✓ Выбрано (нажмите чтобы отменить)' : 'Приедем в течение часа'}
+                          </p>
                         </div>
                       </div>
                       <div className="text-right">
@@ -788,11 +796,13 @@ function OrderContent() {
                   </div>
 
                   {/* Divider */}
-                  <div className="flex items-center gap-3 py-2">
-                    <div className="h-px bg-teal-900/30 flex-1" />
-                    <span className="text-gray-500 text-xs font-medium uppercase tracking-wider">Или по расписанию</span>
-                    <div className="h-px bg-teal-900/30 flex-1" />
-                  </div>
+                  {slot !== 'urgent' && (
+                    <div className="flex items-center gap-3 py-2">
+                      <div className="h-px bg-teal-900/30 flex-1" />
+                      <span className="text-gray-500 text-xs font-medium uppercase tracking-wider">Или по расписанию</span>
+                      <div className="h-px bg-teal-900/30 flex-1" />
+                    </div>
+                  )}
                 </>
               )}
 
