@@ -128,6 +128,10 @@ class ApiClient {
     return this.request('/users/subscriptions');
   }
 
+  async checkHasTrial(): Promise<{ has_trial: boolean }> {
+    return this.request('/users/me/has-trial');
+  }
+
   async getAddresses(): Promise<Array<{
     id: number;
     complex_id?: number;

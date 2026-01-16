@@ -117,6 +117,27 @@ async def get_user_subscriptions(
     } for s in subscriptions]
 
 
+@router.get("/me/has-trial")
+async def check_has_trial_subscription(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Check if user has ever purchased a trial subscription (active or inactive)
+    """
+    from app.models import Subscription, Tariff
+    
+    result = await db.execute(
+        select(Subscription).where(
+            Subscription.user_id == current_user.id,
+            Subscription.tariff == Tariff.TRIAL
+        )
+    )
+    trial_subscription = result.scalar_one_or_none()
+    
+    return {"has_trial": trial_subscription is not None}
+
+
 @router.get("/addresses", response_model=List[AddressResponse])
 async def get_addresses(
     db: AsyncSession = Depends(get_db),
