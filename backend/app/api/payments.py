@@ -285,7 +285,7 @@ async def yookassa_webhook(request: Request, db: AsyncSession = Depends(get_db))
                          select(Subscription).where(
                              Subscription.user_id == user.id,
                              Subscription.tariff == Tariff.TRIAL
-                         )
+                         ).limit(1)
                      )
                      existing_trial = existing_trial_result.scalar_one_or_none()
                      if existing_trial:

@@ -137,7 +137,7 @@ async def create_order(
                 select(Subscription).where(
                     Subscription.user_id == current_user.id,
                     Subscription.tariff == Tariff.TRIAL
-                )
+                ).limit(1)
             )
             existing_sub = existing_trial_result.scalar_one_or_none()
         else:

@@ -131,7 +131,7 @@ async def check_has_trial_subscription(
         select(Subscription).where(
             Subscription.user_id == current_user.id,
             Subscription.tariff == Tariff.TRIAL
-        )
+        ).limit(1)
     )
     trial_subscription = result.scalar_one_or_none()
     
