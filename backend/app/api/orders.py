@@ -130,14 +130,24 @@ async def create_order(
     
     # Create Subscription if tariff is trial or monthly
     if request.tariff_type in ['trial', 'monthly']:
-        # Check if user already has active subscription of this type
-        existing_sub_result = await db.execute(
-            select(Subscription).where(
-                Subscription.user_id == current_user.id,
-                Subscription.is_active == True
+        # For trial: check if user has EVER had a trial subscription (active or not)
+        # For monthly: check if user has an active subscription
+        if request.tariff_type == 'trial':
+            existing_trial_result = await db.execute(
+                select(Subscription).where(
+                    Subscription.user_id == current_user.id,
+                    Subscription.tariff == Tariff.TRIAL
+                )
             )
-        )
-        existing_sub = existing_sub_result.scalar_one_or_none()
+            existing_sub = existing_trial_result.scalar_one_or_none()
+        else:
+            existing_sub_result = await db.execute(
+                select(Subscription).where(
+                    Subscription.user_id == current_user.id,
+                    Subscription.is_active == True
+                )
+            )
+            existing_sub = existing_sub_result.scalar_one_or_none()
         
         if not existing_sub:
             # Determine total credits and end date based on tariff

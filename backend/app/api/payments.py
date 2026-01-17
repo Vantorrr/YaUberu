@@ -277,34 +277,50 @@ async def yookassa_webhook(request: Request, db: AsyncSession = Depends(get_db))
             
             # C. Create Subscription (if trial/monthly)
             if request_obj.tariff_type in ['trial', 'monthly']:
-                 # Get tariff details
-                 duration_days = 14  # Default for trial
-                 frequency = 'every_other_day'  # Default
-                 bags_count = 1  # Default
+                 # For trial: check if user has EVER had a trial subscription
+                 should_create_subscription = True
                  
-                 if request_obj.tariff_type == 'monthly' and request_obj.tariff_details:
-                     duration_days = request_obj.tariff_details.duration
-                     frequency = request_obj.tariff_details.frequency
-                     bags_count = request_obj.tariff_details.bags_count
+                 if request_obj.tariff_type == 'trial':
+                     existing_trial_result = await db.execute(
+                         select(Subscription).where(
+                             Subscription.user_id == user.id,
+                             Subscription.tariff == Tariff.TRIAL
+                         )
+                     )
+                     existing_trial = existing_trial_result.scalar_one_or_none()
+                     if existing_trial:
+                         should_create_subscription = False
+                         # Don't create subscription, but still process payment
                  
-                 sub = Subscription(
-                    user_id=user.id,
-                    address_id=request_obj.address_id,
-                    tariff=Tariff.TRIAL if request_obj.tariff_type == 'trial' else Tariff.MONTHLY,
-                    total_credits=credits_to_add,
-                    used_credits=1, # We just used 1 for the first order
-                    schedule_days="1,3,5", # Default
-                    default_time_slot=request_obj.time_slot,
-                    is_active=True,
-                    start_date=date.today(),
-                    end_date=date.today() + timedelta(days=duration_days),
-                    frequency=frequency,
-                    bags_count=bags_count
-                 )
-                 db.add(sub)
-                 await db.flush()
-                 order.subscription_id = sub.id
-                 order.is_subscription = True
+                 if should_create_subscription:
+                     # Get tariff details
+                     duration_days = 14  # Default for trial
+                     frequency = 'every_other_day'  # Default
+                     bags_count = 1  # Default
+                     
+                     if request_obj.tariff_type == 'monthly' and request_obj.tariff_details:
+                         duration_days = request_obj.tariff_details.duration
+                         frequency = request_obj.tariff_details.frequency
+                         bags_count = request_obj.tariff_details.bags_count
+                     
+                     sub = Subscription(
+                        user_id=user.id,
+                        address_id=request_obj.address_id,
+                        tariff=Tariff.TRIAL if request_obj.tariff_type == 'trial' else Tariff.MONTHLY,
+                        total_credits=credits_to_add,
+                        used_credits=1, # We just used 1 for the first order
+                        schedule_days="1,3,5", # Default
+                        default_time_slot=request_obj.time_slot,
+                        is_active=True,
+                        start_date=date.today(),
+                        end_date=date.today() + timedelta(days=duration_days),
+                        frequency=frequency,
+                        bags_count=bags_count
+                     )
+                     db.add(sub)
+                     await db.flush()
+                     order.subscription_id = sub.id
+                     order.is_subscription = True
 
             await db.commit()
             

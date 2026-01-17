@@ -20,6 +20,8 @@ export default function TariffsPage() {
           api.checkHasTrial()
         ]);
         
+        console.log('🔍 Has trial check:', hasTrialData);
+        
         // Convert array to object keyed by tariff_id
         const tariffsMap = tariffsData.reduce((acc: any, t: any) => {
           acc[t.tariff_id] = t;
@@ -29,6 +31,7 @@ export default function TariffsPage() {
         
         // Hide trial button if user has ever purchased it
         setHasSubscriptions(hasTrialData.has_trial);
+        console.log('✅ Should hide trial?', hasTrialData.has_trial);
       } catch (error) {
         console.error('Failed to load data:', error);
         // Use fallback prices if API fails
