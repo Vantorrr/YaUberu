@@ -303,6 +303,94 @@ function OrderContent() {
     if (stepIndex === 0) router.back();
     else setStep(steps[stepIndex - 1]);
   };
+
+  // Submit order with explicit balance choice (fixes async setState issue)
+  const submitWithBalance = async (shouldUseBalance: boolean) => {
+    try {
+      setLoading(true);
+      
+      // Get selected complex name for street
+      const selectedComplex = complexes.find(c => c.id === Number(address.complexId));
+      const streetName = selectedComplex ? selectedComplex.name : '';
+      
+      // 1. Create Address
+      const addressRes = await api.createAddress({
+        complex_id: Number(address.complexId),
+        street: streetName,
+        building: address.building,
+        entrance: address.entrance || '1',
+        floor: address.floor || '1',
+        apartment: address.apartment,
+        intercom: address.intercom || '0',
+        is_default: saveAddress,
+      });
+
+      // 2. Prepare Time Slot
+      let timeSlotStr = '';
+      let isUrgent = false;
+
+      const mapping: Record<number, string> = {
+        1: '08:00-10:00',
+        2: '12:00-14:00',
+        3: '16:00-18:00',
+        4: '20:00-22:00',
+      };
+
+      if (slot === 'urgent') {
+        isUrgent = true;
+        timeSlotStr = '12:00-14:00'; 
+      } else if (typeof slot === 'number') {
+        timeSlotStr = mapping[slot];
+      } else {
+        timeSlotStr = '12:00-14:00';
+      }
+
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      const dateStr = tomorrow.toISOString().split('T')[0];
+      const finalDate = deliveryDate || dateStr;
+      const finalComment = comment || '';
+
+      console.log(`[ORDER] submitWithBalance: shouldUseBalance=${shouldUseBalance}, singleBalance=${singleBalance}`);
+
+      if (shouldUseBalance && singleBalance > 0) {
+        // Use single_credits balance
+        console.log('[ORDER] Creating order with single_credits balance');
+        await api.createOrder({
+          address_id: addressRes.id,
+          date: finalDate,
+          time_slot: timeSlotStr,
+          is_urgent: isUrgent,
+          comment: finalComment,
+          tariff_type: 'single',
+          tariff_details: { bags_count: bagsCount }
+        });
+        router.push('/app/order/success');
+      } else {
+        // Payment required
+        console.log('[ORDER] Redirecting to payment');
+        const paymentRes = await api.createPayment({
+          address_id: addressRes.id,
+          date: finalDate,
+          time_slot: timeSlotStr,
+          is_urgent: isUrgent,
+          comment: finalComment,
+          tariff_type: 'single',
+          tariff_details: { bags_count: bagsCount }
+        });
+        
+        if (paymentRes.confirmation_url) {
+          window.location.href = paymentRes.confirmation_url;
+        } else {
+          router.push('/app/order/success');
+        }
+      }
+    } catch (err: any) {
+      console.error(err);
+      alert(err.message || 'Ошибка создания заказа.');
+      setLoading(false);
+    }
+  };
   
   const selectedComplexName = complexes.find(c => c.id === Number(address.complexId))?.name;
 
@@ -1317,7 +1405,7 @@ function OrderContent() {
           <div className="space-y-3">
             <Button
               fullWidth
-              onClick={() => { setUseBalance(true); next(); }}
+              onClick={() => submitWithBalance(true)}
               disabled={loading}
               className="bg-teal-600 hover:bg-teal-700"
             >
@@ -1325,7 +1413,7 @@ function OrderContent() {
             </Button>
             <Button
               fullWidth
-              onClick={() => { setUseBalance(false); next(); }}
+              onClick={() => submitWithBalance(false)}
               disabled={loading}
               className="bg-orange-600 hover:bg-orange-700"
             >
