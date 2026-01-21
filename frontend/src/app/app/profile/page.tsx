@@ -8,7 +8,7 @@ import { api } from '@/lib/api';
 export default function ProfilePage() {
   const router = useRouter();
   const [user, setUser] = useState<any>(null);
-  const [balance, setBalance] = useState<number | null>(null);
+  const [balance, setBalance] = useState<{credits: number; single_credits: number} | null>(null);
 
   useEffect(() => {
     loadUser();
@@ -27,7 +27,7 @@ export default function ProfilePage() {
   const loadBalance = async () => {
     try {
       const res = await api.getBalance();
-      setBalance(res.credits);
+      setBalance({ credits: res.credits, single_credits: res.single_credits });
     } catch (e) {
       console.error(e);
     }
@@ -70,17 +70,36 @@ export default function ProfilePage() {
           </div>
         </div>
         
-        {/* Balance */}
-        <div className="flex items-center justify-between bg-white rounded-2xl p-5 shadow-sm">
-          <div className="flex items-center gap-4 flex-1">
-            <div className="w-12 h-12 bg-teal-100 rounded-xl flex items-center justify-center">
-              <Package className="w-6 h-6 text-teal-600" />
+        {/* Balances */}
+        <div className="space-y-3">
+          {/* Subscription Balance */}
+          <div className="flex items-center justify-between bg-white rounded-2xl p-5 shadow-sm">
+            <div className="flex items-center gap-4 flex-1">
+              <div className="w-12 h-12 bg-teal-100 rounded-xl flex items-center justify-center">
+                <Package className="w-6 h-6 text-teal-600" />
+              </div>
+              <div className="flex-1">
+                <p className="text-gray-500 text-xs mb-1">Баланс подписки</p>
+                <div className="flex items-baseline gap-2">
+                  <span className="text-gray-900 font-bold text-4xl">{balance !== null ? balance.credits : '...'}</span>
+                  <span className="text-gray-600 font-medium text-lg">выносов</span>
+                </div>
+              </div>
             </div>
-            <div className="flex-1">
-              <p className="text-gray-500 text-xs mb-1">Ваш баланс</p>
-              <div className="flex items-baseline gap-2">
-                <span className="text-gray-900 font-bold text-4xl">{balance !== null ? balance : '...'}</span>
-                <span className="text-gray-600 font-medium text-lg">выносов</span>
+          </div>
+
+          {/* Single Credits Balance */}
+          <div className="flex items-center justify-between bg-white rounded-2xl p-5 shadow-sm">
+            <div className="flex items-center gap-4 flex-1">
+              <div className="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center">
+                <Package className="w-6 h-6 text-orange-600" />
+              </div>
+              <div className="flex-1">
+                <p className="text-gray-500 text-xs mb-1">Разовые выносы</p>
+                <div className="flex items-baseline gap-2">
+                  <span className="text-gray-900 font-bold text-4xl">{balance !== null ? balance.single_credits : '...'}</span>
+                  <span className="text-gray-600 font-medium text-lg">доступно</span>
+                </div>
               </div>
             </div>
           </div>

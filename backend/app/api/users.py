@@ -41,7 +41,8 @@ class AddressResponse(BaseModel):
 
 
 class BalanceResponse(BaseModel):
-    credits: int
+    credits: int  # Subscription credits (trial/monthly)
+    single_credits: int  # Single pickup credits (flexible rescheduling)
     
     class Config:
         from_attributes = True
@@ -76,7 +77,7 @@ async def get_balance(
     current_user: User = Depends(get_current_user)
 ):
     """
-    Get user's credit balance
+    Get user's credit balance (subscription + single pickups)
     """
     result = await db.execute(
         select(Balance).where(Balance.user_id == current_user.id)
@@ -84,7 +85,7 @@ async def get_balance(
     balance = result.scalar_one_or_none()
     
     if not balance:
-        return BalanceResponse(credits=0)
+        return BalanceResponse(credits=0, single_credits=0)
     
     return balance
 

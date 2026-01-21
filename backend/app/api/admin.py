@@ -432,7 +432,7 @@ async def add_credits_to_client(
     db: AsyncSession = Depends(get_db),
 ):
     """
-    Add credits to a client's balance (admin action)
+    Add subscription credits to a client's balance (admin action)
     """
     # Get client
     result = await db.execute(
@@ -453,7 +453,7 @@ async def add_credits_to_client(
     balance = result.scalar_one_or_none()
     
     if not balance:
-        balance = Balance(user_id=client.id, credits=0)
+        balance = Balance(user_id=client.id, credits=0, single_credits=0)
         db.add(balance)
         await db.flush()
     
@@ -476,6 +476,60 @@ async def add_credits_to_client(
         "status": "ok", 
         "message": f"Added {request.amount} credits to {client.name}",
         "new_balance": balance.credits
+    }
+
+
+@router.post("/clients/add-single-credits")
+async def add_single_credits_to_client(
+    request: AddCreditsRequest,
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Add single pickup credits to a client's balance (admin action)
+    These credits can be used for single pickups with flexible rescheduling
+    """
+    # Get client
+    result = await db.execute(
+        select(User).where(User.id == request.user_id, User.role == UserRole.CLIENT)
+    )
+    client = result.scalar_one_or_none()
+    
+    if not client:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Client not found"
+        )
+    
+    # Get or create balance
+    result = await db.execute(
+        select(Balance).where(Balance.user_id == client.id)
+    )
+    balance = result.scalar_one_or_none()
+    
+    if not balance:
+        balance = Balance(user_id=client.id, credits=0, single_credits=0)
+        db.add(balance)
+        await db.flush()
+    
+    # Add single_credits
+    balance.single_credits += request.amount
+    
+    # Create transaction record
+    transaction = BalanceTransaction(
+        balance_id=balance.id,
+        amount=request.amount,
+        description=request.description or f"Пополнение разовых выносов администратором (+{request.amount})",
+        order_id=None,
+    )
+    db.add(transaction)
+    
+    await db.commit()
+    await db.refresh(balance)
+    
+    return {
+        "status": "ok", 
+        "message": f"Added {request.amount} single credits to {client.name}",
+        "new_single_balance": balance.single_credits
     }
 
 

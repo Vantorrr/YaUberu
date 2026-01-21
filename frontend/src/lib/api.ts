@@ -20,6 +20,9 @@ export interface Order {
   date: string; // Changed from scheduled_date
   scheduled_date?: string; // Keep for backward compatibility if needed
   comment?: string;
+  is_subscription?: boolean; // Is this a subscription order?
+  subscription_id?: number; // Associated subscription ID
+  was_rescheduled?: boolean; // Has this order been rescheduled?
 }
 
 class ApiClient {

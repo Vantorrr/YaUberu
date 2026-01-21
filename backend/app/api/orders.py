@@ -76,8 +76,10 @@ async def create_order(
 ):
     """
     Create a new order (uses credits from balance)
+    For single orders: uses single_credits if available
+    For subscription orders: uses subscription credits
     """
-    cost = 2 if request.is_urgent else 1
+    cost = 1  # Always 1 credit per order (urgent/bags_count handled in payment)
     
     # Check user balance
     result = await db.execute(
@@ -85,49 +87,100 @@ async def create_order(
     )
     balance = result.scalar_one_or_none()
     
-    if not balance or balance.credits < cost:
-        raise HTTPException(
-            status_code=status.HTTP_402_PAYMENT_REQUIRED,
-            detail=f"Недостаточно выносов. Нужно: {cost}, доступно: {balance.credits if balance else 0}"
+    # SINGLE ORDER: Check single_credits balance
+    if request.tariff_type == 'single':
+        if not balance or balance.single_credits < cost:
+            raise HTTPException(
+                status_code=status.HTTP_402_PAYMENT_REQUIRED,
+                detail=f"Недостаточно разовых выносов. Доступно: {balance.single_credits if balance else 0}"
+            )
+        
+        # Verify address belongs to user
+        result = await db.execute(
+            select(Address).where(
+                and_(Address.id == request.address_id, Address.user_id == current_user.id)
+            )
         )
-    
-    # Verify address belongs to user
-    result = await db.execute(
-        select(Address).where(
-            and_(Address.id == request.address_id, Address.user_id == current_user.id)
+        address = result.scalar_one_or_none()
+        
+        if not address:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Address not found"
+            )
+        
+        # Create order
+        bags_count = request.tariff_details.bags_count if request.tariff_details else 1
+        order = Order(
+            user_id=current_user.id,
+            address_id=request.address_id,
+            date=request.date,
+            time_slot=request.time_slot,
+            status=OrderStatus.SCHEDULED,
+            comment=request.comment,
+            is_urgent=request.is_urgent,
+            bags_count=bags_count
         )
-    )
-    address = result.scalar_one_or_none()
-    
-    if not address:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Address not found"
+        db.add(order)
+        await db.flush()
+        
+        # Deduct single_credit
+        balance.single_credits -= cost
+        
+        # Log transaction
+        transaction = BalanceTransaction(
+            balance_id=balance.id,
+            amount=-cost,
+            description=f"Разовый заказ #{order.id} ({'Срочный' if request.is_urgent else 'Обычный'})",
+            order_id=order.id,
         )
+        db.add(transaction)
     
-    # Create order
-    order = Order(
-        user_id=current_user.id,
-        address_id=request.address_id,
-        date=request.date,
-        time_slot=request.time_slot,
-        status=OrderStatus.SCHEDULED,
-        comment=request.comment
-    )
-    db.add(order)
-    await db.flush()
-    
-    # Deduct credit
-    balance.credits -= cost
-    
-    # Log transaction
-    transaction = BalanceTransaction(
-        balance_id=balance.id,
-        amount=-cost,
-        description=f"Заказ #{order.id} ({'Срочный' if request.is_urgent else 'Обычный'})",
-        order_id=order.id,
-    )
-    db.add(transaction)
+    # SUBSCRIPTION ORDER: Check subscription credits
+    else:
+        if not balance or balance.credits < cost:
+            raise HTTPException(
+                status_code=status.HTTP_402_PAYMENT_REQUIRED,
+                detail=f"Недостаточно выносов. Нужно: {cost}, доступно: {balance.credits if balance else 0}"
+            )
+        
+        # Verify address belongs to user
+        result = await db.execute(
+            select(Address).where(
+                and_(Address.id == request.address_id, Address.user_id == current_user.id)
+            )
+        )
+        address = result.scalar_one_or_none()
+        
+        if not address:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Address not found"
+            )
+        
+        # Create order
+        order = Order(
+            user_id=current_user.id,
+            address_id=request.address_id,
+            date=request.date,
+            time_slot=request.time_slot,
+            status=OrderStatus.SCHEDULED,
+            comment=request.comment
+        )
+        db.add(order)
+        await db.flush()
+        
+        # Deduct subscription credit
+        balance.credits -= cost
+        
+        # Log transaction
+        transaction = BalanceTransaction(
+            balance_id=balance.id,
+            amount=-cost,
+            description=f"Заказ #{order.id} ({'Срочный' if request.is_urgent else 'Обычный'})",
+            order_id=order.id,
+        )
+        db.add(transaction)
     
     # Create Subscription if tariff is trial or monthly
     if request.tariff_type in ['trial', 'monthly']:
@@ -268,7 +321,9 @@ async def reschedule_order(
     current_user: User = Depends(get_current_user)
 ):
     """
-    Reschedule an order (allowed if > 24 hours before pickup)
+    Reschedule an order
+    - Subscription orders: strict rules (+1 day, 1 day before, once only)
+    - Single orders: flexible (any date, any time, no restrictions)
     """
     result = await db.execute(
         select(Order).where(
@@ -283,13 +338,6 @@ async def reschedule_order(
             detail="Order not found"
         )
     
-    # Rule 0: Can only reschedule once
-    if order.was_rescheduled:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Заказ уже был перенесён. Повторный перенос невозможен."
-        )
-    
     # Parse date
     try:
         new_date = date.fromisoformat(request.new_date)
@@ -297,25 +345,6 @@ async def reschedule_order(
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Invalid date format. Use YYYY-MM-DD"
-        )
-    
-    # Check if reschedule is allowed
-    today = date.today()
-    days_until_order = (order.date - today).days
-    
-    # Rule 1: Can only reschedule 1 day before (not on the day of pickup)
-    if days_until_order < 1:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Перенос возможен только за 1 день до выноса"
-        )
-    
-    # Rule 2: Can only move to +1 day from original date
-    expected_new_date = order.date + timedelta(days=1)
-    if new_date != expected_new_date:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Можно перенести только на +1 день ({expected_new_date.strftime('%d.%m.%Y')})"
         )
     
     # Map time slot string to enum
@@ -338,9 +367,48 @@ async def reschedule_order(
             detail="Invalid time slot"
         )
     
+    # SUBSCRIPTION ORDER: Apply strict rules
+    if order.is_subscription or order.subscription_id:
+        # Rule 0: Can only reschedule once
+        if order.was_rescheduled:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Заказ уже был перенесён. Повторный перенос невозможен."
+            )
+        
+        # Check if reschedule is allowed
+        today = date.today()
+        days_until_order = (order.date - today).days
+        
+        # Rule 1: Can only reschedule 1 day before (not on the day of pickup)
+        if days_until_order < 1:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Перенос возможен только за 1 день до выноса"
+            )
+        
+        # Rule 2: Can only move to +1 day from original date
+        expected_new_date = order.date + timedelta(days=1)
+        if new_date != expected_new_date:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Можно перенести только на +1 день ({expected_new_date.strftime('%d.%m.%Y')})"
+            )
+        
+        order.was_rescheduled = True  # Mark as rescheduled (can't reschedule again)
+    
+    # SINGLE ORDER: No restrictions, can reschedule freely
+    else:
+        # Prevent moving to past dates
+        today = date.today()
+        if new_date < today:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Нельзя перенести на прошедшую дату"
+            )
+    
     order.date = new_date
     order.time_slot = new_time_slot
-    order.was_rescheduled = True  # Mark as rescheduled (can't reschedule again)
     
     await db.commit()
     

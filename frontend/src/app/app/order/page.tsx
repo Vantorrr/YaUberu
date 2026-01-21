@@ -66,7 +66,9 @@ function OrderContent() {
   const [selectedComplexBuildings, setSelectedComplexBuildings] = useState<string[]>([]);
   
   // Balance for payment logic
-  const [balance, setBalance] = useState<number>(0);
+  const [balance, setBalance] = useState<number>(0); // Subscription credits
+  const [singleBalance, setSingleBalance] = useState<number>(0); // Single pickup credits
+  const [useBalance, setUseBalance] = useState<boolean>(false); // User choice: use balance or pay
   
   // Check if user has any subscriptions (for first-time pricing)
   const [hasSubscriptions, setHasSubscriptions] = useState<boolean>(false);
@@ -103,6 +105,7 @@ function OrderContent() {
         console.log('[ORDER] Loaded subscriptions:', subscriptionsData);
         setComplexes(complexesData);
         setBalance(balanceData.credits || 0);
+        setSingleBalance(balanceData.single_credits || 0);
         setHasSubscriptions(subscriptionsData && subscriptionsData.length > 0);
         
         // Parse tariff prices
@@ -246,31 +249,47 @@ function OrderContent() {
         // Use user selected date
         const finalDate = deliveryDate || dateStr;
 
-        console.log(`[ORDER] Submitting: tariff=${tariffId}, date=${finalDate}, slot=${timeSlotStr}, balance=${balance}`);
+        console.log(`[ORDER] Submitting: tariff=${tariffId}, date=${finalDate}, slot=${timeSlotStr}, singleBalance=${singleBalance}, useBalance=${useBalance}`);
 
         // Logic:
-        // ALL tariffs (single, trial, monthly) ALWAYS require payment
-        // Balance is ONLY used for subscription orders (deducted when courier completes)
+        // - Single orders: Use single_credits if available AND user chose "Использовать баланс"
+        // - Trial/Monthly: Always require payment (subscription credits handled by backend)
         
-        console.log('[ORDER] Redirecting to payment');
-        const paymentRes = await api.createPayment({
-          address_id: addressRes.id,
-          date: finalDate,
-          time_slot: timeSlotStr,
-          is_urgent: isUrgent,
-          comment: finalComment,
-          tariff_type: tariffId,
-          tariff_details: tariffId === 'monthly' 
-            ? { bags_count: bagsCount, duration, frequency } 
-            : tariffId === 'trial'
-            ? { bags_count: 1 }
-            : { bags_count: bagsCount } // for single
-        });
-        
-        if (paymentRes.confirmation_url) {
-            window.location.href = paymentRes.confirmation_url;
+        if (tariffId === 'single' && useBalance && singleBalance > 0) {
+          // Use single_credits balance
+          console.log('[ORDER] Creating order with single_credits balance');
+          await api.createOrder({
+            address_id: addressRes.id,
+            date: finalDate,
+            time_slot: timeSlotStr,
+            is_urgent: isUrgent,
+            comment: finalComment,
+            tariff_type: 'single',
+            tariff_details: { bags_count: bagsCount }
+          });
+          router.push('/app/order/success');
         } else {
-             router.push('/app/order/success');
+          // Payment required
+          console.log('[ORDER] Redirecting to payment');
+          const paymentRes = await api.createPayment({
+            address_id: addressRes.id,
+            date: finalDate,
+            time_slot: timeSlotStr,
+            is_urgent: isUrgent,
+            comment: finalComment,
+            tariff_type: tariffId,
+            tariff_details: tariffId === 'monthly' 
+              ? { bags_count: bagsCount, duration, frequency } 
+              : tariffId === 'trial'
+              ? { bags_count: 1 }
+              : { bags_count: bagsCount } // for single
+          });
+          
+          if (paymentRes.confirmation_url) {
+              window.location.href = paymentRes.confirmation_url;
+          } else {
+               router.push('/app/order/success');
+          }
         }
       } catch (err: any) {
         console.error(err);
@@ -1293,18 +1312,40 @@ function OrderContent() {
           </div>
         )}
 
-        <Button
-          fullWidth
-          onClick={next}
-          disabled={((step === 'address' && (address.complexId === '0' || !address.building || !address.apartment)) || (step === 'time' && (!deliveryDate || !slot))) || loading}
-          className={
-            ((step === 'address' && (address.complexId === '0' || !address.building || !address.apartment)) || (step === 'time' && (!deliveryDate || !slot)))
-              ? 'opacity-50 cursor-not-allowed'
-              : ''
-          }
-        >
-          {loading ? 'Обработка... ⏳' : step === 'confirm' ? 'Подтвердить и вызвать ✅' : 'Продолжить ➡️'}
-        </Button>
+        {/* Payment/Balance choice for single orders on confirm step */}
+        {step === 'confirm' && tariffId === 'single' && singleBalance > 0 ? (
+          <div className="space-y-3">
+            <Button
+              fullWidth
+              onClick={() => { setUseBalance(true); next(); }}
+              disabled={loading}
+              className="bg-teal-600 hover:bg-teal-700"
+            >
+              {loading ? 'Обработка... ⏳' : `Использовать баланс (${singleBalance} доступно) ✅`}
+            </Button>
+            <Button
+              fullWidth
+              onClick={() => { setUseBalance(false); next(); }}
+              disabled={loading}
+              className="bg-orange-600 hover:bg-orange-700"
+            >
+              {loading ? 'Обработка... ⏳' : 'Оплатить 💳'}
+            </Button>
+          </div>
+        ) : (
+          <Button
+            fullWidth
+            onClick={next}
+            disabled={((step === 'address' && (address.complexId === '0' || !address.building || !address.apartment)) || (step === 'time' && (!deliveryDate || !slot))) || loading}
+            className={
+              ((step === 'address' && (address.complexId === '0' || !address.building || !address.apartment)) || (step === 'time' && (!deliveryDate || !slot)))
+                ? 'opacity-50 cursor-not-allowed'
+                : ''
+            }
+          >
+            {loading ? 'Обработка... ⏳' : step === 'confirm' ? 'Подтвердить и вызвать ✅' : 'Продолжить ➡️'}
+          </Button>
+        )}
       </div>
     </div>
   );

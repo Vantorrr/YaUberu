@@ -79,7 +79,8 @@ class Balance(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"), unique=True, nullable=False)
-    credits = Column(Integer, default=0)  # Number of pickups available
+    credits = Column(Integer, default=0)  # Subscription pickups (trial/monthly)
+    single_credits = Column(Integer, default=0)  # Single pickups (можно перенести на любую дату)
     
     # Relationships
     user = relationship("User", back_populates="balance")
