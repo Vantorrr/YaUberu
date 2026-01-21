@@ -12,6 +12,7 @@ from app.models import get_db, User, Order, OrderStatus, TimeSlot, Address, Bala
 from app.api.deps import get_current_user
 from app.api.orders import CreateOrderRequest, TariffDetails
 from app.services.notifications import notify_all_couriers_new_order, notify_admins_new_order, notify_client_order_created
+from app.services.subscription_orders import generate_all_subscription_orders
 
 router = APIRouter()
 
@@ -321,6 +322,11 @@ async def yookassa_webhook(request: Request, db: AsyncSession = Depends(get_db))
                      await db.flush()
                      order.subscription_id = sub.id
                      order.is_subscription = True
+                     
+                     # Generate ALL future orders for this subscription
+                     print(f"[PAYMENT] Generating all orders for subscription {sub.id}")
+                     created_orders = await generate_all_subscription_orders(db, sub, start_from_date=sub.start_date)
+                     print(f"[PAYMENT] Created {created_orders} orders for subscription period")
 
             await db.commit()
             

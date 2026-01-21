@@ -8,6 +8,7 @@ from datetime import date, timedelta
 from app.models import get_db, Order, OrderStatus, TimeSlot, Address, Balance, BalanceTransaction, User, UserRole, ResidentialComplex, Subscription, Tariff
 from app.api.deps import get_current_user
 from app.services.notifications import notify_all_couriers_new_order, notify_admins_new_order, notify_client_order_created
+from app.services.subscription_orders import generate_all_subscription_orders
 from app.config import settings
 
 router = APIRouter()
@@ -168,6 +169,7 @@ async def create_order(
                 frequency='every_other_day'
             )
             db.add(subscription)
+            await db.flush()  # Get subscription ID
             
             # ADD subscription credits to balance (refund the order cost + add subscription credits)
             balance.credits += (cost + total_credits)  # Refund order cost + add subscription credits
@@ -180,6 +182,11 @@ async def create_order(
                 order_id=order.id,
             )
             db.add(subscription_transaction)
+            
+            # Generate ALL orders for the entire subscription period
+            print(f"[ORDER] Generating all orders for subscription {subscription.id}")
+            created_orders = await generate_all_subscription_orders(db, subscription, start_from_date=subscription.start_date)
+            print(f"[ORDER] Created {created_orders} orders for subscription period")
     
     await db.commit()
     await db.refresh(order)
