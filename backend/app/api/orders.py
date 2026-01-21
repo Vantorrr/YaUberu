@@ -292,13 +292,24 @@ async def reschedule_order(
             detail="Invalid date format. Use YYYY-MM-DD"
         )
     
-    # Check if reschedule is allowed (> 24 hours before)
-    # RESTRICTION REMOVED TEMPORARILY FOR TESTING/FLEXIBILITY
-    # if order.date <= date.today() + timedelta(days=1):
-    #     raise HTTPException(
-    #         status_code=status.HTTP_400_BAD_REQUEST,
-    #         detail="Невозможно перенести заказ менее чем за 24 часа"
-    #     )
+    # Check if reschedule is allowed
+    today = date.today()
+    days_until_order = (order.date - today).days
+    
+    # Rule 1: Can only reschedule 1 day before (not on the day of pickup)
+    if days_until_order < 1:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Перенос возможен только за 1 день до выноса"
+        )
+    
+    # Rule 2: Can only move to +1 day from original date
+    expected_new_date = order.date + timedelta(days=1)
+    if new_date != expected_new_date:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Можно перенести только на +1 день ({expected_new_date.strftime('%d.%m.%Y')})"
+        )
     
     # Validate time slot
     if request.new_time_slot not in ['08:00 — 10:00', '12:00 — 14:00', '16:00 — 18:00', '20:00 — 22:00']:

@@ -33,10 +33,41 @@ export default function OrdersPage() {
   };
 
   const openEditModal = (order: Order) => {
+    const orderDate = order.date || order.scheduled_date || '';
+    
+    // Check if can reschedule (only 1 day before)
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const orderDateObj = new Date(orderDate);
+    orderDateObj.setHours(0, 0, 0, 0);
+    
+    const daysDiff = Math.floor((orderDateObj.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+    
+    if (daysDiff < 1) {
+      alert('❌ Перенос возможен только за 1 день до выноса');
+      return;
+    }
+    
     setSelectedOrder(order);
-    setNewDate(order.date || order.scheduled_date || '');
+    setNewDate(orderDate); // Keep original date initially
     setNewTimeSlot(order.time_slot);
     setShowEditModal(true);
+  };
+  
+  // Check if date was changed (for enabling time edit)
+  const isDateChanged = () => {
+    if (!selectedOrder) return false;
+    const originalDate = selectedOrder.date || selectedOrder.scheduled_date || '';
+    return newDate !== originalDate;
+  };
+  
+  // Get next day date for the order
+  const getNextDayDate = () => {
+    if (!selectedOrder) return '';
+    const orderDate = selectedOrder.date || selectedOrder.scheduled_date || '';
+    const nextDay = new Date(orderDate);
+    nextDay.setDate(nextDay.getDate() + 1);
+    return nextDay.toISOString().split('T')[0];
   };
 
   const handleReschedule = async () => {
@@ -227,29 +258,62 @@ export default function OrdersPage() {
           <div className="bg-white rounded-3xl w-full max-w-md max-h-[90vh] overflow-y-auto p-6 space-y-4 animate-fadeIn">
             <h3 className="text-gray-900 font-bold text-xl">Перенести заказ</h3>
             
+            {/* Current date info */}
+            <div className="bg-gray-50 rounded-xl p-4">
+              <p className="text-gray-500 text-sm">Текущая дата:</p>
+              <p className="text-gray-900 font-semibold">
+                {formatDate(selectedOrder.date || selectedOrder.scheduled_date)}
+              </p>
+            </div>
+            
+            {/* Move to next day button */}
             <div>
-              <label className="block text-gray-700 text-sm font-medium mb-2">Новая дата</label>
-              <input
-                type="date"
-                value={newDate}
-                onChange={(e) => setNewDate(e.target.value)}
-                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl text-gray-900 focus:border-teal-500 focus:outline-none"
-              />
+              <label className="block text-gray-700 text-sm font-medium mb-2">Перенос даты</label>
+              <button
+                onClick={() => setNewDate(getNextDayDate())}
+                className={`w-full px-4 py-3 rounded-xl font-medium transition ${
+                  isDateChanged()
+                    ? 'bg-teal-100 text-teal-700 border-2 border-teal-500'
+                    : 'bg-gray-100 text-gray-700 border-2 border-gray-200 hover:border-teal-300'
+                }`}
+              >
+                {isDateChanged() 
+                  ? `✅ Перенесено на ${formatDate(newDate)}`
+                  : `Перенести на +1 день (${formatDate(getNextDayDate())})`
+                }
+              </button>
+              {isDateChanged() && (
+                <button
+                  onClick={() => setNewDate(selectedOrder.date || selectedOrder.scheduled_date || '')}
+                  className="w-full mt-2 text-sm text-gray-500 hover:text-gray-700"
+                >
+                  ↩️ Отменить перенос даты
+                </button>
+              )}
             </div>
 
-            <div>
-              <label className="block text-gray-700 text-sm font-medium mb-2">Новое время</label>
-              <select
-                value={newTimeSlot}
-                onChange={(e) => setNewTimeSlot(e.target.value)}
-                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl text-gray-900 focus:border-teal-500 focus:outline-none"
-              >
-                <option value="08:00 — 10:00">08:00 — 10:00</option>
-                <option value="12:00 — 14:00">12:00 — 14:00</option>
-                <option value="16:00 — 18:00">16:00 — 18:00</option>
-                <option value="20:00 — 22:00">20:00 — 22:00</option>
-              </select>
-            </div>
+            {/* Time selection - only if date changed */}
+            {isDateChanged() && (
+              <div>
+                <label className="block text-gray-700 text-sm font-medium mb-2">Новое время</label>
+                <select
+                  value={newTimeSlot}
+                  onChange={(e) => setNewTimeSlot(e.target.value)}
+                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl text-gray-900 focus:border-teal-500 focus:outline-none"
+                >
+                  <option value="08:00 — 10:00">🌅 Утро: 08:00 — 10:00</option>
+                  <option value="12:00 — 14:00">☀️ День: 12:00 — 14:00</option>
+                  <option value="16:00 — 18:00">🌤 Вечер: 16:00 — 18:00</option>
+                  <option value="20:00 — 22:00">🌙 Ночь: 20:00 — 22:00</option>
+                </select>
+              </div>
+            )}
+            
+            {!isDateChanged() && (
+              <p className="text-gray-500 text-sm text-center py-2">
+                💡 Выберите новую дату, чтобы изменить время
+              </p>
+            )}
 
             <div className="flex gap-3 pt-2">
               <button
@@ -260,8 +324,8 @@ export default function OrdersPage() {
               </button>
               <button
                 onClick={handleReschedule}
-                disabled={editLoading}
-                className="flex-1 py-3 bg-teal-600 text-white font-semibold rounded-xl hover:bg-teal-700 transition disabled:opacity-50"
+                disabled={editLoading || !isDateChanged()}
+                className="flex-1 py-3 bg-teal-600 text-white font-semibold rounded-xl hover:bg-teal-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {editLoading ? 'Сохранение...' : 'Сохранить'}
               </button>
