@@ -70,11 +70,11 @@ async def notify_all_couriers_new_order(courier_telegram_ids: list, order_id: in
     text += "\n⚡️ Кто первый возьмет — того и заказ!\n\n"
     text += "👉 Откройте бот курьеров @YaUberu_TeamBot → Мои задачи"
     
-    print(f"[NOTIFY] Sending order #{order_id} to {len(courier_telegram_ids)} couriers via CLIENT BOT")
+    print(f"[NOTIFY] Sending order #{order_id} to {len(courier_telegram_ids)} couriers via COURIER BOT")
     
     for tg_id in courier_telegram_ids:
-        # use_courier_bot=False to avoid 401 conflict
-        result = await send_telegram_notification(tg_id, text, use_courier_bot=False)
+        # use_courier_bot=True - send directly to @YaUberu_TeamBot
+        result = await send_telegram_notification(tg_id, text, use_courier_bot=True)
         if result:
             print(f"[NOTIFY] ✅ Courier {tg_id} notified")
         else:
