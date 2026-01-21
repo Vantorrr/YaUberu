@@ -319,8 +319,7 @@ async def yookassa_webhook(request: Request, db: AsyncSession = Depends(get_db))
                            is_active=True,
                            start_date=date.today(),
                            end_date=date.today() + timedelta(days=duration_days),
-                           frequency=frequency,
-                           bags_count=bags_count
+                           frequency=frequency
                         )
                         db.add(sub)
                         await db.flush()
