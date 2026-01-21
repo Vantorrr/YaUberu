@@ -278,55 +278,69 @@ async def yookassa_webhook(request: Request, db: AsyncSession = Depends(get_db))
             
             # C. Create Subscription (if trial/monthly)
             if request_obj.tariff_type in ['trial', 'monthly']:
-                 # For trial: check if user has EVER had a trial subscription
-                 should_create_subscription = True
-                 
-                 if request_obj.tariff_type == 'trial':
-                     existing_trial_result = await db.execute(
-                         select(Subscription).where(
-                             Subscription.user_id == user.id,
-                             Subscription.tariff == Tariff.TRIAL
-                         ).limit(1)
-                     )
-                     existing_trial = existing_trial_result.scalar_one_or_none()
-                     if existing_trial:
-                         should_create_subscription = False
-                         # Don't create subscription, but still process payment
-                 
-                 if should_create_subscription:
-                     # Get tariff details
-                     duration_days = 14  # Default for trial
-                     frequency = 'every_other_day'  # Default
-                     bags_count = 1  # Default
-                     
-                     if request_obj.tariff_type == 'monthly' and request_obj.tariff_details:
-                         duration_days = request_obj.tariff_details.duration
-                         frequency = request_obj.tariff_details.frequency
-                         bags_count = request_obj.tariff_details.bags_count
-                     
-                     sub = Subscription(
-                        user_id=user.id,
-                        address_id=request_obj.address_id,
-                        tariff=Tariff.TRIAL if request_obj.tariff_type == 'trial' else Tariff.MONTHLY,
-                        total_credits=credits_to_add,
-                        used_credits=1, # We just used 1 for the first order
-                        schedule_days="1,3,5", # Default
-                        default_time_slot=request_obj.time_slot,
-                        is_active=True,
-                        start_date=date.today(),
-                        end_date=date.today() + timedelta(days=duration_days),
-                        frequency=frequency,
-                        bags_count=bags_count
-                     )
-                     db.add(sub)
-                     await db.flush()
-                     order.subscription_id = sub.id
-                     order.is_subscription = True
-                     
-                     # Generate ALL future orders for this subscription
-                     print(f"[PAYMENT] Generating all orders for subscription {sub.id}")
-                     created_orders = await generate_all_subscription_orders(db, sub, start_from_date=sub.start_date)
-                     print(f"[PAYMENT] Created {created_orders} orders for subscription period")
+                print(f"[WEBHOOK] Creating subscription for user {user.id}, tariff: {request_obj.tariff_type}")
+                try:
+                    # For trial: check if user has EVER had a trial subscription
+                    should_create_subscription = True
+                    
+                    if request_obj.tariff_type == 'trial':
+                        existing_trial_result = await db.execute(
+                            select(Subscription).where(
+                                Subscription.user_id == user.id,
+                                Subscription.tariff == Tariff.TRIAL
+                            ).limit(1)
+                        )
+                        existing_trial = existing_trial_result.scalar_one_or_none()
+                        if existing_trial:
+                            should_create_subscription = False
+                            print(f"[WEBHOOK] User {user.id} already has trial subscription #{existing_trial.id}")
+                    
+                    if should_create_subscription:
+                        # Get tariff details
+                        duration_days = 14  # Default for trial
+                        frequency = 'every_other_day'  # Default
+                        bags_count = 1  # Default
+                        
+                        if request_obj.tariff_type == 'monthly' and request_obj.tariff_details:
+                            duration_days = request_obj.tariff_details.duration
+                            frequency = request_obj.tariff_details.frequency
+                            bags_count = request_obj.tariff_details.bags_count
+                        
+                        print(f"[WEBHOOK] Creating subscription: duration={duration_days}, frequency={frequency}, address={request_obj.address_id}")
+                        
+                        sub = Subscription(
+                           user_id=user.id,
+                           address_id=request_obj.address_id,
+                           tariff=Tariff.TRIAL if request_obj.tariff_type == 'trial' else Tariff.MONTHLY,
+                           total_credits=credits_to_add,
+                           used_credits=1, # We just used 1 for the first order
+                           schedule_days="1,3,5", # Default
+                           default_time_slot=request_obj.time_slot,
+                           is_active=True,
+                           start_date=date.today(),
+                           end_date=date.today() + timedelta(days=duration_days),
+                           frequency=frequency,
+                           bags_count=bags_count
+                        )
+                        db.add(sub)
+                        await db.flush()
+                        print(f"[WEBHOOK] Subscription #{sub.id} created!")
+                        
+                        order.subscription_id = sub.id
+                        order.is_subscription = True
+                        
+                        # Generate ALL future orders for this subscription
+                        print(f"[WEBHOOK] Generating all orders for subscription {sub.id}")
+                        try:
+                            created_orders = await generate_all_subscription_orders(db, sub, start_from_date=sub.start_date)
+                            print(f"[WEBHOOK] Created {created_orders} orders for subscription period")
+                        except Exception as gen_error:
+                            print(f"[WEBHOOK] ERROR generating orders: {gen_error}")
+                            # Continue anyway - subscription is created
+                except Exception as sub_error:
+                    print(f"[WEBHOOK] ERROR creating subscription: {sub_error}")
+                    import traceback
+                    traceback.print_exc()
 
             await db.commit()
             
