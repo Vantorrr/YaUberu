@@ -311,15 +311,28 @@ async def reschedule_order(
             detail=f"Можно перенести только на +1 день ({expected_new_date.strftime('%d.%m.%Y')})"
         )
     
-    # Validate time slot
-    if request.new_time_slot not in ['08:00 — 10:00', '12:00 — 14:00', '16:00 — 18:00', '20:00 — 22:00']:
+    # Map time slot string to enum
+    time_slot_map = {
+        '08:00 — 10:00': TimeSlot.MORNING,
+        '12:00 — 14:00': TimeSlot.DAY,
+        '16:00 — 18:00': TimeSlot.EVENING,
+        '20:00 — 22:00': TimeSlot.NIGHT,
+        # Also support enum format
+        '08:00-10:00': TimeSlot.MORNING,
+        '12:00-14:00': TimeSlot.DAY,
+        '16:00-18:00': TimeSlot.EVENING,
+        '20:00-22:00': TimeSlot.NIGHT,
+    }
+    
+    new_time_slot = time_slot_map.get(request.new_time_slot)
+    if not new_time_slot:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Invalid time slot"
         )
     
     order.date = new_date
-    order.time_slot = TimeSlot(request.new_time_slot)
+    order.time_slot = new_time_slot
     
     await db.commit()
     
