@@ -359,6 +359,36 @@ async def complete_order(order_id: int, bags_count: int, db: AsyncSession = Depe
         courier = result.scalar_one_or_none()
         if courier:
             courier_name = courier.name
+    
+    # DEDUCT CREDIT FROM USER BALANCE (for subscription orders)
+    if order.is_subscription and order.subscription_id:
+        from app.models import Balance, BalanceTransaction, Subscription
+        
+        # Get user balance
+        balance_result = await db.execute(select(Balance).where(Balance.user_id == order.user_id))
+        balance = balance_result.scalar_one_or_none()
+        
+        if balance and balance.credits > 0:
+            balance.credits -= 1
+            
+            # Log transaction
+            transaction = BalanceTransaction(
+                balance_id=balance.id,
+                amount=-1,
+                description=f"Выполнен заказ #{order.id}",
+                order_id=order.id
+            )
+            db.add(transaction)
+            print(f"[COURIER] Deducted 1 credit for completed order #{order.id}")
+        
+        # Update subscription used_credits
+        sub_result = await db.execute(select(Subscription).where(Subscription.id == order.subscription_id))
+        subscription = sub_result.scalar_one_or_none()
+        if subscription:
+            subscription.used_credits += 1
+            # Check if subscription is complete
+            if subscription.used_credits >= subscription.total_credits:
+                subscription.is_active = False
         
     order.status = OrderStatus.COMPLETED
     order.bags_count = bags_count

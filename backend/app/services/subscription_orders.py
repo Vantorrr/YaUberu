@@ -80,13 +80,7 @@ async def generate_all_subscription_orders(
         if order_date in existing_dates:
             continue  # Already exists
         
-        # Check if we have enough credits
-        remaining_credits = subscription.total_credits - subscription.used_credits
-        if remaining_credits <= 0:
-            print(f"[SUBSCRIPTION] No more credits for subscription {subscription.id}")
-            break
-        
-        # Create order
+        # Create order (credits will be deducted when completed)
         order = Order(
             user_id=subscription.user_id,
             address_id=subscription.address_id,
@@ -101,27 +95,10 @@ async def generate_all_subscription_orders(
         db.add(order)
         await db.flush()  # Get order ID
         
-        # Deduct credit from balance
-        if balance.credits > 0:
-            balance.credits -= 1
-            
-            # Log transaction
-            transaction = BalanceTransaction(
-                balance_id=balance.id,
-                amount=-1,
-                description=f"Авто-заказ по подписке #{order.id} на {order_date.strftime('%d.%m')}",
-                order_id=order.id,
-            )
-            db.add(transaction)
-        
-        # Update subscription
-        subscription.used_credits += 1
+        # DON'T deduct credit now - will be deducted when courier completes order
+        # This way user sees full balance until order is actually completed
         
         created_count += 1
         print(f"[SUBSCRIPTION] Created order #{order.id} for {order_date}")
-    
-    # Check if subscription completed
-    if subscription.used_credits >= subscription.total_credits:
-        subscription.is_active = False
     
     return created_count
