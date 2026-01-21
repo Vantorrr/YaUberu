@@ -11,6 +11,7 @@ export default function HomePage() {
   const [loading, setLoading] = useState(true);
   const [subscription, setSubscription] = useState<any>(null);
   const [balance, setBalance] = useState(0);
+  const [singleBalance, setSingleBalance] = useState(0); // Баланс разовых выносов
 
   useEffect(() => {
     // Load user data
@@ -30,6 +31,7 @@ export default function HomePage() {
         }
         
         setBalance(balanceData.credits || 0);
+        setSingleBalance(balanceData.single_credits || 0);
         setLoading(false);
       } catch (error) {
         console.error('[HOME] Error loading user data:', error);
@@ -71,16 +73,31 @@ export default function HomePage() {
               </div>
             </div>
             
-            {/* Balance */}
-            <div className="bg-white/70 rounded-2xl p-4 mb-4">
+            {/* Balance - Subscription */}
+            <div className="bg-white/70 rounded-2xl p-4 mb-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="w-12 h-12 bg-teal-600 rounded-full flex items-center justify-center">
                     <Trash2 className="w-6 h-6 text-white" />
                   </div>
                   <div>
-                    <p className="text-xs text-gray-600">Осталось выносов</p>
+                    <p className="text-xs text-gray-600">Баланс подписки</p>
                     <p className="text-3xl font-bold text-gray-900">{balance}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Balance - Single (always show) */}
+            <div className="bg-white/70 rounded-2xl p-4 mb-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 bg-orange-500 rounded-full flex items-center justify-center">
+                    <Trash2 className="w-6 h-6 text-white" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-600">Разовые выносы</p>
+                    <p className="text-3xl font-bold text-gray-900">{singleBalance}</p>
                   </div>
                 </div>
               </div>
@@ -147,11 +164,21 @@ export default function HomePage() {
           </h2>
         </div>
 
-        {/* Balance if exists */}
-        {balance > 0 && (
-          <div className="bg-teal-50 border-2 border-teal-200 rounded-2xl p-4 w-full">
-            <p className="text-xs text-teal-700 font-medium uppercase tracking-wide mb-1">Ваш баланс</p>
-            <p className="text-3xl font-bold text-teal-900">{balance} выносов</p>
+        {/* Balances if exist */}
+        {(balance > 0 || singleBalance > 0) && (
+          <div className="w-full space-y-3">
+            {balance > 0 && (
+              <div className="bg-teal-50 border-2 border-teal-200 rounded-2xl p-4">
+                <p className="text-xs text-teal-700 font-medium uppercase tracking-wide mb-1">Баланс подписки</p>
+                <p className="text-3xl font-bold text-teal-900">{balance} выносов</p>
+              </div>
+            )}
+            {singleBalance > 0 && (
+              <div className="bg-orange-50 border-2 border-orange-200 rounded-2xl p-4">
+                <p className="text-xs text-orange-700 font-medium uppercase tracking-wide mb-1">Разовые выносы</p>
+                <p className="text-3xl font-bold text-orange-900">{singleBalance} доступно</p>
+              </div>
+            )}
           </div>
         )}
 
