@@ -172,19 +172,13 @@ export default function OrdersPage() {
                     )}
 
                     {/* Actions */}
-                    <div className="flex gap-2 pt-3 border-t border-gray-200">
+                    <div className="pt-3 border-t border-gray-200">
                       <button
                         onClick={() => openEditModal(order)}
-                        className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-gray-100 text-gray-900 font-medium rounded-xl hover:bg-gray-200 transition text-sm"
+                        className="w-full flex items-center justify-center gap-2 py-2.5 bg-gray-100 text-gray-900 font-medium rounded-xl hover:bg-gray-200 transition text-sm"
                       >
                         <Pencil className="w-4 h-4" />
                         Перенести
-                      </button>
-                      <button
-                        onClick={() => handleCancel(order.id)}
-                        className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-red-50 text-red-600 font-medium rounded-xl hover:bg-red-100 transition text-sm"
-                      >
-                        Отменить
                       </button>
                     </div>
                   </div>
