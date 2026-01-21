@@ -87,11 +87,11 @@ export default function OrdersPage() {
   };
 
   const handleCancel = async (orderId: number) => {
-    if (!confirm('❌ Отменить заказ? Средства вернутся на баланс.')) return;
+    if (!confirm('❌ Отменить заказ? Вынос вернётся на баланс.')) return;
     
     try {
       await api.cancelOrder(orderId);
-      alert('✅ Заказ отменён, средства возвращены!');
+      alert('✅ Заказ отменён, вынос возвращён на баланс!');
       loadOrders();
     } catch (e: any) {
       alert(e.message || '❌ Ошибка отмены заказа');
