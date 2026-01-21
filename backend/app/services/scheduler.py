@@ -67,10 +67,31 @@ async def generate_orders_for_today():
         courier_tg_ids = [c.telegram_id for c in couriers if c.telegram_id]
         
         for sub in subscriptions:
-            # Check if today is in schedule
-            schedule_days = parse_schedule_days(sub.schedule_days)
+            # Check if today is in schedule based on frequency
+            should_generate = False
             
-            if today_weekday not in schedule_days:
+            if sub.frequency == 'daily':
+                # Generate every day
+                should_generate = True
+            elif sub.frequency == 'every_other_day':
+                # Generate every other day from start_date
+                if sub.start_date:
+                    days_since_start = (today - sub.start_date).days
+                    # Generate on start date (day 0) and every 2 days after (day 2, 4, 6...)
+                    should_generate = (days_since_start % 2 == 0)
+                else:
+                    # Fallback to schedule_days if no start_date
+                    schedule_days = parse_schedule_days(sub.schedule_days)
+                    should_generate = today_weekday in schedule_days
+            elif sub.frequency == 'twice_week':
+                # Use schedule_days for specific weekdays
+                schedule_days = parse_schedule_days(sub.schedule_days)
+                should_generate = today_weekday in schedule_days
+            else:
+                # Unknown frequency, skip
+                should_generate = False
+            
+            if not should_generate:
                 continue
             
             # Check if already generated today
@@ -178,9 +199,25 @@ async def generate_orders_for_date(target_date: date):
         subscriptions = result.scalars().all()
         
         for sub in subscriptions:
-            schedule_days = parse_schedule_days(sub.schedule_days)
+            # Check if target_date is in schedule based on frequency
+            should_generate = False
             
-            if target_weekday not in schedule_days:
+            if sub.frequency == 'daily':
+                should_generate = True
+            elif sub.frequency == 'every_other_day':
+                if sub.start_date:
+                    days_since_start = (target_date - sub.start_date).days
+                    should_generate = (days_since_start % 2 == 0)
+                else:
+                    schedule_days = parse_schedule_days(sub.schedule_days)
+                    should_generate = target_weekday in schedule_days
+            elif sub.frequency == 'twice_week':
+                schedule_days = parse_schedule_days(sub.schedule_days)
+                should_generate = target_weekday in schedule_days
+            else:
+                should_generate = False
+            
+            if not should_generate:
                 continue
             
             # Check if order already exists for this date
