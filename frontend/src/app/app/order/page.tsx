@@ -1401,15 +1401,21 @@ function OrderContent() {
         )}
 
         {/* Payment/Balance choice for single orders on confirm step */}
-        {step === 'confirm' && tariffId === 'single' && singleBalance > 0 ? (
+        {step === 'confirm' && tariffId === 'single' ? (
           <div className="space-y-3">
             <Button
               fullWidth
               onClick={() => submitWithBalance(true)}
-              disabled={loading}
-              className="bg-teal-600 hover:bg-teal-700"
+              disabled={loading || singleBalance === 0}
+              className={singleBalance > 0 
+                ? "bg-teal-600 hover:bg-teal-700" 
+                : "bg-gray-300 cursor-not-allowed"
+              }
             >
-              {loading ? 'Обработка... ⏳' : `Использовать баланс (${singleBalance} доступно) ✅`}
+              {loading ? 'Обработка... ⏳' : singleBalance > 0 
+                ? `Использовать баланс (${singleBalance} доступно) ✅` 
+                : 'Использовать баланс (0 доступно)'
+              }
             </Button>
             <Button
               fullWidth
