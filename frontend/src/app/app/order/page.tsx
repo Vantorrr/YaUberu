@@ -360,7 +360,6 @@ function OrderContent() {
           address_id: addressRes.id,
           date: finalDate,
           time_slot: timeSlotStr,
-          is_urgent: isUrgent,
           comment: finalComment,
           tariff_type: 'single',
           tariff_details: { bags_count: bagsCount }

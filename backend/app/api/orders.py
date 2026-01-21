@@ -118,7 +118,6 @@ async def create_order(
             time_slot=request.time_slot,
             status=OrderStatus.SCHEDULED,
             comment=request.comment,
-            is_urgent=request.is_urgent,
             bags_count=bags_count
         )
         db.add(order)
@@ -131,7 +130,7 @@ async def create_order(
         transaction = BalanceTransaction(
             balance_id=balance.id,
             amount=-cost,
-            description=f"Разовый заказ #{order.id} ({'Срочный' if request.is_urgent else 'Обычный'})",
+            description=f"Разовый заказ #{order.id}",
             order_id=order.id,
         )
         db.add(transaction)
@@ -177,7 +176,7 @@ async def create_order(
         transaction = BalanceTransaction(
             balance_id=balance.id,
             amount=-cost,
-            description=f"Заказ #{order.id} ({'Срочный' if request.is_urgent else 'Обычный'})",
+            description=f"Заказ #{order.id}",
             order_id=order.id,
         )
         db.add(transaction)
