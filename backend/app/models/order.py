@@ -67,6 +67,9 @@ class Order(Base):
     # User preference (Leave at door vs Hand over)
     comment = Column(String(200), nullable=True)
     
+    # Reschedule tracking (can only reschedule once)
+    was_rescheduled = Column(Boolean, default=False)
+    
     # Relationships
     user = relationship("User", back_populates="orders", foreign_keys=[user_id])
     address = relationship("Address", back_populates="orders")

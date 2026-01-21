@@ -283,6 +283,13 @@ async def reschedule_order(
             detail="Order not found"
         )
     
+    # Rule 0: Can only reschedule once
+    if order.was_rescheduled:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Заказ уже был перенесён. Повторный перенос невозможен."
+        )
+    
     # Parse date
     try:
         new_date = date.fromisoformat(request.new_date)
@@ -333,6 +340,7 @@ async def reschedule_order(
     
     order.date = new_date
     order.time_slot = new_time_slot
+    order.was_rescheduled = True  # Mark as rescheduled (can't reschedule again)
     
     await db.commit()
     
