@@ -358,19 +358,32 @@ async def cancel_order(
     result = await db.execute(
         select(Balance).where(Balance.user_id == current_user.id)
     )
-    balance = result.scalar_one()
-    balance.credits += 1 
+    balance = result.scalar_one_or_none()
     
-    # Log refund
-    transaction = BalanceTransaction(
-        balance_id=balance.id,
-        amount=1,
-        description=f"Возврат за отмену заказа #{order.id}",
-        order_id=order.id,
-    )
-    db.add(transaction)
+    if balance:
+        balance.credits += 1 
+        
+        # Log refund
+        transaction = BalanceTransaction(
+            balance_id=balance.id,
+            amount=1,
+            description=f"Возврат за отмену заказа #{order.id}",
+            order_id=order.id,
+        )
+        db.add(transaction)
+    
+    # If subscription order - update subscription used_credits
+    if order.subscription_id:
+        sub_result = await db.execute(
+            select(Subscription).where(Subscription.id == order.subscription_id)
+        )
+        subscription = sub_result.scalar_one_or_none()
+        if subscription and subscription.used_credits > 0:
+            subscription.used_credits -= 1
+            subscription.is_active = True  # Reactivate if was deactivated
     
     order.status = OrderStatus.CANCELLED
+    print(f"[ORDER] Cancelled order #{order.id}, refunded 1 credit")
     
     await db.commit()
     
