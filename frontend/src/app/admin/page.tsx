@@ -424,18 +424,32 @@ export default function AdminPage() {
               {filteredClients.map(client => (
                 <div key={client.id} className="bg-gray-800/30 p-4 rounded-xl border border-gray-800">
                   <div className="flex items-start justify-between mb-3">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-teal-900/50 flex items-center justify-center text-teal-400 font-bold text-lg">
+                    <a 
+                      href={
+                        client.username ? `https://t.me/${client.username.replace('@', '')}` :
+                        client.phone ? `https://t.me/${client.phone.replace(/\+/g, '')}` :
+                        `tg://user?id=${client.telegram_id}`
+                      }
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-3 hover:bg-gray-900/30 -m-2 p-2 rounded-lg transition group cursor-pointer"
+                    >
+                      <div className="w-10 h-10 rounded-full bg-teal-900/50 flex items-center justify-center text-teal-400 font-bold text-lg relative">
                         {client.name?.[0] || 'U'}
+                        <div className="absolute -bottom-1 -right-1 bg-gray-900 rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition">
+                            <div className="w-3 h-3 bg-blue-500 rounded-full" />
+                        </div>
                       </div>
                       <div>
-                        <p className="font-bold text-white">
+                        <p className="font-bold text-white group-hover:text-blue-400 transition flex items-center gap-2">
                           {client.name === 'User' ? `User #${client.telegram_id}` : client.name}
                         </p>
                         <p className="text-xs text-gray-500">ID: {client.telegram_id}</p>
                         {client.phone && <p className="text-xs text-gray-500">📱 {client.phone}</p>}
+                        {client.username && <p className="text-xs text-gray-500">@{client.username}</p>}
                       </div>
-                    </div>
+                    </a>
+                    
                     <div className="text-right">
                       <p className="text-2xl font-bold text-teal-400">{client.balance}</p>
                       <p className="text-xs text-gray-500">выносов</p>
@@ -453,61 +467,13 @@ export default function AdminPage() {
                     </div>
                   </div>
                   
-                  <div className="grid grid-cols-2 gap-2">
-                    {/* BUTTON: MESSAGE (Smart Logic) */}
-                    {(() => {
-                      // 1. Username (BEST)
-                      if (client.username) {
-                         return (
-                          <a
-                            href={`https://t.me/${client.username.replace('@', '')}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="py-2 bg-blue-600/20 text-blue-400 text-sm font-medium rounded-lg border border-blue-500/30 hover:bg-blue-600/30 flex items-center justify-center gap-2 transition"
-                          >
-                            💬 @{client.username}
-                          </a>
-                         );
-                      }
-                      
-                      // 2. Phone (GOOD)
-                      if (client.phone) {
-                        return (
-                          <a
-                            href={`https://t.me/${client.phone.replace(/\+/g, '')}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="py-2 bg-blue-600/20 text-blue-400 text-sm font-medium rounded-lg border border-blue-500/30 hover:bg-blue-600/30 flex items-center justify-center gap-2 transition"
-                          >
-                            💬 {client.phone}
-                          </a>
-                        );
-                      }
-                      
-                      // 3. ID (FALLBACK - Copy & Search)
-                      return (
-                        <button
-                          onClick={() => {
-                            navigator.clipboard.writeText(client.telegram_id.toString());
-                            // Try to open generic telegram link, user might need to paste
-                            window.open('https://t.me', '_blank');
-                            alert(`ID ${client.telegram_id} скопирован!\n\nК сожалению, у пользователя нет @username и телефона.\n\nTelegram не дает открыть чат по ID напрямую.\n\nВставь ID в поиск Telegram!`);
-                          }}
-                          className="py-2 bg-gray-700/50 text-gray-400 text-sm font-medium rounded-lg border border-gray-600/30 hover:bg-gray-700/70 flex items-center justify-center gap-2 transition"
-                        >
-                          📋 ID (Копия)
-                        </button>
-                      );
-                    })()}
-
-                    <button 
-                      onClick={() => openAddCreditsModal(client)}
-                      className="py-2 bg-teal-900/40 text-teal-400 text-sm font-medium rounded-lg border border-teal-800/50 hover:bg-teal-900/60 flex items-center justify-center gap-2"
-                    >
-                      <Plus className="w-4 h-4" />
-                      Выносы
-                    </button>
-                  </div>
+                  <button 
+                    onClick={() => openAddCreditsModal(client)}
+                    className="w-full py-2 bg-teal-900/40 text-teal-400 text-sm font-medium rounded-lg border border-teal-800/50 hover:bg-teal-900/60 flex items-center justify-center gap-2"
+                  >
+                    <Plus className="w-4 h-4" />
+                    Добавить выносы
+                  </button>
                 </div>
               ))}
               
