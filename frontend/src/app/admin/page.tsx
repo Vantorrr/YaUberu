@@ -429,15 +429,21 @@ export default function AdminPage() {
                         {client.name?.[0] || 'U'}
                       </div>
                       <div>
-                        <a
-                          href={`tg://user?id=${client.telegram_id}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="font-bold text-white hover:text-teal-400 transition flex items-center gap-1 group"
-                        >
-                          {client.name === 'User' ? `User #${client.telegram_id}` : client.name}
-                          <span className="text-teal-500 opacity-0 group-hover:opacity-100 transition">💬</span>
-                        </a>
+                        <div className="flex items-center gap-2">
+                          <p className="font-bold text-white">
+                            {client.name === 'User' ? `User #${client.telegram_id}` : client.name}
+                          </p>
+                          <button
+                            onClick={async () => {
+                              await navigator.clipboard.writeText(client.telegram_id.toString());
+                              alert(`ID ${client.telegram_id} скопирован!\n\nНайди пользователя в Telegram:\n1. Открой поиск в Telegram\n2. Вставь ID (Ctrl+V)\n3. Добавь + перед числом (+${client.telegram_id})`);
+                            }}
+                            className="text-teal-500 hover:text-teal-400 transition p-1 hover:bg-teal-900/30 rounded"
+                            title="Скопировать ID для поиска в Telegram"
+                          >
+                            💬
+                          </button>
+                        </div>
                         <p className="text-xs text-gray-500">ID: {client.telegram_id}</p>
                         {client.phone && <p className="text-xs text-gray-500">📱 {client.phone}</p>}
                       </div>
