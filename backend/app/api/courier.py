@@ -115,7 +115,7 @@ async def get_courier_stats(telegram_id: int, db: AsyncSession = Depends(get_db)
 
 @router.get("/complexes")
 async def get_complexes_with_orders(db: AsyncSession = Depends(get_db)):
-    """Get complexes that have scheduled orders for today"""
+    """Get complexes that have scheduled orders for today OR overdue"""
     today = date.today()
     
     # Get all active complexes
@@ -124,14 +124,14 @@ async def get_complexes_with_orders(db: AsyncSession = Depends(get_db)):
     
     response = []
     for comp in complexes:
-        # Count scheduled orders for TODAY
+        # Count scheduled orders for TODAY + OVERDUE (past dates)
         result = await db.execute(
             select(func.count(Order.id))
             .join(Address, Order.address_id == Address.id)
             .where(
                 and_(
                     Address.complex_id == comp.id,
-                    Order.date == today,
+                    Order.date <= today,  # Today OR past dates (overdue)
                     Order.status.in_([OrderStatus.SCHEDULED, OrderStatus.IN_PROGRESS])
                 )
             )
@@ -143,14 +143,14 @@ async def get_complexes_with_orders(db: AsyncSession = Depends(get_db)):
             "orders_count": count
         })
     
-    # Count orders with NO complex_id (Manual Addresses) for TODAY
+    # Count orders with NO complex_id (Manual Addresses) for TODAY + OVERDUE
     result = await db.execute(
         select(func.count(Order.id))
         .join(Address, Order.address_id == Address.id)
         .where(
             and_(
                 Address.complex_id.is_(None),
-                Order.date == today,
+                Order.date <= today,  # Today OR past dates (overdue)
                 Order.status.in_([OrderStatus.SCHEDULED, OrderStatus.IN_PROGRESS])
             )
         )
@@ -168,7 +168,7 @@ async def get_complexes_with_orders(db: AsyncSession = Depends(get_db)):
 
 @router.get("/buildings")
 async def get_buildings(complex_id: int, db: AsyncSession = Depends(get_db)):
-    """Get buildings in complex with orders for TODAY"""
+    """Get buildings in complex with orders for TODAY + OVERDUE"""
     today = date.today()
     
     if complex_id == 0:
@@ -179,7 +179,7 @@ async def get_buildings(complex_id: int, db: AsyncSession = Depends(get_db)):
             .where(
                 and_(
                     Address.complex_id.is_(None),
-                    Order.date == today,
+                    Order.date <= today,  # Today OR past dates (overdue)
                     Order.status.in_([OrderStatus.SCHEDULED, OrderStatus.IN_PROGRESS])
                 )
             )
@@ -196,7 +196,7 @@ async def get_buildings(complex_id: int, db: AsyncSession = Depends(get_db)):
         .where(
             and_(
                 Address.complex_id == complex_id,
-                Order.date == today,
+                Order.date <= today,  # Today OR past dates (overdue)
                 Order.status.in_([OrderStatus.SCHEDULED, OrderStatus.IN_PROGRESS])
             )
         )
@@ -207,7 +207,7 @@ async def get_buildings(complex_id: int, db: AsyncSession = Depends(get_db)):
 
 @router.get("/orders")
 async def get_orders(complex_id: int, building: str, db: AsyncSession = Depends(get_db)):
-    """Get orders for specific building - only today's orders"""
+    """Get orders for specific building - today's + overdue orders"""
     today = date.today()
     
     query = select(Order, Address, ResidentialComplex)\
@@ -228,7 +228,7 @@ async def get_orders(complex_id: int, building: str, db: AsyncSession = Depends(
                 Address.complex_id.is_(None),
                 Address.street == street_val,
                 Address.building == building_val,
-                Order.date == today,
+                Order.date <= today,  # Today OR past dates (overdue)
                 Order.status.in_([OrderStatus.SCHEDULED, OrderStatus.IN_PROGRESS])
             )
         )
@@ -237,7 +237,7 @@ async def get_orders(complex_id: int, building: str, db: AsyncSession = Depends(
             and_(
                 Address.complex_id == complex_id,
                 Address.building == building,
-                Order.date == today,
+                Order.date <= today,  # Today OR past dates (overdue)
                 Order.status.in_([OrderStatus.SCHEDULED, OrderStatus.IN_PROGRESS])
             )
         )
@@ -261,6 +261,9 @@ async def get_orders(complex_id: int, building: str, db: AsyncSession = Depends(
             courier_result = await db.execute(select(User.telegram_id).where(User.id == order.courier_id))
             courier_telegram_id = courier_result.scalar_one_or_none()
         
+        # Check if order is overdue
+        is_overdue = order.date < today if order.date else False
+        
         response.append({
             "id": order.id,
             "complex_name": complex_name,
@@ -274,7 +277,8 @@ async def get_orders(complex_id: int, building: str, db: AsyncSession = Depends(
             "time_slot": order.time_slot,
             "status": order.status.value,
             "comment": order.comment,
-            "courier_telegram_id": courier_telegram_id
+            "courier_telegram_id": courier_telegram_id,
+            "is_overdue": is_overdue  # Flag for overdue orders
         })
         
     return response
