@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { api } from '@/lib/api';
-import { RefreshCw, Package, CheckCircle, TrendingUp, XCircle, Truck, X, Users, Building, Plus, Trash2, Coins, Edit } from 'lucide-react';
+import { RefreshCw, Package, CheckCircle, TrendingUp, XCircle, Truck, X, Users, Building, Plus, Trash2, Coins, Edit, Search } from 'lucide-react';
 
 export default function AdminPage() {
   const [activeTab, setActiveTab] = useState<'orders' | 'couriers' | 'complexes' | 'clients' | 'tariffs'>('orders');
@@ -14,6 +14,7 @@ export default function AdminPage() {
   const [clients, setClients] = useState<any[]>([]);
   const [tariffs, setTariffs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [clientSearch, setClientSearch] = useState('');
   
   // Modals / Forms
   const [showAssignModal, setShowAssignModal] = useState(false);
@@ -377,15 +378,50 @@ export default function AdminPage() {
         )}
 
         {/* CLIENTS TAB */}
-        {activeTab === 'clients' && (
+        {activeTab === 'clients' && (() => {
+          const filteredClients = clients.filter(client => {
+            if (!clientSearch.trim()) return true;
+            const search = clientSearch.toLowerCase();
+            return (
+              client.name?.toLowerCase().includes(search) ||
+              client.telegram_id?.toString().includes(search) ||
+              client.phone?.includes(search)
+            );
+          });
+          
+          return (
           <div className="space-y-4">
             <h3 className="font-bold text-gray-300 mb-4 flex items-center gap-2">
               <Users className="w-5 h-5 text-teal-500" />
-              Все клиенты ({clients.length})
+              Все клиенты ({clientSearch.trim() 
+                ? `${filteredClients.length} из ${clients.length}` 
+                : clients.length})
             </h3>
             
+            {/* Search Input */}
+            <div className="bg-gray-800/40 p-3 rounded-xl border border-gray-800">
+              <div className="relative flex items-center">
+                <Search className="absolute left-3 w-4 h-4 text-gray-500" />
+                <input
+                  type="text"
+                  placeholder="Поиск по имени, ID или телефону..."
+                  value={clientSearch}
+                  onChange={(e) => setClientSearch(e.target.value)}
+                  className="w-full bg-gray-900 border border-gray-700 text-white rounded-lg pl-10 pr-10 py-3 text-sm focus:border-teal-500 outline-none placeholder:text-gray-600"
+                />
+                {clientSearch && (
+                  <button
+                    onClick={() => setClientSearch('')}
+                    className="absolute right-3 text-gray-500 hover:text-gray-300"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
+            </div>
+            
             <div className="space-y-3">
-              {clients.map(client => (
+              {filteredClients.map(client => (
                 <div key={client.id} className="bg-gray-800/30 p-4 rounded-xl border border-gray-800">
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex items-center gap-3">
@@ -425,14 +461,15 @@ export default function AdminPage() {
                 </div>
               ))}
               
-              {clients.length === 0 && (
+              {filteredClients.length === 0 && (
                 <div className="text-center py-10 text-gray-500 bg-gray-800/20 rounded-2xl border border-gray-800/50 border-dashed">
-                  <p>Пока нет клиентов</p>
+                  <p>{clientSearch.trim() ? '🔍 Клиенты не найдены' : 'Пока нет клиентов'}</p>
                 </div>
               )}
             </div>
           </div>
-        )}
+          );
+        })()}
 
         {/* COURIERS TAB */}
         {activeTab === 'couriers' && (
