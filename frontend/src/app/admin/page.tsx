@@ -424,10 +424,7 @@ export default function AdminPage() {
               {filteredClients.map(client => (
                 <div key={client.id} className="bg-gray-800/30 p-4 rounded-xl border border-gray-800">
                   <div className="flex items-start justify-between mb-3">
-                    <a 
-                      href={`tg://openmessage?user_id=${client.telegram_id}`}
-                      className="flex items-center gap-3 hover:bg-gray-900/30 -m-2 p-2 rounded-lg transition"
-                    >
+                    <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-full bg-teal-900/50 flex items-center justify-center text-teal-400 font-bold text-lg">
                         {client.name?.[0] || 'U'}
                       </div>
@@ -438,7 +435,7 @@ export default function AdminPage() {
                         <p className="text-xs text-gray-500">ID: {client.telegram_id}</p>
                         {client.phone && <p className="text-xs text-gray-500">📱 {client.phone}</p>}
                       </div>
-                    </a>
+                    </div>
                     <div className="text-right">
                       <p className="text-2xl font-bold text-teal-400">{client.balance}</p>
                       <p className="text-xs text-gray-500">выносов</p>
@@ -456,13 +453,35 @@ export default function AdminPage() {
                     </div>
                   </div>
                   
-                  <button 
-                    onClick={() => openAddCreditsModal(client)}
-                    className="w-full py-2 bg-teal-900/40 text-teal-400 text-sm font-medium rounded-lg border border-teal-800/50 hover:bg-teal-900/60 flex items-center justify-center gap-2"
-                  >
-                    <Plus className="w-4 h-4" />
-                    Добавить выносы
-                  </button>
+                  <div className="grid grid-cols-2 gap-2">
+                    {client.phone ? (
+                      <a
+                        href={`https://t.me/${client.phone.replace(/\+/g, '')}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="py-2 bg-blue-900/40 text-blue-400 text-sm font-medium rounded-lg border border-blue-800/50 hover:bg-blue-900/60 flex items-center justify-center gap-2"
+                      >
+                        💬 Написать
+                      </a>
+                    ) : (
+                      <button
+                        onClick={() => {
+                          navigator.clipboard.writeText(client.telegram_id.toString());
+                          alert(`ID скопирован: ${client.telegram_id}`);
+                        }}
+                        className="py-2 bg-gray-900/40 text-gray-400 text-sm font-medium rounded-lg border border-gray-800/50 hover:bg-gray-800/60 flex items-center justify-center gap-2"
+                      >
+                        📋 ID
+                      </button>
+                    )}
+                    <button 
+                      onClick={() => openAddCreditsModal(client)}
+                      className="py-2 bg-teal-900/40 text-teal-400 text-sm font-medium rounded-lg border border-teal-800/50 hover:bg-teal-900/60 flex items-center justify-center gap-2"
+                    >
+                      <Plus className="w-4 h-4" />
+                      Выносы
+                    </button>
+                  </div>
                 </div>
               ))}
               
