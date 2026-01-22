@@ -81,7 +81,7 @@ export default function HomePage() {
                     <Trash2 className="w-6 h-6 text-white" />
                   </div>
                   <div>
-                    <p className="text-xs text-gray-600">Баланс подписки</p>
+                    <p className="text-xs text-gray-600">Баланс выносов по подписке</p>
                     <p className="text-3xl font-bold text-gray-900">{balance}</p>
                   </div>
                 </div>
@@ -169,7 +169,7 @@ export default function HomePage() {
           <div className="w-full space-y-3">
             {balance > 0 && (
               <div className="bg-teal-50 border-2 border-teal-200 rounded-2xl p-4">
-                <p className="text-xs text-teal-700 font-medium uppercase tracking-wide mb-1">Баланс подписки</p>
+                <p className="text-xs text-teal-700 font-medium uppercase tracking-wide mb-1">Баланс выносов по подписке</p>
                 <p className="text-3xl font-bold text-teal-900">{balance} выносов</p>
               </div>
             )}

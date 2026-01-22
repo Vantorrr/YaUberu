@@ -79,7 +79,7 @@ export default function ProfilePage() {
                 <Package className="w-6 h-6 text-teal-600" />
               </div>
               <div className="flex-1">
-                <p className="text-gray-500 text-xs mb-1">Баланс подписки</p>
+                <p className="text-gray-500 text-xs mb-1">Баланс выносов по подписке</p>
                 <div className="flex items-baseline gap-2">
                   <span className="text-gray-900 font-bold text-4xl">{balance !== null ? balance.credits : '...'}</span>
                   <span className="text-gray-600 font-medium text-lg">выносов</span>
