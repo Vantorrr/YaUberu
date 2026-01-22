@@ -158,19 +158,39 @@ export default function AdminPage() {
       alert('Введите корректное количество');
       return;
     }
+    
+    // Prevent double-click
+    const submitButton = document.querySelector('[data-add-credits-btn]') as HTMLButtonElement;
+    if (submitButton) {
+      submitButton.disabled = true;
+      submitButton.textContent = 'Добавляем...';
+    }
+    
     try {
+      console.log(`[ADMIN] Adding ${amount} ${creditsType} credits to user ${selectedClient.id}`);
+      
       if (creditsType === 'single') {
-        await api.addSingleCreditsToClient(selectedClient.id, amount, `Разовые выносы (+${amount})`);
+        const result = await api.addSingleCreditsToClient(selectedClient.id, amount, `Разовые выносы (+${amount})`);
+        console.log('[ADMIN] Single credits added:', result);
       } else {
-        await api.addCreditsToClient(selectedClient.id, amount, `Пополнение подписки (+${amount})`);
+        const result = await api.addCreditsToClient(selectedClient.id, amount, `Пополнение подписки (+${amount})`);
+        console.log('[ADMIN] Subscription credits added:', result);
       }
+      
       setShowAddCreditsModal(false);
       setCreditsAmount('1');
       setCreditsType('subscription');
       setSelectedClient(null);
       loadData();
     } catch (e) {
+      console.error('[ADMIN] Error adding credits:', e);
       alert('Ошибка пополнения');
+    } finally {
+      // Re-enable button
+      if (submitButton) {
+        submitButton.disabled = false;
+        submitButton.textContent = 'Добавить';
+      }
     }
   };
 
@@ -685,7 +705,8 @@ export default function AdminPage() {
               </button>
               <button
                 onClick={handleAddCredits}
-                className="flex-1 py-3 bg-teal-600 text-white rounded-lg font-medium hover:bg-teal-500"
+                data-add-credits-btn
+                className="flex-1 py-3 bg-teal-600 text-white rounded-lg font-medium hover:bg-teal-500 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Добавить
               </button>

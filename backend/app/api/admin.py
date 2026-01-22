@@ -511,8 +511,15 @@ async def add_single_credits_to_client(
         db.add(balance)
         await db.flush()
     
+    # Log before adding
+    old_balance = balance.single_credits
+    print(f"[ADMIN ADD SINGLE CREDITS] User: {client.name} (ID: {client.id})")
+    print(f"[ADMIN ADD SINGLE CREDITS] Old balance: {old_balance}, Adding: {request.amount}")
+    
     # Add single_credits
     balance.single_credits += request.amount
+    
+    print(f"[ADMIN ADD SINGLE CREDITS] New balance (before commit): {balance.single_credits}")
     
     # Create transaction record
     transaction = BalanceTransaction(
@@ -525,6 +532,8 @@ async def add_single_credits_to_client(
     
     await db.commit()
     await db.refresh(balance)
+    
+    print(f"[ADMIN ADD SINGLE CREDITS] New balance (after commit): {balance.single_credits}")
     
     return {
         "status": "ok", 
