@@ -304,7 +304,9 @@ async def create_order(
             address=address_str,
             date_str=date_str,
             time_slot=time_slot_str,
-            client_name=client_name
+            client_name=client_name,
+            tariff_type=request.tariff_type,
+            order_date=request.date
         )
     except Exception as e:
         print(f"[NOTIFY ERROR] Failed to notify couriers/admins/client: {e}")

@@ -367,7 +367,9 @@ async def yookassa_webhook(request: Request, db: AsyncSession = Depends(get_db))
                     address=address_str,
                     date_str=date_str,
                     time_slot=time_slot_str,
-                    client_name=user.name or "Клиент"
+                    client_name=user.name or "Клиент",
+                    tariff_type=request_obj.tariff_type,
+                    order_date=date_val
                 )
                 
                 # Notify Client

@@ -44,9 +44,9 @@ async def send_telegram_notification(chat_id: int, text: str, reply_markup: dict
 # ============ NOTIFICATIONS FOR COURIERS ============
 
 async def notify_all_couriers_new_order(courier_telegram_ids: list, order_id: int, address: str, date_str: str, time_slot: str, comment: str = None, tariff_type: str = None, order_date = None):
-    """Notify ALL couriers about a new order - sent via CLIENT BOT"""
+    """Notify ALL couriers about a new order - sent via COURIER BOT"""
     
-    # Check if this is a single order for TODAY
+    # Check if this is a single order for TODAY (URGENT)
     from datetime import date as date_type
     is_today = False
     if order_date and isinstance(order_date, date_type):
@@ -55,9 +55,10 @@ async def notify_all_couriers_new_order(courier_telegram_ids: list, order_id: in
     # Build message
     text = f"🆕 Новый заказ #{order_id}!\n\n"
     
-    # If it's a single order for TODAY, highlight it!
-    if tariff_type == 'single' and is_today:
-        text = f"⚡ СРОЧНО! РАЗОВЫЙ ВЫНОС НА СЕГОДНЯ!\n\n🆕 Заказ #{order_id}\n\n"
+    # If it's a single order for TODAY, highlight it as URGENT!
+    is_urgent = tariff_type == 'single' and is_today
+    if is_urgent:
+        text = f"🚨🚨🚨 СРОЧНО! РАЗОВЫЙ ВЫНОС НА СЕГОДНЯ! 🚨🚨🚨\n\n⚡ Заказ #{order_id}\n\n"
     
     text += (
         f"📍 {address}\n"
@@ -70,7 +71,7 @@ async def notify_all_couriers_new_order(courier_telegram_ids: list, order_id: in
     text += "\n⚡️ Кто первый возьмет — того и заказ!\n\n"
     text += "👉 Откройте бот курьеров @YaUberu_TeamBot → Мои задачи"
     
-    print(f"[NOTIFY] Sending order #{order_id} to {len(courier_telegram_ids)} couriers via COURIER BOT")
+    print(f"[NOTIFY] Sending order #{order_id} (URGENT={is_urgent}) to {len(courier_telegram_ids)} couriers via COURIER BOT")
     
     for tg_id in courier_telegram_ids:
         # use_courier_bot=True - send directly to @YaUberu_TeamBot
@@ -79,6 +80,13 @@ async def notify_all_couriers_new_order(courier_telegram_ids: list, order_id: in
             print(f"[NOTIFY] ✅ Courier {tg_id} notified")
         else:
             print(f"[NOTIFY] ❌ Failed to notify courier {tg_id}")
+    
+    # If URGENT, send ADDITIONAL notification to all couriers (2nd ping!)
+    if is_urgent:
+        print(f"[NOTIFY] 🚨 URGENT ORDER - Sending 2nd notification to all couriers!")
+        urgent_text = f"🚨 СРОЧНЫЙ ЗАКАЗ #{order_id} ЖДЁТ!\n📍 {address}\n🕐 {time_slot}\n\n⏰ НУЖЕН КУРЬЕР ПРЯМО СЕЙЧАС!"
+        for tg_id in courier_telegram_ids:
+            await send_telegram_notification(tg_id, urgent_text, use_courier_bot=True)
 
 
 # ============ NOTIFICATIONS FOR CLIENTS ============
@@ -135,18 +143,35 @@ async def notify_client_order_completed(client_telegram_id: int, bags_count: int
 
 # ============ NOTIFICATIONS FOR ADMINS ============
 
-async def notify_admins_new_order(admin_telegram_ids: list, order_id: int, address: str, date_str: str, time_slot: str, client_name: str = "Клиент"):
+async def notify_admins_new_order(admin_telegram_ids: list, order_id: int, address: str, date_str: str, time_slot: str, client_name: str = "Клиент", tariff_type: str = None, order_date = None):
     """Notify all admins about a new order - sent via CLIENT BOT"""
-    text = (
-        f"📋 Новый заказ #{order_id}\n\n"
+    
+    # Check if this is a single order for TODAY (URGENT)
+    from datetime import date as date_type
+    is_today = False
+    if order_date and isinstance(order_date, date_type):
+        is_today = (order_date == date_type.today())
+    
+    is_urgent = tariff_type == 'single' and is_today
+    
+    if is_urgent:
+        text = f"🚨 СРОЧНЫЙ ЗАКАЗ #{order_id}!\n\n"
+    else:
+        text = f"📋 Новый заказ #{order_id}\n\n"
+    
+    text += (
         f"👤 Клиент: {client_name}\n"
         f"📍 Адрес: {address}\n"
         f"📅 Дата: {date_str}\n"
         f"🕐 Время: {time_slot}\n\n"
-        f"Курьеры получили уведомление"
     )
     
-    print(f"[NOTIFY] Sending order #{order_id} to {len(admin_telegram_ids)} admins via CLIENT BOT")
+    if is_urgent:
+        text += f"⚡ РАЗОВЫЙ ВЫНОС НА СЕГОДНЯ!\n"
+    
+    text += f"Курьеры получили уведомление"
+    
+    print(f"[NOTIFY] Sending order #{order_id} (URGENT={is_urgent}) to {len(admin_telegram_ids)} admins via CLIENT BOT")
     
     for tg_id in admin_telegram_ids:
         result = await send_telegram_notification(tg_id, text, use_courier_bot=False)
