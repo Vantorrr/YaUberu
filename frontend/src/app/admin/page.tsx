@@ -22,6 +22,7 @@ export default function AdminPage() {
   const [showAddCreditsModal, setShowAddCreditsModal] = useState(false);
   const [selectedClient, setSelectedClient] = useState<any>(null);
   const [creditsAmount, setCreditsAmount] = useState('1');
+  const [creditsType, setCreditsType] = useState<'subscription' | 'single'>('subscription');
 
   const [showEditTariffModal, setShowEditTariffModal] = useState(false);
   const [selectedTariff, setSelectedTariff] = useState<any>(null);
@@ -146,6 +147,7 @@ export default function AdminPage() {
   const openAddCreditsModal = (client: any) => {
     setSelectedClient(client);
     setCreditsAmount('1');
+    setCreditsType('subscription');
     setShowAddCreditsModal(true);
   };
 
@@ -157,9 +159,14 @@ export default function AdminPage() {
       return;
     }
     try {
-      await api.addCreditsToClient(selectedClient.id, amount, `Пополнение администратором (+${amount})`);
+      if (creditsType === 'single') {
+        await api.addSingleCreditsToClient(selectedClient.id, amount, `Разовые выносы (+${amount})`);
+      } else {
+        await api.addCreditsToClient(selectedClient.id, amount, `Пополнение подписки (+${amount})`);
+      }
       setShowAddCreditsModal(false);
       setCreditsAmount('1');
+      setCreditsType('subscription');
       setSelectedClient(null);
       loadData();
     } catch (e) {
@@ -626,6 +633,35 @@ export default function AdminPage() {
               <p className="text-gray-400 text-sm mb-1">Клиент:</p>
               <p className="text-white font-bold">{selectedClient.name}</p>
               <p className="text-gray-500 text-xs">Текущий баланс: {selectedClient.balance} выносов</p>
+            </div>
+
+            {/* Balance Type Selection */}
+            <div className="mb-4">
+              <label className="block text-gray-400 text-sm mb-2">Тип баланса:</label>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setCreditsType('subscription')}
+                  className={`flex-1 py-2 px-3 rounded-lg font-medium text-sm transition ${
+                    creditsType === 'subscription'
+                      ? 'bg-teal-600 text-white'
+                      : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+                  }`}
+                >
+                  📦 Подписка
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setCreditsType('single')}
+                  className={`flex-1 py-2 px-3 rounded-lg font-medium text-sm transition ${
+                    creditsType === 'single'
+                      ? 'bg-orange-600 text-white'
+                      : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+                  }`}
+                >
+                  🎁 Разовые
+                </button>
+              </div>
             </div>
             
             <div className="mb-4">

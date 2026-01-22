@@ -267,6 +267,13 @@ class ApiClient {
       });
   }
 
+  async addSingleCreditsToClient(userId: number, amount: number, description?: string) {
+      return this.request('/admin/clients/add-single-credits', {
+          method: 'POST',
+          body: JSON.stringify({ user_id: userId, amount, description })
+      });
+  }
+
   // Tariffs (PUBLIC - no auth required)
   async getPublicTariffs() {
     const response = await fetch(`${API_BASE}/admin/public/tariffs`);
