@@ -12,7 +12,7 @@ async def send_telegram_notification(chat_id: int, text: str, reply_markup: dict
     
     # DEBUG: Show which token is being used
     token_preview = bot_token[:20] + "..." if bot_token else "EMPTY"
-    print(f"[NOTIFY DEBUG] use_courier_bot={use_courier_bot}, token={token_preview}")
+    # print(f"[NOTIFY DEBUG] use_courier_bot={use_courier_bot}, token={token_preview}")
     
     if not bot_token or not chat_id:
         print(f"[NOTIFY] Skipping notification: token={bool(bot_token)}, chat_id={chat_id}, courier_bot={use_courier_bot}")
@@ -31,7 +31,7 @@ async def send_telegram_notification(chat_id: int, text: str, reply_markup: dict
                 payload["reply_markup"] = reply_markup
             
             response = await client.post(url, json=payload)
-            print(f"[NOTIFY] Sent to {chat_id} (courier_bot={use_courier_bot}): {response.status_code}")
+            # print(f"[NOTIFY] Sent to {chat_id} (courier_bot={use_courier_bot}): {response.status_code}")
             if response.status_code != 200:
                 error_text = await response.aread()
                 print(f"[NOTIFY ERROR] Response: {error_text.decode('utf-8')}")
@@ -39,6 +39,31 @@ async def send_telegram_notification(chat_id: int, text: str, reply_markup: dict
     except Exception as e:
         print(f"[NOTIFY ERROR] {e}")
         return False
+
+
+async def get_telegram_user_info(chat_id: int):
+    """
+    Fetch user info (username, first_name) from Telegram API
+    Used to update missing data in our DB
+    """
+    bot_token = settings.TELEGRAM_BOT_TOKEN
+    if not bot_token or not chat_id:
+        return None
+        
+    try:
+        async with httpx.AsyncClient() as client:
+            url = f"https://api.telegram.org/bot{bot_token}/getChat"
+            payload = {"chat_id": chat_id}
+            
+            response = await client.post(url, json=payload)
+            if response.status_code == 200:
+                data = response.json()
+                if data.get("ok"):
+                    return data.get("result")
+            return None
+    except Exception as e:
+        print(f"[TELEGRAM API ERROR] Failed to get chat info: {e}")
+        return None
 
 
 # ============ NOTIFICATIONS FOR COURIERS ============

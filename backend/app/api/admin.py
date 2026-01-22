@@ -11,6 +11,7 @@ from app.models import (
     ResidentialComplex, Subscription, Balance, BalanceTransaction, TariffPrice, ComplexBuilding
 )
 from app.services.scheduler import generate_orders_for_today
+from app.services.notifications import get_telegram_user_info
 
 router = APIRouter()
 
@@ -374,7 +375,23 @@ async def list_clients(
     clients = result.scalars().all()
     
     client_list = []
+    
+    # Track if we updated any usernames
+    updated_usernames = False
+    
     for client in clients:
+        # Check if username is missing and fetch it from Telegram
+        if not client.username:
+            print(f"[ADMIN] Fetching missing username for user {client.id} (TG: {client.telegram_id})")
+            tg_info = await get_telegram_user_info(client.telegram_id)
+            if tg_info and tg_info.get("username"):
+                new_username = tg_info.get("username")
+                print(f"[ADMIN] Found username: @{new_username}")
+                client.username = new_username
+                updated_usernames = True
+            else:
+                print(f"[ADMIN] No username found for user {client.id}")
+
         # Get balance
         balance_result = await db.execute(
             select(Balance).where(Balance.user_id == client.id)
@@ -407,6 +424,9 @@ async def list_clients(
             "total_orders": total_orders,
             "created_at": client.created_at.isoformat() if client.created_at else None,
         })
+    
+    if updated_usernames:
+        await db.commit()
     
     return client_list
 
