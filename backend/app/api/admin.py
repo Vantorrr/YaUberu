@@ -400,6 +400,7 @@ async def list_clients(
             "id": client.id,
             "name": client.name,
             "telegram_id": client.telegram_id,
+            "username": client.username,  # Add username
             "phone": client.phone,
             "balance": balance.credits if balance else 0,
             "active_subscriptions": active_subs,

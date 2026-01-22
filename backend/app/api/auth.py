@@ -48,6 +48,8 @@ async def telegram_auth(
         )
     
     telegram_id = telegram_data.get("user", {}).get("id")
+    username = telegram_data.get("user", {}).get("username")
+    
     if not telegram_id:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -66,6 +68,7 @@ async def telegram_auth(
             telegram_id=telegram_id,
             name=request.name or telegram_data.get("user", {}).get("first_name", "User"),
             phone=request.phone,
+            username=username
         )
         db.add(user)
         await db.flush()
@@ -75,6 +78,11 @@ async def telegram_auth(
         db.add(balance)
         await db.commit()
         await db.refresh(user)
+    else:
+        # Update username if changed
+        if username and user.username != username:
+            user.username = username
+            await db.commit()
     
     # Count user's orders to determine if they are new
     result = await db.execute(

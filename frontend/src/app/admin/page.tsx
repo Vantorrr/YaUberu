@@ -454,26 +454,52 @@ export default function AdminPage() {
                   </div>
                   
                   <div className="grid grid-cols-2 gap-2">
-                    {client.phone ? (
-                      <a
-                        href={`https://t.me/${client.phone.replace(/\+/g, '')}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="py-2 bg-blue-900/40 text-blue-400 text-sm font-medium rounded-lg border border-blue-800/50 hover:bg-blue-900/60 flex items-center justify-center gap-2"
-                      >
-                        💬 Написать
-                      </a>
-                    ) : (
-                      <button
-                        onClick={() => {
-                          navigator.clipboard.writeText(client.telegram_id.toString());
-                          alert(`ID скопирован: ${client.telegram_id}`);
-                        }}
-                        className="py-2 bg-gray-900/40 text-gray-400 text-sm font-medium rounded-lg border border-gray-800/50 hover:bg-gray-800/60 flex items-center justify-center gap-2"
-                      >
-                        📋 ID
-                      </button>
-                    )}
+                    {/* BUTTON: MESSAGE (Smart Logic) */}
+                    {(() => {
+                      // 1. Username (BEST)
+                      if (client.username) {
+                         return (
+                          <a
+                            href={`https://t.me/${client.username.replace('@', '')}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="py-2 bg-blue-600/20 text-blue-400 text-sm font-medium rounded-lg border border-blue-500/30 hover:bg-blue-600/30 flex items-center justify-center gap-2 transition"
+                          >
+                            💬 @{client.username}
+                          </a>
+                         );
+                      }
+                      
+                      // 2. Phone (GOOD)
+                      if (client.phone) {
+                        return (
+                          <a
+                            href={`https://t.me/${client.phone.replace(/\+/g, '')}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="py-2 bg-blue-600/20 text-blue-400 text-sm font-medium rounded-lg border border-blue-500/30 hover:bg-blue-600/30 flex items-center justify-center gap-2 transition"
+                          >
+                            💬 {client.phone}
+                          </a>
+                        );
+                      }
+                      
+                      // 3. ID (FALLBACK - Copy & Search)
+                      return (
+                        <button
+                          onClick={() => {
+                            navigator.clipboard.writeText(client.telegram_id.toString());
+                            // Try to open generic telegram link, user might need to paste
+                            window.open('https://t.me', '_blank');
+                            alert(`ID ${client.telegram_id} скопирован!\n\nК сожалению, у пользователя нет @username и телефона.\n\nTelegram не дает открыть чат по ID напрямую.\n\nВставь ID в поиск Telegram!`);
+                          }}
+                          className="py-2 bg-gray-700/50 text-gray-400 text-sm font-medium rounded-lg border border-gray-600/30 hover:bg-gray-700/70 flex items-center justify-center gap-2 transition"
+                        >
+                          📋 ID (Копия)
+                        </button>
+                      );
+                    })()}
+
                     <button 
                       onClick={() => openAddCreditsModal(client)}
                       className="py-2 bg-teal-900/40 text-teal-400 text-sm font-medium rounded-lg border border-teal-800/50 hover:bg-teal-900/60 flex items-center justify-center gap-2"
