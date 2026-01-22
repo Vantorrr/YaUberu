@@ -424,30 +424,21 @@ export default function AdminPage() {
               {filteredClients.map(client => (
                 <div key={client.id} className="bg-gray-800/30 p-4 rounded-xl border border-gray-800">
                   <div className="flex items-start justify-between mb-3">
-                    <div className="flex items-center gap-3">
+                    <a 
+                      href={`tg://openmessage?user_id=${client.telegram_id}`}
+                      className="flex items-center gap-3 hover:bg-gray-900/30 -m-2 p-2 rounded-lg transition"
+                    >
                       <div className="w-10 h-10 rounded-full bg-teal-900/50 flex items-center justify-center text-teal-400 font-bold text-lg">
                         {client.name?.[0] || 'U'}
                       </div>
                       <div>
-                        <div className="flex items-center gap-2">
-                          <p className="font-bold text-white">
-                            {client.name === 'User' ? `User #${client.telegram_id}` : client.name}
-                          </p>
-                          <button
-                            onClick={async () => {
-                              await navigator.clipboard.writeText(client.telegram_id.toString());
-                              alert(`ID ${client.telegram_id} скопирован!\n\nНайди пользователя в Telegram:\n1. Открой поиск в Telegram\n2. Вставь ID (Ctrl+V)\n3. Добавь + перед числом (+${client.telegram_id})`);
-                            }}
-                            className="text-teal-500 hover:text-teal-400 transition p-1 hover:bg-teal-900/30 rounded"
-                            title="Скопировать ID для поиска в Telegram"
-                          >
-                            💬
-                          </button>
-                        </div>
+                        <p className="font-bold text-white">
+                          {client.name === 'User' ? `User #${client.telegram_id}` : client.name}
+                        </p>
                         <p className="text-xs text-gray-500">ID: {client.telegram_id}</p>
                         {client.phone && <p className="text-xs text-gray-500">📱 {client.phone}</p>}
                       </div>
-                    </div>
+                    </a>
                     <div className="text-right">
                       <p className="text-2xl font-bold text-teal-400">{client.balance}</p>
                       <p className="text-xs text-gray-500">выносов</p>
