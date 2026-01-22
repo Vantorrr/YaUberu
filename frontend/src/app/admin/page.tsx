@@ -426,10 +426,18 @@ export default function AdminPage() {
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-full bg-teal-900/50 flex items-center justify-center text-teal-400 font-bold text-lg">
-                        {client.name[0]}
+                        {client.name?.[0] || 'U'}
                       </div>
                       <div>
-                        <p className="font-bold text-white">{client.name}</p>
+                        <a
+                          href={`tg://user?id=${client.telegram_id}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="font-bold text-white hover:text-teal-400 transition flex items-center gap-1 group"
+                        >
+                          {client.name === 'User' ? `User #${client.telegram_id}` : client.name}
+                          <span className="text-teal-500 opacity-0 group-hover:opacity-100 transition">💬</span>
+                        </a>
                         <p className="text-xs text-gray-500">ID: {client.telegram_id}</p>
                         {client.phone && <p className="text-xs text-gray-500">📱 {client.phone}</p>}
                       </div>
