@@ -385,7 +385,8 @@ export default function AdminPage() {
             return (
               client.name?.toLowerCase().includes(search) ||
               client.telegram_id?.toString().includes(search) ||
-              client.phone?.includes(search)
+              client.phone?.includes(search) ||
+              client.username?.toLowerCase().includes(search)
             );
           });
           
