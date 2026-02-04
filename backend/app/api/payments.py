@@ -56,36 +56,37 @@ async def create_payment(
         amount = tariff_prices.get('trial', {}).get('price', 199)
         description = tariff_prices.get('trial', {}).get('name', "Подписка 'Пробный старт'") + " (7 выносов)"
     elif request.tariff_type == 'monthly':
-        # Dynamic price calculation based on bags/frequency/duration
+        # Get price directly from DB based on duration
         if request.tariff_details:
-            # Get base price from DB (approximate from monthly price)
-            monthly_tariff_price = tariff_prices.get('monthly', {}).get('price', 945)
-            base_price = int(monthly_tariff_price / 7)  # Approximate base per pickup
+            daysInPeriod = request.tariff_details.duration
             
+            # Choose tariff based on duration
+            if daysInPeriod == 14:
+                tariff_key = 'monthly_14'
+                amount = tariff_prices.get(tariff_key, {}).get('price', 756)
+                description = tariff_prices.get(tariff_key, {}).get('name', 'Комфорт «2 недели»')
+            elif daysInPeriod == 30:
+                tariff_key = 'monthly_30'
+                amount = tariff_prices.get(tariff_key, {}).get('price', 1350)
+                description = tariff_prices.get(tariff_key, {}).get('name', 'Комфорт «месяц»')
+            else:
+                # Fallback для других периодов
+                tariff_key = 'monthly_14' if daysInPeriod < 30 else 'monthly_30'
+                amount = tariff_prices.get(tariff_key, {}).get('price', 756)
+                description = f"Комфорт «{daysInPeriod} дней»"
+            
+            # Calculate number of pickups for description
             frequencyMultiplier = {
                 'daily': 1,
                 'every_other_day': 0.5,
                 'twice_week': 2/7
             }
-            daysInPeriod = request.tariff_details.duration
             pickupsCount = int(daysInPeriod * frequencyMultiplier.get(request.tariff_details.frequency, 0.5))
-            totalPrice = base_price * pickupsCount * request.tariff_details.bags_count
-            
-            # Apply discount based on duration
-            if daysInPeriod >= 60:
-                discount = 0.3
-            elif daysInPeriod >= 30:
-                discount = 0.2
-            elif daysInPeriod >= 14:
-                discount = 0.1
-            else:
-                discount = 0
-            
-            amount = int(totalPrice * (1 - discount))
-            description = f"{tariff_prices.get('monthly', {}).get('name', 'Подписка Месяц Комфорт')} ({pickupsCount} выносов)"
+            description += f" ({pickupsCount} выносов)"
         else:
-            amount = tariff_prices.get('monthly', {}).get('price', 945)
-            description = tariff_prices.get('monthly', {}).get('name', "Подписка 'Месяц Комфорт'")
+            # Fallback
+            amount = tariff_prices.get('monthly_14', {}).get('price', 756)
+            description = tariff_prices.get('monthly_14', {}).get('name', "Комфорт «2 недели»")
     
     if amount == 0:
         raise HTTPException(status_code=400, detail="Invalid tariff type or price")
