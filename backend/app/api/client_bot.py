@@ -33,6 +33,21 @@ async def send_telegram_message(chat_id: int, text: str, keyboard: dict = None):
             print(f"[BOT ERROR] Failed to send message: {e}")
 
 
+async def answer_callback_query(callback_query_id: str):
+    """Answer callback query to remove loading state"""
+    token = settings.TELEGRAM_BOT_TOKEN
+    if not token:
+        return
+    
+    try:
+        async with httpx.AsyncClient() as client:
+            url = f"https://api.telegram.org/bot{token}/answerCallbackQuery"
+            payload = {"callback_query_id": callback_query_id}
+            await client.post(url, json=payload)
+    except Exception as e:
+        print(f"[BOT ERROR] Failed to answer callback query: {e}")
+
+
 async def send_telegram_photo(chat_id: int, photo_url: str, caption: str = None, keyboard: dict = None):
     """Send a photo with optional caption and keyboard"""
     token = settings.TELEGRAM_BOT_TOKEN
@@ -112,6 +127,13 @@ async def telegram_webhook(request: Request, db: AsyncSession = Depends(get_db))
         callback = data["callback_query"]
         chat_id = callback["message"]["chat"]["id"]
         callback_data = callback.get("data", "")
+        callback_id = callback.get("id")
+        
+        print(f"[WEBHOOK] Callback query from {chat_id}, data: {callback_data}")
+        
+        # Answer callback query to remove loading state
+        if callback_id:
+            await answer_callback_query(callback_id)
         
         if callback_data == "help":
             help_text = """❓ **Помощь**
