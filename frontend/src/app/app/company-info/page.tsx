@@ -67,7 +67,7 @@ export default function CompanyInfoPage() {
 
         <div className="bg-blue-50 border border-blue-200 rounded-2xl p-4">
           <p className="text-blue-900 text-sm">
-            📞 Для выставления счёта или заключения договора свяжитесь с нами в Telegram: <strong>@YaUberu_AppBot</strong>
+            📞 Для выставления счёта или заключения договора свяжитесь с нами в Telegram: <strong>@yauberuhelp</strong>
           </p>
         </div>
       </div>

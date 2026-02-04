@@ -39,7 +39,7 @@ export default function ProfilePage() {
   };
 
   const openSupport = () => {
-    window.open('https://t.me/YaUberu_AppBot', '_blank');
+    window.open('https://t.me/yauberuhelp', '_blank');
   };
 
   return (

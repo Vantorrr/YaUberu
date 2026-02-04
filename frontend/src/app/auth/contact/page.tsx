@@ -10,7 +10,7 @@ export default function ContactAuthPage() {
 
   const handleShareContact = () => {
     // Открываем бота для регистрации
-    window.open('https://t.me/YaUberu_AppBot?start=auth', '_blank');
+    window.open('https://t.me/yauberuhelp?start=auth', '_blank');
   };
 
   return (
