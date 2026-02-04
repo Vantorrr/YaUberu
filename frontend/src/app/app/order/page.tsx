@@ -77,7 +77,8 @@ function OrderContent() {
   const [tariffPrices, setTariffPrices] = useState<any>({
     single: { price: 150, urgent_price: 250 },
     trial: { price: 199 },
-    monthly: { price: 150 }
+    monthly_14: { price: 756 },
+    monthly_30: { price: 1350 }
   });
   
   useEffect(() => {
@@ -108,25 +109,24 @@ function OrderContent() {
         setSingleBalance(balanceData.single_credits || 0);
         setHasSubscriptions(subscriptionsData && subscriptionsData.length > 0);
         
-        // Parse tariff prices
+        // Parse tariff prices directly from DB
         const prices: any = {
           single: { price: 150, urgent_price: 250 },
           trial: { price: 199 },
-          monthly: { price: 150 }
+          monthly_14: { price: 756 },
+          monthly_30: { price: 1350 }
         };
         
         tariffsData.forEach((t: any) => {
           if (t.tariff_type === 'single' || t.tariff_id === 'single') {
             prices.single.price = parseInt(t.price);
-            // Urgent price is stored in old_price field
             prices.single.urgent_price = t.old_price ? parseInt(t.old_price) : 250;
           } else if (t.tariff_type === 'trial' || t.tariff_id === 'trial') {
             prices.trial.price = parseInt(t.price);
-          } else if (t.tariff_type === 'monthly' || t.tariff_id === 'monthly_14' || t.tariff_id === 'monthly_30') {
-            // For monthly, use monthly_14 price as base price per pickup (7 pickups in 14 days)
-            if (t.tariff_id === 'monthly_14' || t.tariff_type === 'monthly') {
-              prices.monthly.price = Math.floor(parseInt(t.price) / 7); // Approximate base per pickup
-            }
+          } else if (t.tariff_id === 'monthly_14') {
+            prices.monthly_14.price = parseInt(t.price);
+          } else if (t.tariff_id === 'monthly_30') {
+            prices.monthly_30.price = parseInt(t.price);
           }
         });
         
@@ -789,25 +789,20 @@ function OrderContent() {
                 };
                 const daysInPeriod = duration;
                 const pickupsCount = Math.ceil(daysInPeriod * frequencyMultiplier[frequency]);
-                const totalPrice = basePrice * pickupsCount * bagsCount;
-                const discount = duration >= 60 ? 0.3 : duration >= 30 ? 0.2 : duration >= 14 ? 0.1 : 0;
-                const discountedPrice = Math.round(totalPrice * (1 - discount));
-                const savingsPercent = Math.round(discount * 100);
+                
+                // Get price directly from DB (no discounts!)
+                const finalPrice = duration === 14 
+                  ? tariffPrices.monthly_14.price 
+                  : duration === 30 
+                  ? tariffPrices.monthly_30.price 
+                  : 756; // fallback
 
                 return (
                   <div className="bg-white rounded-2xl border-2 border-teal-200 p-5 space-y-3">
-                    {savingsPercent > 0 && (
-                      <div className="inline-block bg-teal-600 text-white px-3 py-1 rounded-full text-sm font-bold">
-                        ⚡ Выгода {savingsPercent}%
-                      </div>
-                    )}
                     <div className="flex items-center justify-between">
                       <span className="text-gray-700 font-semibold text-lg">Стоимость</span>
                       <div className="text-right">
-                        {discount > 0 && (
-                          <p className="text-gray-400 line-through text-sm">{totalPrice} ₽</p>
-                        )}
-                        <p className="text-teal-600 font-bold text-3xl">{discountedPrice} ₽</p>
+                        <p className="text-teal-600 font-bold text-3xl">{finalPrice} ₽</p>
                       </div>
                     </div>
                     <p className="text-gray-500 text-xs">
@@ -1017,12 +1012,13 @@ function OrderContent() {
                             return String(tariffPrices.single.price * bagsCount);
                           }
                           if (tariffId === 'monthly') {
-                            const basePrice = tariffPrices.monthly?.price || 150;
-                            const pickupsCount = frequency === 'daily' ? duration : frequency === 'every_other_day' ? Math.floor(duration / 2) : Math.floor((duration / 7) * 2);
-                            const totalPrice = basePrice * pickupsCount * bagsCount;
-                            const discount = duration >= 60 ? 0.3 : duration >= 30 ? 0.2 : duration >= 14 ? 0.1 : 0;
-                            const discountedPrice = Math.round(totalPrice * (1 - discount));
-                            return String(discountedPrice);
+                            // Use direct price from DB (no formulas!)
+                            const price = duration === 14 
+                              ? tariffPrices.monthly_14?.price || 756
+                              : duration === 30
+                              ? tariffPrices.monthly_30?.price || 1350
+                              : 756;
+                            return String(price);
                           }
                           return '0';
                         })()} ₽
@@ -1283,25 +1279,13 @@ function OrderContent() {
                       if (tariffId === 'single') return String(tariffPrices.single.price * bagsCount);
                       if (tariffId === 'trial') return String(tariffPrices.trial.price); // Fixed trial price from DB (1 bag included)
                       if (tariffId === 'monthly') {
-                        // Special price for first-time subscribers with trial-like parameters
-                        const isTrialEquivalent = duration === 14 && frequency === 'every_other_day' && bagsCount === 1;
-                        if (!hasSubscriptions && isTrialEquivalent) {
-                          return String(tariffPrices.trial.price); // 199 руб - trial price
-                        }
-                        
-                        // Dynamic calculation for monthly
-                        const basePrice = tariffPrices.monthly.base_price; // From DB
-                        const frequencyMultiplier = {
-                          daily: 1,
-                          every_other_day: 0.5,
-                          twice_week: 2/7
-                        };
-                        const daysInPeriod = duration;
-                        const pickupsCount = Math.ceil(daysInPeriod * frequencyMultiplier[frequency]);
-                        const totalPrice = basePrice * pickupsCount * bagsCount;
-                        const discount = duration >= 60 ? 0.3 : duration >= 30 ? 0.2 : duration >= 14 ? 0.1 : 0;
-                        const discountedPrice = Math.round(totalPrice * (1 - discount));
-                        return String(discountedPrice);
+                        // Use direct price from DB (no formulas, no discounts!)
+                        const price = duration === 14 
+                          ? tariffPrices.monthly_14?.price || 756
+                          : duration === 30
+                          ? tariffPrices.monthly_30?.price || 1350
+                          : 756;
+                        return String(price);
                       }
                       return String(tariffPrices.single.price * bagsCount);
                     })()} ₽
