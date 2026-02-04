@@ -96,9 +96,12 @@ async def get_user_subscriptions(
     current_user: User = Depends(get_current_user)
 ):
     """
-    Get user's active subscriptions
+    Get user's active subscriptions (auto-deactivates expired ones)
     """
     from app.models import Subscription
+    from datetime import date
+    
+    today = date.today()
     
     result = await db.execute(
         select(Subscription).where(
@@ -108,6 +111,17 @@ async def get_user_subscriptions(
     )
     subscriptions = result.scalars().all()
     
+    # Auto-deactivate expired subscriptions
+    for s in subscriptions:
+        if s.end_date and s.end_date < today:
+            print(f"[SUBSCRIPTIONS] Deactivating expired subscription #{s.id} (ended {s.end_date})")
+            s.is_active = False
+    
+    await db.commit()
+    
+    # Return only active and not expired
+    active_subs = [s for s in subscriptions if s.is_active and (not s.end_date or s.end_date >= today)]
+    
     return [{
         "id": s.id,
         "tariff": s.tariff.value,
@@ -115,7 +129,7 @@ async def get_user_subscriptions(
         "end_date": s.end_date.isoformat() if s.end_date else None,
         "frequency": s.frequency,  # Already a string, not enum
         "is_active": s.is_active
-    } for s in subscriptions]
+    } for s in active_subs]
 
 
 @router.get("/me/has-trial")
