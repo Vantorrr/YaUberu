@@ -143,10 +143,8 @@ async def telegram_webhook(request: Request, db: AsyncSession = Depends(get_db))
             await send_telegram_message(chat_id, help_text, keyboard)
             
         elif callback_data == "support":
-            support_text = f"""💬 **Поддержка**
+            support_text = """💬 **Поддержка**
 
-👤 Менеджер: {settings.SUPPORT_USERNAME}
-📱 Телефон: {settings.SUPPORT_PHONE}
 ⏰ Работаем: 9:00 — 21:00
 
 **Срочные вопросы:**
@@ -155,12 +153,18 @@ async def telegram_webhook(request: Request, db: AsyncSession = Depends(get_db))
 • Неправильный адрес
 • Жалоба на сервис
 
+📩 Нажмите кнопку ниже, чтобы написать нам!
 Ответим за 15 минут!"""
             
             keyboard = {
-                "inline_keyboard": [[
-                    {"text": "🏠 Главное меню", "callback_data": "menu"}
-                ]]
+                "inline_keyboard": [
+                    [
+                        {"text": "💬 Написать в поддержку", "url": "https://t.me/yauberuhelp"}
+                    ],
+                    [
+                        {"text": "🏠 Главное меню", "callback_data": "menu"}
+                    ]
+                ]
             }
             await send_telegram_message(chat_id, support_text, keyboard)
             
@@ -264,10 +268,8 @@ async def telegram_webhook(request: Request, db: AsyncSession = Depends(get_db))
             return {"status": "ok"}
         
         elif text == "/support":
-            support_text = f"""💬 **Поддержка**
+            support_text = """💬 **Поддержка**
 
-👤 Менеджер: {settings.SUPPORT_USERNAME}
-📱 Телефон: {settings.SUPPORT_PHONE}
 ⏰ Работаем: 9:00 — 21:00
 
 **Срочные вопросы:**
@@ -276,12 +278,18 @@ async def telegram_webhook(request: Request, db: AsyncSession = Depends(get_db))
 • Неправильный адрес
 • Жалоба на сервис
 
+📩 Нажмите кнопку ниже, чтобы написать нам!
 Ответим за 15 минут!"""
             
             keyboard = {
-                "inline_keyboard": [[
-                    {"text": "🏠 Главное меню", "callback_data": "menu"}
-                ]]
+                "inline_keyboard": [
+                    [
+                        {"text": "💬 Написать в поддержку", "url": "https://t.me/yauberuhelp"}
+                    ],
+                    [
+                        {"text": "🏠 Главное меню", "callback_data": "menu"}
+                    ]
+                ]
             }
             await send_telegram_message(chat_id, support_text, keyboard)
             return {"status": "ok"}
